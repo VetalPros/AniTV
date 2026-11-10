@@ -21,11 +21,15 @@
 ## Environment facts (verified on this machine)
 
 - macOS **27.0.1** (26A434), arm64. Disk: ~104 GB free.
-- Xcode **27.2** (27B52) installed from the App Store at `/Applications/Xcode.app`.
-  - `xcode-select -p` still points to `/Library/Developer/CommandLineTools` → **`xcodebuild` and
-    `simctl` do not work yet**. Requires `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`
-    and `sudo xcodebuild -license accept` (needs the user's password — cannot be automated here).
-  - tvOS simulator runtime: **not downloaded yet** (`xcodebuild -downloadPlatform tvOS`).
+- Xcode **27.2** (27B52) at `/Applications/Xcode.app`; `xcode-select -p` →
+  `/Applications/Xcode.app/Contents/Developer`. License accepted, first-launch components installed.
+  **Verified working** (`xcodebuild -version`, `xcrun simctl`, `xcodebuild -showsdks`).
+- SDKs: `appletvos27.2`, `appletvsimulator27.2`. Runtime: **tvOS 27.2 (24K150)**, id
+  `com.apple.CoreSimulator.SimRuntime.tvOS-27-2`. SDKs are 27.x while the deployment target stays
+  26.0 — that is fine and intended.
+- Simulators available (both `Apple TV 4K (4th generation)`):
+  - `1CEE9693-F8EB-45A4-8223-1679EE0EFC5A` (4K)
+  - `A51D0687-F8A5-494D-B199-3AAB94271BFB` (1080p)
 - Tooling: Homebrew 7.0.11, git 2.54.0, Swift 6.4, Node v24.3.0, npm 11.4.2, python3 3.9.6
   (CommandLineTools one — not a project dependency).
   - Installed via Homebrew and verified: **xcodegen 2.46.0**, **xcbeautify 3.2.1**,
@@ -44,26 +48,20 @@
 - [x] Wrote the agent working agreement (Agent Teams + memory protocol).
 - [x] Added `LICENSE` (MIT), `.gitignore`; installed `xcodegen`/`xcbeautify`/`swiftlint`/`swiftformat`.
 - [x] Decisions confirmed by the owner: **MIT**, **tvOS 26.0 minimum**, provisional name `anitv`.
+- [x] Xcode toolchain brought up by the owner: license accepted, first launch done, **tvOS 27.2
+      simulator runtime downloaded and verified**.
+- [x] `~/Documents/anitv` registered as a DSH workspace (`c714b289-7397-4251-b27c-4ce3ce773cf6`).
 
 ## Next steps (ordered)
 
-1. **User runs in Terminal** (needs password):
-   ```bash
-   sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
-   sudo xcodebuild -license accept
-   sudo xcodebuild -runFirstLaunch
-   xcodebuild -downloadPlatform tvOS
-   ```
-   Verify: `xcrun simctl list runtimes` (a tvOS runtime must appear),
-   `xcodebuild -showsdks | grep -i appletv`, `xcrun simctl list devices available | grep -i "apple tv"`.
-2. Register this directory as a DSH workspace (GUI → add workspace → `~/Documents/anitv`).
-3. Scaffold the project: `project.yml` (XcodeGen), `AniLibertyKit` package with `Models/`, `API/`,
+1. ~~Toolchain setup~~ — **done**, nothing left to install.
+2. Scaffold the project: `project.yml` (XcodeGen), `AniLibertyKit` package with `Models/`, `API/`,
    `Cache/`, `Player/`; a tvOS app target with an empty "Latest releases" screen.
-4. `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, `.swiftlint.yml`,
-   `.swift-format`, CI workflow (`.gitignore` and `LICENSE` already exist).
-5. First vertical slice: `GET /anime/releases/latest` → grid of poster cards → release detail →
+3. `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, `.swiftlint.yml`,
+   `.swiftformat`, CI workflow (`.gitignore` and `LICENSE` already exist).
+4. First vertical slice: `GET /anime/releases/latest` → grid of poster cells → release detail →
    episode list → HLS playback in `AVPlayerViewController`.
-6. Play the whole slice in the simulator before adding features.
+5. Play the whole slice in the simulator before adding features.
 
 ## Open questions for the user
 

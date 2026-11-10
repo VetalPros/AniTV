@@ -116,3 +116,18 @@ owner.
 
 **Consequences.** Forks may ship closed derivatives — accepted. No patent grant (unlike
 Apache-2.0); revisit only if patent concerns appear.
+
+---
+
+## 0009 — Build with Xcode 27.2 / tvOS SDK 27.2, deploy to 26.0 (2026-11-10)
+
+**Context.** The only toolchain on the machine is Xcode 27.2 with the tvOS 27.2 SDK and simulator
+runtime. Decision 0001 fixed the deployment target at 26.0.
+
+**Decision.** Build and test with the installed 27.2 SDK; keep `IPHONEOS_DEPLOYMENT_TARGET`-style
+tvOS deployment target at **26.0**. No second SDK is installed.
+
+**Consequences.** Every API used must be available in tvOS 26.0, not 27.x — the compiler warns but
+runtime failures are what matter, so anything newer must be guarded by `#available` or avoided.
+The simulator runs 27.2, so 26.0-only behaviour is never exercised directly; that is accepted until
+a real device or a 26.x runtime is available.
