@@ -104,3 +104,15 @@ verification and commits. Rules are written down in `AGENTS.md` §3.
 
 **Consequences.** Faster on parallelisable work, but requires discipline: a teammate's report is a
 claim, not evidence, and the Lead must run the build and tests itself.
+
+---
+
+## 0008 — MIT license (2026-11-10)
+
+**Context.** The project is fully open source and permissively licensed forks are welcome.
+
+**Decision.** MIT (`LICENSE`, "Copyright (c) 2026 anitv contributors"). Confirmed by the project
+owner.
+
+**Consequences.** Forks may ship closed derivatives — accepted. No patent grant (unlike
+Apache-2.0); revisit only if patent concerns appear.

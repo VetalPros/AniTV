@@ -12,7 +12,8 @@
 | Target platform | tvOS 26.0 (single target for now) |
 | Distribution | TestFlight / ad-hoc only. App Store out of scope |
 | Apple Developer | **Free** account (7-day profiles, 3 devices, no App Groups/CloudKit/Push) |
-| License | MIT (pending confirmation) |
+| License | **MIT** — confirmed 2026-11-10 (`LICENSE`) |
+| Product name | Provisional `anitv` — final name and bundle ID decided later |
 | Repository | local, `~/Documents/anitv`, `git init` done, no remote yet |
 | DSH workspace | **not registered yet** — must be added in the GUI by path |
 | Physical Apple TV | not available yet (expected ~1 week after launch) |
@@ -27,8 +28,8 @@
   - tvOS simulator runtime: **not downloaded yet** (`xcodebuild -downloadPlatform tvOS`).
 - Tooling: Homebrew 7.0.11, git 2.54.0, Swift 6.4, Node v24.3.0, npm 11.4.2, python3 3.9.6
   (CommandLineTools one — not a project dependency).
-  - `xcodegen`, `xcbeautify`, `swiftlint`, `swiftformat`: being installed via Homebrew
-    (see "Next steps" — confirm they are present before relying on them).
+  - Installed via Homebrew and verified: **xcodegen 2.46.0**, **xcbeautify 3.2.1**,
+    **swiftlint 0.65.1**, **swiftformat 0.64.6**.
 - No standalone "Apple TV emulator" exists: the tvOS **Simulator** ships inside Xcode and is driven
   by `xcrun simctl` / `xcodebuild`.
 
@@ -41,6 +42,8 @@
 - [x] Verified the AniLiberty public API surface and HLS playback by hand (see `api-notes.md`).
 - [x] Created the repository skeleton: `AGENTS.md`, `docs/`, `AniLibertyKit/`, `git init`.
 - [x] Wrote the agent working agreement (Agent Teams + memory protocol).
+- [x] Added `LICENSE` (MIT), `.gitignore`; installed `xcodegen`/`xcbeautify`/`swiftlint`/`swiftformat`.
+- [x] Decisions confirmed by the owner: **MIT**, **tvOS 26.0 minimum**, provisional name `anitv`.
 
 ## Next steps (ordered)
 
@@ -56,19 +59,18 @@
 2. Register this directory as a DSH workspace (GUI → add workspace → `~/Documents/anitv`).
 3. Scaffold the project: `project.yml` (XcodeGen), `AniLibertyKit` package with `Models/`, `API/`,
    `Cache/`, `Player/`; a tvOS app target with an empty "Latest releases" screen.
-4. `.gitignore`, `LICENSE` (MIT), `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`,
-   `.swiftlint.yml`, `.swift-format`, CI workflow.
+4. `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, `.swiftlint.yml`,
+   `.swift-format`, CI workflow (`.gitignore` and `LICENSE` already exist).
 5. First vertical slice: `GET /anime/releases/latest` → grid of poster cards → release detail →
    episode list → HLS playback in `AVPlayerViewController`.
 6. Play the whole slice in the simulator before adding features.
 
 ## Open questions for the user
 
-- Final **product name** and **bundle identifier** (currently a provisional `anitv` directory; the
-  identifier needs the user's own domain, e.g. `top.<domain>.<name>`).
-- MIT license — confirm.
-- tvOS 26.0 as the minimum — confirm (means Liquid Glass everywhere, no legacy fallbacks).
-- Whether MCP tooling for Xcode should be enabled (see "Known tooling options" below).
+- Final **product name** and **bundle identifier** — deliberately deferred; the working name is
+  `anitv` and the bundle id will be `top.<domain>.<name>` once the name is chosen. Renaming the
+  directory later means re-registering the DSH workspace, so decide before the repository goes public.
+- Whether to enable an Xcode MCP bridge now or after the first successful build.
 
 ## Known caveats
 
