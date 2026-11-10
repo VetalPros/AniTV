@@ -1,0 +1,32 @@
+# SwiftFormat configuration — https://github.com/nicklockwood/SwiftFormat
+#
+# Verified against SwiftFormat 0.64.6 (the version CI and AGENTS.md §6 assume).
+# Keep this file minimal and every option justified: formatting must be
+# reproducible, so we pin the options that actually shape this codebase and
+# leave everything else on upstream defaults.
+#
+# Language: Swift 6 language mode, strict concurrency (AGENTS.md §7).
+#
+# swiftversion 6.0
+--swift-version 6.0
+--language-mode 6
+
+# Line width used by the wrapping rules. 120 is the limit SwiftLint enforces too.
+--max-width 120
+
+# 4-space indentation, no tabs.
+--indent 4
+--tab-width 4
+
+# Trailing commas only in collection literals (valid in every Swift version),
+# never in argument lists: keeps the sources buildable by older toolchains.
+--trailing-commas collections-only
+
+# `self.` only where the compiler requires it; SwiftUI view bodies stay readable.
+--self remove
+
+# Do not rewrite heavily indented switch cases; Xcode-style indentation only.
+--indent-case false
+
+# Build products must never be formatted or linted.
+--exclude .build,DerivedData,.swiftpm,AniTV.xcodeproj

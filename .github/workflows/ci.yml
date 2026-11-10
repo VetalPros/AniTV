@@ -1,0 +1,123 @@
+# Continuous integration for the public repository.
+#
+# What this workflow proves on every pull request and on every push to `main`:
+#   1. the Xcode project can be generated from `project.yml` (XcodeGen is the source of truth),
+#   2. the app builds for the tvOS Simulator SDK in Swift 6 language mode,
+#   3. the shared `AniLibertyKit` package passes `swift test` with no network access,
+#   4. the tree is formatted (`swiftformat --lint`) and lint-clean (`swiftlint --strict`).
+#
+# No secrets are used, no signing material is present, and nothing is uploaded anywhere:
+# the repository is public and runs on GitHub-hosted macOS runners (AGENTS.md §2).
+#
+# Determinism: SwiftFormat and SwiftLint are downloaded from pinned GitHub releases instead of
+# Homebrew, because the checked-in configuration files were verified against exactly these
+# versions. A newer linter with new default rules would otherwise turn `main` red for reasons
+# that have nothing to do with the change under review. XcodeGen is installed from Homebrew —
+# it only needs to be new enough to understand `project.yml`.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Public repository: the workflow only reads the tree.
+permissions:
+  contents: read
+
+# A newer push to the same branch cancels the previous run.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SWIFTFORMAT_VERSION: "0.64.6"
+  SWIFTLINT_VERSION: "0.65.1"
+  # Build-only destination: GitHub-hosted runners do not ship every simulator runtime, so we
+  # never boot a device and never need a concrete Apple TV device name. Building against
+  # `generic/platform=tvOS Simulator` only requires the tvOS SDK, which ships with Xcode.
+  TVOS_DESTINATION: "generic/platform=tvOS Simulator"
+  DERIVED_DATA: ".build/DerivedData"
+
+jobs:
+  build-test-lint:
+    name: Build, test, format, lint
+    # Any GitHub macOS image with Xcode 26 or newer provides the tvOS 26.0 SDK that this project
+    # deploys to. Bump the label when GitHub retires `macos-26`.
+    runs-on: macos-26
+    timeout-minutes: 40
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Show the toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+          # The tvOS SDK is called `appletvos` — `xcrun --sdk tvos` fails with
+          # "SDK \"tvos\" cannot be located" even on a machine with a full Xcode install.
+          xcrun --sdk appletvos --show-sdk-version
+          xcrun --sdk appletvos --show-sdk-path
+
+      - name: Install XcodeGen
+        run: |
+          brew install xcodegen
+          xcodegen --version
+
+      - name: Install pinned SwiftFormat and SwiftLint
+        run: |
+          set -euo pipefail
+          tools_dir="$RUNNER_TEMP/ci-tools"
+          mkdir -p "$tools_dir/bin" "$tools_dir/src"
+
+          curl --fail --silent --show-error --location --retry 3 \
+            --output "$tools_dir/src/swiftformat.zip" \
+            "https://github.com/nicklockwood/SwiftFormat/releases/download/${SWIFTFORMAT_VERSION}/swiftformat.zip"
+          curl --fail --silent --show-error --location --retry 3 \
+            --output "$tools_dir/src/swiftlint.zip" \
+            "https://github.com/realm/SwiftLint/releases/download/${SWIFTLINT_VERSION}/portable_swiftlint.zip"
+
+          # Both archives ship a universal (arm64 + x86_64) binary at their root.
+          unzip -q -o "$tools_dir/src/swiftformat.zip" -d "$tools_dir/bin"
+          unzip -q -o "$tools_dir/src/swiftlint.zip" -d "$tools_dir/bin"
+          chmod +x "$tools_dir/bin/swiftformat" "$tools_dir/bin/swiftlint"
+
+          echo "$tools_dir/bin" >> "$GITHUB_PATH"
+          "$tools_dir/bin/swiftformat" --version
+          "$tools_dir/bin/swiftlint" version
+
+      - name: Cache Swift Package Manager artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build/DerivedData/SourcePackages
+            AniLibertyKit/.build
+          key: spm-${{ runner.os }}-${{ hashFiles('AniLibertyKit/Package.swift') }}
+          restore-keys: |
+            spm-${{ runner.os }}-
+
+      - name: Generate the Xcode project
+        run: xcodegen generate
+
+      - name: Build the app for the tvOS Simulator
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project AniTV.xcodeproj \
+            -scheme AniTV \
+            -destination "$TVOS_DESTINATION" \
+            -derivedDataPath "$DERIVED_DATA" \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Test AniLibertyKit
+        run: swift test --package-path AniLibertyKit
+
+      - name: Check formatting
+        run: swiftformat --lint .
+
+      - name: Lint Swift sources
+        run: swiftlint --strict

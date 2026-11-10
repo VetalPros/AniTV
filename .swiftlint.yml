@@ -1,0 +1,92 @@
+# SwiftLint configuration for AniTV — https://realm.github.io/SwiftLint
+#
+# Verified against SwiftLint 0.65.1 (the version CI and AGENTS.md §6 assume).
+# Run with `swiftlint --strict`; warnings are errors there, so keep the tree clean.
+#
+# Policy: no force casts, no force unwraps, no `try!` in production paths.
+# `force_cast` and `force_try` are on by default; `force_unwrapping` and
+# `implicitly_unwrapped_optional` are opt-in and enabled below.
+
+# TODO/FIXME notes must not fail CI. Track them as issues, not lint errors.
+disabled_rules:
+  - todo
+  # `modifier_order` is NOT disabled to silence our own code: SwiftLint 0.65.1 and
+  # SwiftFormat 0.64.6 demand opposite orders and the linter's order is not configurable.
+  #   SwiftFormat wants: `private nonisolated static func …`
+  #   SwiftLint wants:   `nonisolated private static func ...`
+  # SwiftLint's `preferred_modifier_order` does not accept a `nonisolated` token in 0.65.1
+  # (any list containing it is rejected with "Invalid configuration"), so the two tools
+  # cannot be aligned. SwiftFormat is the formatter and owns modifier ordering; CI runs
+  # `swiftformat --lint .` before `swiftlint --strict`, so this rule is still enforced —
+  # by the formatter, consistently, on every file.
+  - modifier_order
+
+opt_in_rules:
+  # Safety: no crash-on-purpose in shipping code.
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  # Idiomatic, slightly cheaper standard-library usage.
+  - array_init
+  - contains_over_first_not_nil
+  - empty_count
+  - empty_string
+  - first_where
+  - last_where
+  # SwiftUI state hygiene.
+  - private_swiftui_state
+  # Style checks that do not fight SwiftUI's view syntax.
+
+# Only `swiftlint analyze` uses these; kept documented for future CI hardening.
+analyzer_rules:
+  - unused_import
+
+# Build products and generated files are not ours to lint.
+excluded:
+  - .build
+  - AniLibertyKit/.build
+  - DerivedData
+  - AniTV.xcodeproj
+  - .swiftpm
+  - .swiftlint-scratch
+
+# Single-letter names stay allowed where they are the clearest thing available:
+# geometry math (x/y, dx/dy) and short index loops (i, j). Everything else keeps
+# the default 3-character minimum.
+identifier_name:
+  min_length: 2
+  max_length: 40
+  excluded:
+    - x
+    - y
+    - i
+    - j
+    - dx
+    - dy
+
+line_length:
+  warning: 120
+  error: 200
+  ignores_urls: true
+  ignores_interpolated_strings: true
+
+file_length:
+  warning: 400
+  error: 800
+
+type_body_length:
+  warning: 300
+  error: 500
+
+function_body_length:
+  warning: 80
+  error: 200
+
+cyclomatic_complexity:
+  warning: 15
+  error: 25
+
+# Must match SwiftFormat's `--trailing-commas collections-only` so the formatter
+# and the linter do not fight each other: SwiftLint defaults to forbidding
+# trailing commas, SwiftFormat adds them to multi-line collection literals.
+trailing_comma:
+  mandatory_comma: true

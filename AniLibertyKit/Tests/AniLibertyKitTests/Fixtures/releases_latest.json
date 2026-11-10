@@ -1,0 +1,508 @@
+[
+  {
+    "id": 10308,
+    "type": {
+      "value": "TV",
+      "description": "ТВ"
+    },
+    "year": 2026,
+    "name": {
+      "main": "Я очнулся будучи пилотом сильнейшего космического корабля, а потому решил стать межгалактическим наёмником",
+      "english": "Mezametara Saikyou Soubi to Uchuusenmochi Datta node, Ikkodate Mezashite Youhei toshite Jiyuu ni Ikitai",
+      "alternative": null
+    },
+    "alias": "mezametara-saikyou-soubi-to-uchuusenmochi-datta-node-ikkodate-mezashite-youhei-toshite-jiyuu-ni-ikitai",
+    "season": {
+      "value": "autumn",
+      "description": "Осень"
+    },
+    "shikimori": {
+      "id": 60948,
+      "url": "https://shikimori.io/animes/60948",
+      "votes": 355,
+      "rating": 7.61
+    },
+    "mal": {
+      "id": 60948,
+      "url": "https://myanimelist.net/anime/60948",
+      "votes": 4704,
+      "rating": 6.84
+    },
+    "rating": {
+      "average": 8,
+      "votes": 1,
+      "distribution": {
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 0,
+        "8": 1,
+        "9": 0,
+        "10": 0
+      }
+    },
+    "poster": {
+      "src": "/storage/releases/posters/10308/wly8lALsOIYNPIJSHyrIXCYpNx2VATyE.jpg",
+      "preview": "/storage/releases/posters/10308/wly8lALsOIYNPIJSHyrIXCYpNx2VATyE.jpg",
+      "thumbnail": "/storage/releases/posters/10308/KvBdGfZqnUfa7utMTyGuloeLGOZby8Qt.jpg",
+      "optimized": {
+        "src": "/storage/releases/posters/10308/c7m9gJs2tp3CjxlijndcrfMUfCVnhRmO.webp",
+        "preview": "/storage/releases/posters/10308/c7m9gJs2tp3CjxlijndcrfMUfCVnhRmO.webp",
+        "thumbnail": "/storage/releases/posters/10308/o3vpdRKMpoj8PXBOs3UkKags4x1iyvTf.webp"
+      }
+    },
+    "fresh_at": "2026-11-10T11:23:12+00:00",
+    "created_at": "2026-08-18T22:45:29+00:00",
+    "updated_at": "2026-11-10T14:44:59+00:00",
+    "is_ongoing": true,
+    "age_rating": {
+      "value": "R16_PLUS",
+      "label": "16+",
+      "is_adult": false,
+      "description": "Для людей, достигших возраста шестнадцати лет (16+)"
+    },
+    "publish_day": {
+      "value": 1,
+      "description": "Понедельник"
+    },
+    "description": "Сато Такахиро был обычным офисным работником и заядлым любителем видеоигр, пока однажды не проснулся на борту космического корабля, удивительно похожего на самое мощное судно из его любимого космического шутера. Так что теперь у него есть навороченный корабль, а в придачу ещё и команда прекрасных девушек, ну и целая вселенная для исследования.\r\nПохоже, судьба подарила ему невероятный шанс, и Такахиро намерен воспользоваться им по полной, чтобы построить жизнь, о которой всегда мечтал.",
+    "notification": null,
+    "episodes_total": 12,
+    "external_player": null,
+    "is_in_production": true,
+    "is_blocked_by_geo": false,
+    "is_blocked_by_copyrights": false,
+    "is_comments_closed": false,
+    "comments_count": 27,
+    "added_in_users_favorites": 7609,
+    "average_duration_of_episode": 24,
+    "added_in_planned_collection": 405,
+    "added_in_watched_collection": 12,
+    "added_in_watching_collection": 871,
+    "added_in_postponed_collection": 20,
+    "added_in_abandoned_collection": 17,
+    "genres": [
+      {
+        "id": 22,
+        "name": "Фантастика",
+        "image": {
+          "preview": "/storage/anime/genres/images/22/SkMfGTRw25vgROZYw2ckIFThCj6vieKr.jpg",
+          "thumbnail": "/storage/anime/genres/images/22/ITIPuxUQTOmgnVdrWsKsvpHILkKC8XKf.jpg",
+          "optimized": {
+            "preview": "/storage/anime/genres/images/22/eWMwlRJdiIp9AVbEBvc3uNoJtPoNZZtb.webp",
+            "thumbnail": "/storage/anime/genres/images/22/BsPOUSqL5Fmd8opLAAnnv8g9B86U3iyb.webp"
+          }
+        },
+        "total_releases": 272
+      },
+      {
+        "id": 14,
+        "name": "Экшен",
+        "image": {
+          "preview": "/storage/anime/genres/images/14/HVxcEvm7oA6JQvnMKKgSdYJ90ab8Zoco.jpg",
+          "thumbnail": "/storage/anime/genres/images/14/7JeDltmth6vVUs1bG4OHq6ywRYVjbYoY.jpg",
+          "optimized": {
+            "preview": "/storage/anime/genres/images/14/FNZP4gLtDFe67Ynbthc08wRsTp5q94sx.webp",
+            "thumbnail": "/storage/anime/genres/images/14/gfzjNkJYPgeaIyQxXveaP5UblbQWadEF.webp"
+          }
+        },
+        "total_releases": 693
+      },
+      {
+        "id": 34,
+        "name": "Исекай",
+        "image": {
+          "preview": "/storage/anime/genres/images/34/kojD1QCZq7E1EiHEYIlXqpqPl387Mdq0.jpg",
+          "thumbnail": "/storage/anime/genres/images/34/bavMvL2OgW8ujeidmM3GZ7rY20lopGNo.jpg",
+          "optimized": {
+            "preview": "/storage/anime/genres/images/34/HUewoXUZAlHsb9KrW432Q6R3zLBSV63h.webp",
+            "thumbnail": "/storage/anime/genres/images/34/7yEEgekS9jZq0FSqcMtRBp8lCOU2SRy2.webp"
+          }
+        },
+        "total_releases": 46
+      }
+    ],
+    "latest_episode": {
+      "id": "a330e9e2-1a21-46e6-bc8f-efc761bb97cb",
+      "name": null,
+      "ordinal": 6,
+      "opening": {
+        "stop": 168,
+        "start": 78
+      },
+      "ending": {
+        "stop": 1392,
+        "start": 1302
+      },
+      "preview": {
+        "src": "/storage/releases/episodes/previews/10308/6/tXiTgLSr0rzJST7a.jpg",
+        "preview": "/storage/releases/episodes/previews/10308/6/tXiTgLSr0rzJST7a.jpg",
+        "thumbnail": "/storage/releases/episodes/previews/10308/6/tXiTgLSr0rzJST7a__99f13fbecce4a1716a6ceec610ec4a0b.jpg",
+        "optimized": {
+          "src": "/storage/releases/episodes/previews/10308/6/tXiTgLSr0rzJST7a__efd8c05352e8e0811a78234be8f32cf3.webp",
+          "preview": "/storage/releases/episodes/previews/10308/6/tXiTgLSr0rzJST7a__efd8c05352e8e0811a78234be8f32cf3.webp",
+          "thumbnail": "/storage/releases/episodes/previews/10308/6/tXiTgLSr0rzJST7a__a3b55c0ebb6bf8c8266a45b6d7ff8d88.webp"
+        }
+      },
+      "hls_480": "https://cache.libria.fun/videos/media/ts/10308/6/480/6fb3e4fdb61d6ecafe0574dd0a12c349.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "hls_720": "https://cache.libria.fun/videos/media/ts/10308/6/720/c4fe3fc55909c227bf69195c9103f02f.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "hls_1080": "https://cache.libria.fun/videos/media/ts/10308/6/1080/0fc385e47491ff7764fb53f9cc4db591.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "duration": 1422,
+      "rutube_id": null,
+      "youtube_id": null,
+      "updated_at": "2026-11-10T11:00:28+00:00",
+      "sort_order": 6,
+      "release_id": 10308,
+      "name_english": null
+    }
+  },
+  {
+    "id": 10172,
+    "type": {
+      "value": "ONA",
+      "description": "ОNA"
+    },
+    "year": 2026,
+    "name": {
+      "main": "Невероятные приключения ДжоДжо: Гонка «Стальной шар»",
+      "english": "Steel Ball Run: JoJo no Kimyou na Bouken",
+      "alternative": null
+    },
+    "alias": "steel-ball-run-jojo-no-kimyou-na-bouken",
+    "season": {
+      "value": "spring",
+      "description": "Весна"
+    },
+    "shikimori": {
+      "id": 61469,
+      "url": "https://shikimori.io/animes/61469",
+      "votes": 4219,
+      "rating": 8.64
+    },
+    "mal": {
+      "id": 61469,
+      "url": "https://myanimelist.net/anime/61469",
+      "votes": 114099,
+      "rating": 9.03
+    },
+    "rating": {
+      "average": null,
+      "votes": 0,
+      "distribution": {
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 0,
+        "8": 0,
+        "9": 0,
+        "10": 0
+      }
+    },
+    "poster": {
+      "src": "/storage/releases/posters/10172/5bHZeLaIKOser7WZsyhCy6jVrneAKOfO.jpg",
+      "preview": "/storage/releases/posters/10172/5bHZeLaIKOser7WZsyhCy6jVrneAKOfO.jpg",
+      "thumbnail": "/storage/releases/posters/10172/A8HKy0PJxtKlqtgpd4zT2xL8doPKORhT.jpg",
+      "optimized": {
+        "src": "/storage/releases/posters/10172/cQ4uyJmWs16t9MxMEv0eltZp0nIaYtIz.webp",
+        "preview": "/storage/releases/posters/10172/cQ4uyJmWs16t9MxMEv0eltZp0nIaYtIz.webp",
+        "thumbnail": "/storage/releases/posters/10172/elJLNZVty6zatexvXdpdN7ircRyEdOQJ.webp"
+      }
+    },
+    "fresh_at": "2026-11-10T10:51:12+00:00",
+    "created_at": "2026-03-06T12:48:19+00:00",
+    "updated_at": "2026-11-10T10:49:45+00:00",
+    "is_ongoing": true,
+    "age_rating": {
+      "value": "R16_PLUS",
+      "label": "16+",
+      "is_adult": false,
+      "description": "Для людей, достигших возраста шестнадцати лет (16+)"
+    },
+    "publish_day": {
+      "value": 1,
+      "description": "Понедельник"
+    },
+    "description": "Наездники со всего света собираются на Диком Западе, чтобы принять участие в гонке века, где на кону стоит 50 миллионов. Джонни Джостар, бывший профессиональный жокей, тоже всей душой хотел бы поучаствовать в столь грандиозном событии, однако судьба сложилась так, что теперь он прикован к инвалидному креслу. И мог бы он остаться просто зрителем, но внезапная встреча с человеком по имени Гиро Цеппели и его стальными шарами, внезапно вернувшими ему возможность снова ходить, дало парню шанс снова почувствовать, что такое безумие скорости и адреналин гонки. Ну что ж, поехали!",
+    "notification": null,
+    "episodes_total": null,
+    "external_player": null,
+    "is_in_production": true,
+    "is_blocked_by_geo": false,
+    "is_blocked_by_copyrights": false,
+    "is_comments_closed": false,
+    "comments_count": 0,
+    "added_in_users_favorites": 3086,
+    "average_duration_of_episode": 24,
+    "added_in_planned_collection": 234,
+    "added_in_watched_collection": 80,
+    "added_in_watching_collection": 547,
+    "added_in_postponed_collection": 20,
+    "added_in_abandoned_collection": 16,
+    "genres": [
+      {
+        "id": 5,
+        "name": "Сейнен",
+        "image": {
+          "preview": "/storage/anime/genres/images/5/ekFrF3Puccsi75ngq0fzd4fUbnXiGCnn.jpg",
+          "thumbnail": "/storage/anime/genres/images/5/CfIxntJmgBabUiBQChxB0WZHdSF5L87K.jpg",
+          "optimized": {
+            "preview": "/storage/anime/genres/images/5/sTleU4eW0CiqDIiiyRniPJIQlB8HZagG.webp",
+            "thumbnail": "/storage/anime/genres/images/5/RsbTRZ6lb0zhLCP033o9PEmsFRwVqLp5.webp"
+          }
+        },
+        "total_releases": 193
+      },
+      {
+        "id": 14,
+        "name": "Экшен",
+        "image": {
+          "preview": "/storage/anime/genres/images/14/HVxcEvm7oA6JQvnMKKgSdYJ90ab8Zoco.jpg",
+          "thumbnail": "/storage/anime/genres/images/14/7JeDltmth6vVUs1bG4OHq6ywRYVjbYoY.jpg",
+          "optimized": {
+            "preview": "/storage/anime/genres/images/14/FNZP4gLtDFe67Ynbthc08wRsTp5q94sx.webp",
+            "thumbnail": "/storage/anime/genres/images/14/gfzjNkJYPgeaIyQxXveaP5UblbQWadEF.webp"
+          }
+        },
+        "total_releases": 693
+      },
+      {
+        "id": 27,
+        "name": "Приключения",
+        "image": {
+          "preview": "/storage/anime/genres/images/27/bcU7byqneZPf1E3qj3g94enAUtoRUr9A.jpg",
+          "thumbnail": "/storage/anime/genres/images/27/dkzAZJGJI45REJTjVMNAJXNi4wHo0AOS.jpg",
+          "optimized": {
+            "preview": "/storage/anime/genres/images/27/z4kgvrZz4JSSy0G1EtWBDSH1SA76Aex1.webp",
+            "thumbnail": "/storage/anime/genres/images/27/lEZNqdhonXq9BAejItNKgPTv1XLFbwdD.webp"
+          }
+        },
+        "total_releases": 455
+      },
+      {
+        "id": 25,
+        "name": "Детектив",
+        "image": {
+          "preview": "/storage/anime/genres/images/25/u5cIFp0H3u9VQ3rUyU0PL6fEPopcrKgE.jpg",
+          "thumbnail": "/storage/anime/genres/images/25/yIbErX5wthUGQNCa6cPRAq34qjfhIwcp.jpg",
+          "optimized": {
+            "preview": "/storage/anime/genres/images/25/oMj3CiolSKjUN2gOMOlNVTjiFRsJwyGO.webp",
+            "thumbnail": "/storage/anime/genres/images/25/lrThGhq9QD0QfhEJsJiSJI1chPKFRCx8.webp"
+          }
+        },
+        "total_releases": 146
+      },
+      {
+        "id": 28,
+        "name": "Сверхъестественное",
+        "image": {
+          "preview": "/storage/anime/genres/images/28/pUwDuFHdJkJpibQwKoROuz99Ayg0MV2t.jpg",
+          "thumbnail": "/storage/anime/genres/images/28/OOnUfzM433g7kC6Guz4uohiBCPeENqQx.jpg",
+          "optimized": {
+            "preview": "/storage/anime/genres/images/28/m0P5nQwrDSKuvXrLnutlKqhweVc1MLXN.webp",
+            "thumbnail": "/storage/anime/genres/images/28/7zjjRP4Cu91AdJDp9cdUEA7Au3fVrAfv.webp"
+          }
+        },
+        "total_releases": 304
+      }
+    ],
+    "latest_episode": {
+      "id": "a330e5c6-0696-4efe-97bf-a7a3a4eff265",
+      "name": null,
+      "ordinal": 8,
+      "opening": {
+        "stop": 111,
+        "start": 20
+      },
+      "ending": {
+        "stop": null,
+        "start": null
+      },
+      "preview": {
+        "src": "/storage/releases/episodes/previews/10172/8/OpX9edQcdgIfZhPR.jpg",
+        "preview": "/storage/releases/episodes/previews/10172/8/OpX9edQcdgIfZhPR.jpg",
+        "thumbnail": "/storage/releases/episodes/previews/10172/8/OpX9edQcdgIfZhPR__c7eac59b256aabc81c840ed9d2bbe53e.jpg",
+        "optimized": {
+          "src": "/storage/releases/episodes/previews/10172/8/OpX9edQcdgIfZhPR__49e83f585f8b030cf7575e1041712897.webp",
+          "preview": "/storage/releases/episodes/previews/10172/8/OpX9edQcdgIfZhPR__49e83f585f8b030cf7575e1041712897.webp",
+          "thumbnail": "/storage/releases/episodes/previews/10172/8/OpX9edQcdgIfZhPR__0b1e07e1d068ec528a0c6d609ba6dbe3.webp"
+        }
+      },
+      "hls_480": "https://cache.libria.fun/videos/media/ts/10172/8/480/bbdf0dcf893e55a79a475fe5bc408c93.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "hls_720": "https://cache.libria.fun/videos/media/ts/10172/8/720/39fa4c5181d0320284ec67ad115d3f53.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "hls_1080": "https://cache.libria.fun/videos/media/ts/10172/8/1080/f37ebbced2217f247ba2c18bb6617f29.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "duration": 1506,
+      "rutube_id": null,
+      "youtube_id": null,
+      "updated_at": "2026-11-10T10:46:44+00:00",
+      "sort_order": 8,
+      "release_id": 10172,
+      "name_english": null
+    }
+  },
+  {
+    "id": 10360,
+    "type": {
+      "value": "ONA",
+      "description": "ОNA"
+    },
+    "year": 2026,
+    "name": {
+      "main": "Герб демонов",
+      "english": "Demons' Crest",
+      "alternative": null
+    },
+    "alias": "demons-crest",
+    "season": {
+      "value": "autumn",
+      "description": "Осень"
+    },
+    "shikimori": {
+      "id": 63045,
+      "url": "https://shikimori.io/animes/63045",
+      "votes": 0,
+      "rating": null
+    },
+    "mal": {
+      "id": 63045,
+      "url": "https://myanimelist.net/anime/63045",
+      "votes": 498,
+      "rating": 6.53
+    },
+    "rating": {
+      "average": null,
+      "votes": 0,
+      "distribution": {
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 0,
+        "8": 0,
+        "9": 0,
+        "10": 0
+      }
+    },
+    "poster": {
+      "src": "/storage/releases/posters/10360/pNmoAD0BjUxkD28jbaPVkSB4ZXIte4BG.jpg",
+      "preview": "/storage/releases/posters/10360/pNmoAD0BjUxkD28jbaPVkSB4ZXIte4BG.jpg",
+      "thumbnail": "/storage/releases/posters/10360/eL1gu0QOlVgWdZ4DZqmnnsr4VrVbsgHR.jpg",
+      "optimized": {
+        "src": "/storage/releases/posters/10360/P0tfiyCySwi9jZ9D3xHlTG5RGrBgTZ4Z.webp",
+        "preview": "/storage/releases/posters/10360/P0tfiyCySwi9jZ9D3xHlTG5RGrBgTZ4Z.webp",
+        "thumbnail": "/storage/releases/posters/10360/bk4JpADaEjKJA6ZkVzvVAehP58U8TskR.webp"
+      }
+    },
+    "fresh_at": "2026-11-10T10:22:26+00:00",
+    "created_at": "2026-08-27T16:35:13+00:00",
+    "updated_at": "2026-11-10T10:41:11+00:00",
+    "is_ongoing": true,
+    "age_rating": {
+      "value": "R16_PLUS",
+      "label": "16+",
+      "is_adult": false,
+      "description": "Для людей, достигших возраста шестнадцати лет (16+)"
+    },
+    "publish_day": {
+      "value": 2,
+      "description": "Вторник"
+    },
+    "description": "Шестиклассник Юма Асихара и его сестра-близнец Сава Асихара играют в «Actual Magic» — новенькую виртуальную MMORPG, как вдруг игра начинает сливаться с реальным миром. Среди воцарившегося хаоса и всеобщего смятения становится ясно, что смерть подстерегает на каждом шагу — в этом Юма убеждается лично, столкнувшись со своей одноклассницей Сумикой. Раньше она была одной из самых милых девчонок в классе, но теперь претерпела ужасающее превращение — в одно из жутких чудовищ этой игры!",
+    "notification": null,
+    "episodes_total": null,
+    "external_player": null,
+    "is_in_production": true,
+    "is_blocked_by_geo": false,
+    "is_blocked_by_copyrights": false,
+    "is_comments_closed": false,
+    "comments_count": 0,
+    "added_in_users_favorites": 630,
+    "average_duration_of_episode": 23,
+    "added_in_planned_collection": 53,
+    "added_in_watched_collection": 0,
+    "added_in_watching_collection": 35,
+    "added_in_postponed_collection": 3,
+    "added_in_abandoned_collection": 0,
+    "genres": [
+      {
+        "id": 29,
+        "name": "Фэнтези",
+        "image": {
+          "preview": "/storage/anime/genres/images/29/BqPfwYPC7STQ0lsv6LsdyDm594Tnz2N5.jpg",
+          "thumbnail": "/storage/anime/genres/images/29/bkKObn59vWFAd8wcAPINJnI8EZLZB8gH.jpg",
+          "optimized": {
+            "preview": "/storage/anime/genres/images/29/BayKuKbzHQkKMlfFyUTZAoExCjqkHDfh.webp",
+            "thumbnail": "/storage/anime/genres/images/29/yVUCPUfGguBeZ280YyS5UhawlR3F1fS0.webp"
+          }
+        },
+        "total_releases": 618
+      },
+      {
+        "id": 27,
+        "name": "Приключения",
+        "image": {
+          "preview": "/storage/anime/genres/images/27/bcU7byqneZPf1E3qj3g94enAUtoRUr9A.jpg",
+          "thumbnail": "/storage/anime/genres/images/27/dkzAZJGJI45REJTjVMNAJXNi4wHo0AOS.jpg",
+          "optimized": {
+            "preview": "/storage/anime/genres/images/27/z4kgvrZz4JSSy0G1EtWBDSH1SA76Aex1.webp",
+            "thumbnail": "/storage/anime/genres/images/27/lEZNqdhonXq9BAejItNKgPTv1XLFbwdD.webp"
+          }
+        },
+        "total_releases": 455
+      },
+      {
+        "id": 14,
+        "name": "Экшен",
+        "image": {
+          "preview": "/storage/anime/genres/images/14/HVxcEvm7oA6JQvnMKKgSdYJ90ab8Zoco.jpg",
+          "thumbnail": "/storage/anime/genres/images/14/7JeDltmth6vVUs1bG4OHq6ywRYVjbYoY.jpg",
+          "optimized": {
+            "preview": "/storage/anime/genres/images/14/FNZP4gLtDFe67Ynbthc08wRsTp5q94sx.webp",
+            "thumbnail": "/storage/anime/genres/images/14/gfzjNkJYPgeaIyQxXveaP5UblbQWadEF.webp"
+          }
+        },
+        "total_releases": 693
+      }
+    ],
+    "latest_episode": {
+      "id": "a330e97f-2bbd-4f60-a1eb-8e9028d2c2ec",
+      "name": null,
+      "ordinal": 1,
+      "opening": {
+        "stop": null,
+        "start": null
+      },
+      "ending": {
+        "stop": null,
+        "start": null
+      },
+      "preview": {
+        "src": "/storage/releases/episodes/previews/10360/1/QVFQIKzqKap27AFl.jpg",
+        "preview": "/storage/releases/episodes/previews/10360/1/QVFQIKzqKap27AFl.jpg",
+        "thumbnail": "/storage/releases/episodes/previews/10360/1/QVFQIKzqKap27AFl__1b1f0f72139dfbb1201eb1c1a8924b2b.jpg",
+        "optimized": {
+          "src": "/storage/releases/episodes/previews/10360/1/QVFQIKzqKap27AFl__2a62b72eaedad62f5062935dc87c8dfd.webp",
+          "preview": "/storage/releases/episodes/previews/10360/1/QVFQIKzqKap27AFl__2a62b72eaedad62f5062935dc87c8dfd.webp",
+          "thumbnail": "/storage/releases/episodes/previews/10360/1/QVFQIKzqKap27AFl__6d4331264e96db3bddbe4af5fc41b20a.webp"
+        }
+      },
+      "hls_480": "https://cache.libria.fun/videos/media/ts/10360/1/480/d05a5b387507b0187ffa43b3f2134308.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "hls_720": "https://cache.libria.fun/videos/media/ts/10360/1/720/cfaba2c810f411aeb64b2baaf842783d.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "hls_1080": "https://cache.libria.fun/videos/media/ts/10360/1/1080/010ae350f7cd50f5b4b9694607816f8d.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "duration": 1491,
+      "rutube_id": null,
+      "youtube_id": null,
+      "updated_at": "2026-11-10T10:28:14+00:00",
+      "sort_order": 1,
+      "release_id": 10360,
+      "name_english": null
+    }
+  }
+]

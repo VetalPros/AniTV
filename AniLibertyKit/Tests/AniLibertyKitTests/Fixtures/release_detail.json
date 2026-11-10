@@ -1,0 +1,650 @@
+{
+  "id": 10308,
+  "type": {
+    "value": "TV",
+    "description": "ТВ"
+  },
+  "year": 2026,
+  "name": {
+    "main": "Я очнулся будучи пилотом сильнейшего космического корабля, а потому решил стать межгалактическим наёмником",
+    "english": "Mezametara Saikyou Soubi to Uchuusenmochi Datta node, Ikkodate Mezashite Youhei toshite Jiyuu ni Ikitai",
+    "alternative": null
+  },
+  "alias": "mezametara-saikyou-soubi-to-uchuusenmochi-datta-node-ikkodate-mezashite-youhei-toshite-jiyuu-ni-ikitai",
+  "season": {
+    "value": "autumn",
+    "description": "Осень"
+  },
+  "shikimori": {
+    "id": 60948,
+    "url": "https://shikimori.io/animes/60948",
+    "votes": 355,
+    "rating": 7.61
+  },
+  "mal": {
+    "id": 60948,
+    "url": "https://myanimelist.net/anime/60948",
+    "votes": 4704,
+    "rating": 6.84
+  },
+  "rating": {
+    "average": 8,
+    "votes": 1,
+    "distribution": {
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 1,
+      "9": 0,
+      "10": 0
+    }
+  },
+  "poster": {
+    "src": "/storage/releases/posters/10308/wly8lALsOIYNPIJSHyrIXCYpNx2VATyE.jpg",
+    "preview": "/storage/releases/posters/10308/wly8lALsOIYNPIJSHyrIXCYpNx2VATyE.jpg",
+    "thumbnail": "/storage/releases/posters/10308/KvBdGfZqnUfa7utMTyGuloeLGOZby8Qt.jpg",
+    "optimized": {
+      "src": "/storage/releases/posters/10308/c7m9gJs2tp3CjxlijndcrfMUfCVnhRmO.webp",
+      "preview": "/storage/releases/posters/10308/c7m9gJs2tp3CjxlijndcrfMUfCVnhRmO.webp",
+      "thumbnail": "/storage/releases/posters/10308/o3vpdRKMpoj8PXBOs3UkKags4x1iyvTf.webp"
+    }
+  },
+  "fresh_at": "2026-11-10T11:23:12+00:00",
+  "created_at": "2026-08-18T22:45:29+00:00",
+  "updated_at": "2026-11-10T14:44:59+00:00",
+  "is_ongoing": true,
+  "age_rating": {
+    "value": "R16_PLUS",
+    "label": "16+",
+    "is_adult": false,
+    "description": "Для людей, достигших возраста шестнадцати лет (16+)"
+  },
+  "publish_day": {
+    "value": 1,
+    "description": "Понедельник"
+  },
+  "description": "Сато Такахиро был обычным офисным работником и заядлым любителем видеоигр, пока однажды не проснулся на борту космического корабля, удивительно похожего на самое мощное судно из его любимого космического шутера. Так что теперь у него есть навороченный корабль, а в придачу ещё и команда прекрасных девушек, ну и целая вселенная для исследования.\r\nПохоже, судьба подарила ему невероятный шанс, и Такахиро намерен воспользоваться им по полной, чтобы построить жизнь, о которой всегда мечтал.",
+  "notification": null,
+  "episodes_total": 12,
+  "external_player": null,
+  "is_in_production": true,
+  "is_blocked_by_geo": false,
+  "is_blocked_by_copyrights": false,
+  "is_comments_closed": false,
+  "comments_count": 27,
+  "added_in_users_favorites": 7609,
+  "average_duration_of_episode": 24,
+  "added_in_planned_collection": 405,
+  "added_in_watched_collection": 12,
+  "added_in_watching_collection": 871,
+  "added_in_postponed_collection": 20,
+  "added_in_abandoned_collection": 17,
+  "genres": [
+    {
+      "id": 22,
+      "name": "Фантастика",
+      "image": {
+        "preview": "/storage/anime/genres/images/22/SkMfGTRw25vgROZYw2ckIFThCj6vieKr.jpg",
+        "thumbnail": "/storage/anime/genres/images/22/ITIPuxUQTOmgnVdrWsKsvpHILkKC8XKf.jpg",
+        "optimized": {
+          "preview": "/storage/anime/genres/images/22/eWMwlRJdiIp9AVbEBvc3uNoJtPoNZZtb.webp",
+          "thumbnail": "/storage/anime/genres/images/22/BsPOUSqL5Fmd8opLAAnnv8g9B86U3iyb.webp"
+        }
+      },
+      "total_releases": 272
+    },
+    {
+      "id": 14,
+      "name": "Экшен",
+      "image": {
+        "preview": "/storage/anime/genres/images/14/HVxcEvm7oA6JQvnMKKgSdYJ90ab8Zoco.jpg",
+        "thumbnail": "/storage/anime/genres/images/14/7JeDltmth6vVUs1bG4OHq6ywRYVjbYoY.jpg",
+        "optimized": {
+          "preview": "/storage/anime/genres/images/14/FNZP4gLtDFe67Ynbthc08wRsTp5q94sx.webp",
+          "thumbnail": "/storage/anime/genres/images/14/gfzjNkJYPgeaIyQxXveaP5UblbQWadEF.webp"
+        }
+      },
+      "total_releases": 693
+    },
+    {
+      "id": 34,
+      "name": "Исекай",
+      "image": {
+        "preview": "/storage/anime/genres/images/34/kojD1QCZq7E1EiHEYIlXqpqPl387Mdq0.jpg",
+        "thumbnail": "/storage/anime/genres/images/34/bavMvL2OgW8ujeidmM3GZ7rY20lopGNo.jpg",
+        "optimized": {
+          "preview": "/storage/anime/genres/images/34/HUewoXUZAlHsb9KrW432Q6R3zLBSV63h.webp",
+          "thumbnail": "/storage/anime/genres/images/34/7yEEgekS9jZq0FSqcMtRBp8lCOU2SRy2.webp"
+        }
+      },
+      "total_releases": 46
+    }
+  ],
+  "background_covers": [],
+  "members": [
+    {
+      "id": "a2eb53bc-44de-4432-b95f-c45298857c75",
+      "role": {
+        "value": "voicing",
+        "description": "Озвучка"
+      },
+      "nickname": "Dejz",
+      "user": null
+    },
+    {
+      "id": "a2eb53c2-dde6-4420-a584-a37239319bd5",
+      "role": {
+        "value": "voicing",
+        "description": "Озвучка"
+      },
+      "nickname": "Гусь Борис",
+      "user": null
+    },
+    {
+      "id": "a2eb53df-7bd7-4f72-b092-0d7d1adc27e2",
+      "role": {
+        "value": "voicing",
+        "description": "Озвучка"
+      },
+      "nickname": "Silv",
+      "user": null
+    },
+    {
+      "id": "a2eb53e6-5f3f-4c08-b99b-fa93f9a1384f",
+      "role": {
+        "value": "voicing",
+        "description": "Озвучка"
+      },
+      "nickname": "Frederica Izzard",
+      "user": null
+    },
+    {
+      "id": "a2eb53f2-887b-491b-b445-dd84de419c17",
+      "role": {
+        "value": "decorating",
+        "description": "Оформление"
+      },
+      "nickname": "Mist",
+      "user": null
+    },
+    {
+      "id": "a2eb5406-06b8-4115-8f04-8406b0604e46",
+      "role": {
+        "value": "timing",
+        "description": "Работа со звуком"
+      },
+      "nickname": "Violin",
+      "user": {
+        "id": 332791,
+        "avatar": {
+          "preview": "/storage/users/avatars/3327/332791/278Mq0ib03NvhtDe2bXxh8Bl2laz8eSa.jpg",
+          "thumbnail": "/storage/users/avatars/3327/332791/7pwFMSeMPpesG2x9sWC7bW1T5tvE0lSR.jpg",
+          "optimized": {
+            "preview": "/storage/users/avatars/3327/332791/46wI3n5FYNDzKfzBixkaD2udKyw60yNM.webp",
+            "thumbnail": "/storage/users/avatars/3327/332791/ZL2E3Ky4wIGWP1Vv7bnkf0kh3dh18g0m.webp"
+          }
+        }
+      }
+    },
+    {
+      "id": "a2ebda75-5871-49b9-ba31-33f523308696",
+      "role": {
+        "value": "hevc",
+        "description": "Кодирование HEVC"
+      },
+      "nickname": "Tuxoid",
+      "user": null
+    }
+  ],
+  "sponsors": [],
+  "episodes": [
+    {
+      "id": "a2ebd9c9-afba-4f13-92c4-fe931656e945",
+      "name": null,
+      "ordinal": 1,
+      "opening": {
+        "stop": 155,
+        "start": 65
+      },
+      "ending": {
+        "stop": 1415,
+        "start": 1326
+      },
+      "preview": {
+        "src": "/storage/releases/episodes/previews/10308/1/2W07NAde2LtEGM81.jpg",
+        "preview": "/storage/releases/episodes/previews/10308/1/2W07NAde2LtEGM81.jpg",
+        "thumbnail": "/storage/releases/episodes/previews/10308/1/2W07NAde2LtEGM81__d9798758e94fc4f3c595585b7cf23ab4.jpg",
+        "optimized": {
+          "src": "/storage/releases/episodes/previews/10308/1/2W07NAde2LtEGM81__87edad3def24e575240d774bfe6129d6.webp",
+          "preview": "/storage/releases/episodes/previews/10308/1/2W07NAde2LtEGM81__87edad3def24e575240d774bfe6129d6.webp",
+          "thumbnail": "/storage/releases/episodes/previews/10308/1/2W07NAde2LtEGM81__1eab3cbc99bcaf4d26f4553ad3507b78.webp"
+        }
+      },
+      "hls_480": "https://cache.libria.fun/videos/media/ts/10308/1/480/0d1bf6f9fb0b578caedde4c02ac30b28.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "hls_720": "https://cache.libria.fun/videos/media/ts/10308/1/720/20e907147d6ad181042522d820589627.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "hls_1080": "https://cache.libria.fun/videos/media/ts/10308/1/1080/1d79e663ec74527ea47d856866cc9416.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "duration": 1421,
+      "rutube_id": null,
+      "youtube_id": null,
+      "updated_at": "2026-10-07T16:31:14+00:00",
+      "sort_order": 1,
+      "release_id": 10308,
+      "name_english": null
+    },
+    {
+      "id": "a2f6aa3b-e31e-483b-9cc6-215570cc6689",
+      "name": null,
+      "ordinal": 2,
+      "opening": {
+        "stop": 124,
+        "start": 34
+      },
+      "ending": {
+        "stop": 1396,
+        "start": 1306
+      },
+      "preview": {
+        "src": "/storage/releases/episodes/previews/10308/2/IG15AefemNVg5xgG.jpg",
+        "preview": "/storage/releases/episodes/previews/10308/2/IG15AefemNVg5xgG.jpg",
+        "thumbnail": "/storage/releases/episodes/previews/10308/2/IG15AefemNVg5xgG__b300b48e13d600b54c258b003af70a97.jpg",
+        "optimized": {
+          "src": "/storage/releases/episodes/previews/10308/2/IG15AefemNVg5xgG__cb1309d4ffeebfd4f1cc1fecf70fd0c1.webp",
+          "preview": "/storage/releases/episodes/previews/10308/2/IG15AefemNVg5xgG__cb1309d4ffeebfd4f1cc1fecf70fd0c1.webp",
+          "thumbnail": "/storage/releases/episodes/previews/10308/2/IG15AefemNVg5xgG__adca21dcde838b83f30df6698df4bf7f.webp"
+        }
+      },
+      "hls_480": "https://cache.libria.fun/videos/media/ts/10308/2/480/022f3eb283e21ad5dc8dfdab12536095.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "hls_720": "https://cache.libria.fun/videos/media/ts/10308/2/720/4f5cdc1cf22a0978dfb7ae38c2bb5f04.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "hls_1080": "https://cache.libria.fun/videos/media/ts/10308/2/1080/d6cfd645565e40c62aad824c22862b72.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "duration": 1421,
+      "rutube_id": null,
+      "youtube_id": null,
+      "updated_at": "2026-10-12T11:28:09+00:00",
+      "sort_order": 2,
+      "release_id": 10308,
+      "name_english": null
+    },
+    {
+      "id": "a3056a9e-692c-40d5-9278-679c22d02046",
+      "name": null,
+      "ordinal": 3,
+      "opening": {
+        "stop": 162,
+        "start": 72
+      },
+      "ending": {
+        "stop": 1380,
+        "start": 1290
+      },
+      "preview": {
+        "src": "/storage/releases/episodes/previews/10308/3/Q0MROj9xicC72HnA.jpg",
+        "preview": "/storage/releases/episodes/previews/10308/3/Q0MROj9xicC72HnA.jpg",
+        "thumbnail": "/storage/releases/episodes/previews/10308/3/Q0MROj9xicC72HnA__e722b24ef9bfdf1f758a477ca82f90d5.jpg",
+        "optimized": {
+          "src": "/storage/releases/episodes/previews/10308/3/Q0MROj9xicC72HnA__d83d651ea8e72ebf6bfc6dc03ce1ed6e.webp",
+          "preview": "/storage/releases/episodes/previews/10308/3/Q0MROj9xicC72HnA__d83d651ea8e72ebf6bfc6dc03ce1ed6e.webp",
+          "thumbnail": "/storage/releases/episodes/previews/10308/3/Q0MROj9xicC72HnA__9c49f161c77f97495bcf84be6ae29029.webp"
+        }
+      },
+      "hls_480": "https://cache.libria.fun/videos/media/ts/10308/3/480/5e7a758927f9f33295b5ab7773dc728e.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "hls_720": "https://cache.libria.fun/videos/media/ts/10308/3/720/a588f0f34ddcc62cde432df218bf4f74.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "hls_1080": "https://cache.libria.fun/videos/media/ts/10308/3/1080/c2c579dbfc545f6d2b99f9b1449f8ffb.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "duration": 1423,
+      "rutube_id": null,
+      "youtube_id": null,
+      "updated_at": "2026-10-19T20:08:55+00:00",
+      "sort_order": 3,
+      "release_id": 10308,
+      "name_english": null
+    },
+    {
+      "id": "a3135be5-19a6-43c3-a278-075f4b9cffde",
+      "name": null,
+      "ordinal": 4,
+      "opening": {
+        "stop": 176,
+        "start": 86
+      },
+      "ending": {
+        "stop": 1415,
+        "start": 1325
+      },
+      "preview": {
+        "src": "/storage/releases/episodes/previews/10308/4/I1IF0ijG5gUgvP6o.jpg",
+        "preview": "/storage/releases/episodes/previews/10308/4/I1IF0ijG5gUgvP6o.jpg",
+        "thumbnail": "/storage/releases/episodes/previews/10308/4/I1IF0ijG5gUgvP6o__6161871611d8d60db896718f592dc9ef.jpg",
+        "optimized": {
+          "src": "/storage/releases/episodes/previews/10308/4/I1IF0ijG5gUgvP6o__ba64c9da58652b969c426772c986baea.webp",
+          "preview": "/storage/releases/episodes/previews/10308/4/I1IF0ijG5gUgvP6o__ba64c9da58652b969c426772c986baea.webp",
+          "thumbnail": "/storage/releases/episodes/previews/10308/4/I1IF0ijG5gUgvP6o__abd1545c00ee295887aaaa2b0a1dfcd6.webp"
+        }
+      },
+      "hls_480": "https://cache.libria.fun/videos/media/ts/10308/4/480/22c948125338c0a45da4af63e64063b3.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "hls_720": "https://cache.libria.fun/videos/media/ts/10308/4/720/a338e74f9359665e72f11c1ce7613809.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "hls_1080": "https://cache.libria.fun/videos/media/ts/10308/4/1080/6abe42db727eade1b711406881e472e9.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "duration": 1421,
+      "rutube_id": null,
+      "youtube_id": null,
+      "updated_at": "2026-10-26T17:57:22+00:00",
+      "sort_order": 4,
+      "release_id": 10308,
+      "name_english": null
+    },
+    {
+      "id": "a321996d-3270-40b2-8345-a9a2aff38a12",
+      "name": null,
+      "ordinal": 5,
+      "opening": {
+        "stop": 169,
+        "start": 79
+      },
+      "ending": {
+        "stop": 1415,
+        "start": 1325
+      },
+      "preview": {
+        "src": "/storage/releases/episodes/previews/10308/5/i3W4sbsep3GDNEDh.jpg",
+        "preview": "/storage/releases/episodes/previews/10308/5/i3W4sbsep3GDNEDh.jpg",
+        "thumbnail": "/storage/releases/episodes/previews/10308/5/i3W4sbsep3GDNEDh__ffc114f2c27e1d13e5ded3cfbbb67a2d.jpg",
+        "optimized": {
+          "src": "/storage/releases/episodes/previews/10308/5/i3W4sbsep3GDNEDh__b0830f78f40ac9c2d8c6c93f4dd5a787.webp",
+          "preview": "/storage/releases/episodes/previews/10308/5/i3W4sbsep3GDNEDh__b0830f78f40ac9c2d8c6c93f4dd5a787.webp",
+          "thumbnail": "/storage/releases/episodes/previews/10308/5/i3W4sbsep3GDNEDh__a32e25039d3f35c9c125ca8efe9e4965.webp"
+        }
+      },
+      "hls_480": "https://cache.libria.fun/videos/media/ts/10308/5/480/b04f15e28e5bbbbc3d13f20fc7ea60ac.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "hls_720": "https://cache.libria.fun/videos/media/ts/10308/5/720/078c5bf379da026ec0851caddd5eafd5.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "hls_1080": "https://cache.libria.fun/videos/media/ts/10308/5/1080/9717bd016777184836322d197c20d054.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "duration": 1440,
+      "rutube_id": null,
+      "youtube_id": null,
+      "updated_at": "2026-11-02T20:00:00+00:00",
+      "sort_order": 5,
+      "release_id": 10308,
+      "name_english": null
+    },
+    {
+      "id": "a330e9e2-1a21-46e6-bc8f-efc761bb97cb",
+      "name": null,
+      "ordinal": 6,
+      "opening": {
+        "stop": 168,
+        "start": 78
+      },
+      "ending": {
+        "stop": 1392,
+        "start": 1302
+      },
+      "preview": {
+        "src": "/storage/releases/episodes/previews/10308/6/tXiTgLSr0rzJST7a.jpg",
+        "preview": "/storage/releases/episodes/previews/10308/6/tXiTgLSr0rzJST7a.jpg",
+        "thumbnail": "/storage/releases/episodes/previews/10308/6/tXiTgLSr0rzJST7a__99f13fbecce4a1716a6ceec610ec4a0b.jpg",
+        "optimized": {
+          "src": "/storage/releases/episodes/previews/10308/6/tXiTgLSr0rzJST7a__efd8c05352e8e0811a78234be8f32cf3.webp",
+          "preview": "/storage/releases/episodes/previews/10308/6/tXiTgLSr0rzJST7a__efd8c05352e8e0811a78234be8f32cf3.webp",
+          "thumbnail": "/storage/releases/episodes/previews/10308/6/tXiTgLSr0rzJST7a__a3b55c0ebb6bf8c8266a45b6d7ff8d88.webp"
+        }
+      },
+      "hls_480": "https://cache.libria.fun/videos/media/ts/10308/6/480/6fb3e4fdb61d6ecafe0574dd0a12c349.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "hls_720": "https://cache.libria.fun/videos/media/ts/10308/6/720/c4fe3fc55909c227bf69195c9103f02f.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "hls_1080": "https://cache.libria.fun/videos/media/ts/10308/6/1080/0fc385e47491ff7764fb53f9cc4db591.m3u8?countryIso=FI&isAuthorized=0&isWithVideoAds=1&isWithVideoAdsAlways=1",
+      "duration": 1422,
+      "rutube_id": null,
+      "youtube_id": null,
+      "updated_at": "2026-11-10T11:00:28+00:00",
+      "sort_order": 6,
+      "release_id": 10308,
+      "name_english": null
+    }
+  ],
+  "torrents": [
+    {
+      "id": 40735,
+      "hash": "029eab86f7a1390e142a58ca010a1809723d8eba",
+      "size": 9063905576,
+      "type": {
+        "value": "WEB-DL",
+        "description": "WEB-DL"
+      },
+      "label": "Mezametara Saikyou Soubi to Uchuusenmochi Datta node, Ikkodate Mezashite Youhei toshite Jiyuu ni Ikitai - AniLiberty.TOP [WEB-DL 1080p][AVC][1-6]",
+      "codec": {
+        "value": "x264/AVC",
+        "label": "AVC",
+        "description": "x264/AVC",
+        "label_color": null,
+        "label_is_visible": false
+      },
+      "color": {
+        "value": "8bit",
+        "description": "8-bit"
+      },
+      "magnet": "magnet:?xt=urn:btih:029eab86f7a1390e142a58ca010a1809723d8eba&dn=Saukyosoubi+-+AniLiberty+%5BWEB-DL+1080p%5D&xl=9063905576&tr=http://tr.libria.fun:2710/announce&tr=http://retracker.local/announce",
+      "seeders": 35,
+      "quality": {
+        "value": "1080p",
+        "description": "1080p"
+      },
+      "bitrate": null,
+      "filename": "Mezametara Saikyou Soubi to Uchuusenmochi Datta node, Ikkodate Mezashite Youhei toshite Jiyuu ni Ikitai - AniLiberty.TOP [WEB-DL 1080p][AVC][1-6].torrent",
+      "leechers": 33,
+      "sort_order": 0,
+      "created_at": "2026-10-07T02:03:04+00:00",
+      "updated_at": "2026-11-10T10:26:14+00:00",
+      "is_hardsub": true,
+      "description": "1-6",
+      "completed_times": 1415,
+      "release": {
+        "id": 10308,
+        "type": {
+          "value": "TV",
+          "description": "ТВ"
+        },
+        "year": 2026,
+        "name": {
+          "main": "Я очнулся будучи пилотом сильнейшего космического корабля, а потому решил стать межгалактическим наёмником",
+          "english": "Mezametara Saikyou Soubi to Uchuusenmochi Datta node, Ikkodate Mezashite Youhei toshite Jiyuu ni Ikitai",
+          "alternative": null
+        },
+        "alias": "mezametara-saikyou-soubi-to-uchuusenmochi-datta-node-ikkodate-mezashite-youhei-toshite-jiyuu-ni-ikitai",
+        "season": {
+          "value": "autumn",
+          "description": "Осень"
+        },
+        "shikimori": {
+          "id": 60948,
+          "url": "https://shikimori.io/animes/60948",
+          "votes": 355,
+          "rating": 7.61
+        },
+        "mal": {
+          "id": 60948,
+          "url": "https://myanimelist.net/anime/60948",
+          "votes": 4704,
+          "rating": 6.84
+        },
+        "rating": {
+          "average": 8,
+          "votes": 1,
+          "distribution": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 0,
+            "5": 0,
+            "6": 0,
+            "7": 0,
+            "8": 1,
+            "9": 0,
+            "10": 0
+          }
+        },
+        "poster": {
+          "src": "/storage/releases/posters/10308/wly8lALsOIYNPIJSHyrIXCYpNx2VATyE.jpg",
+          "preview": "/storage/releases/posters/10308/wly8lALsOIYNPIJSHyrIXCYpNx2VATyE.jpg",
+          "thumbnail": "/storage/releases/posters/10308/KvBdGfZqnUfa7utMTyGuloeLGOZby8Qt.jpg",
+          "optimized": {
+            "src": "/storage/releases/posters/10308/c7m9gJs2tp3CjxlijndcrfMUfCVnhRmO.webp",
+            "preview": "/storage/releases/posters/10308/c7m9gJs2tp3CjxlijndcrfMUfCVnhRmO.webp",
+            "thumbnail": "/storage/releases/posters/10308/o3vpdRKMpoj8PXBOs3UkKags4x1iyvTf.webp"
+          }
+        },
+        "fresh_at": "2026-11-10T11:23:12+00:00",
+        "created_at": "2026-08-18T22:45:29+00:00",
+        "updated_at": "2026-11-10T14:44:59+00:00",
+        "is_ongoing": true,
+        "age_rating": {
+          "value": "R16_PLUS",
+          "label": "16+",
+          "is_adult": false,
+          "description": "Для людей, достигших возраста шестнадцати лет (16+)"
+        },
+        "publish_day": {
+          "value": 1,
+          "description": "Понедельник"
+        },
+        "description": "Сато Такахиро был обычным офисным работником и заядлым любителем видеоигр, пока однажды не проснулся на борту космического корабля, удивительно похожего на самое мощное судно из его любимого космического шутера. Так что теперь у него есть навороченный корабль, а в придачу ещё и команда прекрасных девушек, ну и целая вселенная для исследования.\r\nПохоже, судьба подарила ему невероятный шанс, и Такахиро намерен воспользоваться им по полной, чтобы построить жизнь, о которой всегда мечтал.",
+        "notification": null,
+        "episodes_total": 12,
+        "external_player": null,
+        "is_in_production": true,
+        "is_blocked_by_geo": false,
+        "is_blocked_by_copyrights": false,
+        "is_comments_closed": false,
+        "comments_count": 27,
+        "added_in_users_favorites": 7609,
+        "average_duration_of_episode": 24,
+        "added_in_planned_collection": 405,
+        "added_in_watched_collection": 12,
+        "added_in_watching_collection": 871,
+        "added_in_postponed_collection": 20,
+        "added_in_abandoned_collection": 17
+      }
+    },
+    {
+      "id": 40739,
+      "hash": "9228072b92efb29d11f6190c09ea0ef488e12df1",
+      "size": 1158672106,
+      "type": {
+        "value": "WEB-DL",
+        "description": "WEB-DL"
+      },
+      "label": "Mezametara Saikyou Soubi to Uchuusenmochi Datta node, Ikkodate Mezashite Youhei toshite Jiyuu ni Ikitai - AniLiberty.TOP [WEB-DL 1080p][HEVC][1-6]",
+      "codec": {
+        "value": "x265/HEVC",
+        "label": "HEVC",
+        "description": "x265/HEVC",
+        "label_color": "#FFEB3B",
+        "label_is_visible": true
+      },
+      "color": {
+        "value": "10Bit",
+        "description": "10-bit"
+      },
+      "magnet": "magnet:?xt=urn:btih:9228072b92efb29d11f6190c09ea0ef488e12df1&dn=Saukyosoubi+-+AniLiberty+%5BWEB-DL+1080p+HEVC%5D&xl=1158672106&tr=http://tr.libria.fun:2710/announce&tr=http://retracker.local/announce",
+      "seeders": 0,
+      "quality": {
+        "value": "1080p",
+        "description": "1080p"
+      },
+      "bitrate": null,
+      "filename": "Mezametara Saikyou Soubi to Uchuusenmochi Datta node, Ikkodate Mezashite Youhei toshite Jiyuu ni Ikitai - AniLiberty.TOP [WEB-DL 1080p][HEVC][1-6].torrent",
+      "leechers": 106,
+      "sort_order": 0,
+      "created_at": "2026-10-07T08:11:30+00:00",
+      "updated_at": "2026-11-10T14:44:59+00:00",
+      "is_hardsub": true,
+      "description": "1-6",
+      "completed_times": 2158,
+      "release": {
+        "id": 10308,
+        "type": {
+          "value": "TV",
+          "description": "ТВ"
+        },
+        "year": 2026,
+        "name": {
+          "main": "Я очнулся будучи пилотом сильнейшего космического корабля, а потому решил стать межгалактическим наёмником",
+          "english": "Mezametara Saikyou Soubi to Uchuusenmochi Datta node, Ikkodate Mezashite Youhei toshite Jiyuu ni Ikitai",
+          "alternative": null
+        },
+        "alias": "mezametara-saikyou-soubi-to-uchuusenmochi-datta-node-ikkodate-mezashite-youhei-toshite-jiyuu-ni-ikitai",
+        "season": {
+          "value": "autumn",
+          "description": "Осень"
+        },
+        "shikimori": {
+          "id": 60948,
+          "url": "https://shikimori.io/animes/60948",
+          "votes": 355,
+          "rating": 7.61
+        },
+        "mal": {
+          "id": 60948,
+          "url": "https://myanimelist.net/anime/60948",
+          "votes": 4704,
+          "rating": 6.84
+        },
+        "rating": {
+          "average": 8,
+          "votes": 1,
+          "distribution": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 0,
+            "5": 0,
+            "6": 0,
+            "7": 0,
+            "8": 1,
+            "9": 0,
+            "10": 0
+          }
+        },
+        "poster": {
+          "src": "/storage/releases/posters/10308/wly8lALsOIYNPIJSHyrIXCYpNx2VATyE.jpg",
+          "preview": "/storage/releases/posters/10308/wly8lALsOIYNPIJSHyrIXCYpNx2VATyE.jpg",
+          "thumbnail": "/storage/releases/posters/10308/KvBdGfZqnUfa7utMTyGuloeLGOZby8Qt.jpg",
+          "optimized": {
+            "src": "/storage/releases/posters/10308/c7m9gJs2tp3CjxlijndcrfMUfCVnhRmO.webp",
+            "preview": "/storage/releases/posters/10308/c7m9gJs2tp3CjxlijndcrfMUfCVnhRmO.webp",
+            "thumbnail": "/storage/releases/posters/10308/o3vpdRKMpoj8PXBOs3UkKags4x1iyvTf.webp"
+          }
+        },
+        "fresh_at": "2026-11-10T11:23:12+00:00",
+        "created_at": "2026-08-18T22:45:29+00:00",
+        "updated_at": "2026-11-10T14:44:59+00:00",
+        "is_ongoing": true,
+        "age_rating": {
+          "value": "R16_PLUS",
+          "label": "16+",
+          "is_adult": false,
+          "description": "Для людей, достигших возраста шестнадцати лет (16+)"
+        },
+        "publish_day": {
+          "value": 1,
+          "description": "Понедельник"
+        },
+        "description": "Сато Такахиро был обычным офисным работником и заядлым любителем видеоигр, пока однажды не проснулся на борту космического корабля, удивительно похожего на самое мощное судно из его любимого космического шутера. Так что теперь у него есть навороченный корабль, а в придачу ещё и команда прекрасных девушек, ну и целая вселенная для исследования.\r\nПохоже, судьба подарила ему невероятный шанс, и Такахиро намерен воспользоваться им по полной, чтобы построить жизнь, о которой всегда мечтал.",
+        "notification": null,
+        "episodes_total": 12,
+        "external_player": null,
+        "is_in_production": true,
+        "is_blocked_by_geo": false,
+        "is_blocked_by_copyrights": false,
+        "is_comments_closed": false,
+        "comments_count": 27,
+        "added_in_users_favorites": 7609,
+        "average_duration_of_episode": 24,
+        "added_in_planned_collection": 405,
+        "added_in_watched_collection": 12,
+        "added_in_watching_collection": 871,
+        "added_in_postponed_collection": 20,
+        "added_in_abandoned_collection": 17
+      }
+    }
+  ]
+}

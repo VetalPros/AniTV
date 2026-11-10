@@ -111,7 +111,7 @@ claim, not evidence, and the Lead must run the build and tests itself.
 
 **Context.** The project is fully open source and permissively licensed forks are welcome.
 
-**Decision.** MIT (`LICENSE`, "Copyright (c) 2026 anitv contributors"). Confirmed by the project
+**Decision.** MIT (`LICENSE`, "Copyright (c) 2026 AniTV contributors"). Confirmed by the project
 owner.
 
 **Consequences.** Forks may ship closed derivatives — accepted. No patent grant (unlike
@@ -131,3 +131,42 @@ tvOS deployment target at **26.0**. No second SDK is installed.
 runtime failures are what matter, so anything newer must be guarded by `#available` or avoided.
 The simulator runs 27.2, so 26.0-only behaviour is never exercised directly; that is accepted until
 a real device or a 26.x runtime is available.
+
+---
+
+## 0010 — Modifier ordering belongs to SwiftFormat, not SwiftLint (2026-11-10)
+
+**Context.** SwiftFormat 0.64.6 and SwiftLint 0.65.1 demand opposite modifier orders for
+`nonisolated` members. The formatter writes `private nonisolated static func …`; the linter's
+`modifier_order` rule wants `nonisolated private static func …`. SwiftLint 0.65.1 has no
+`nonisolated` token in `preferred_modifier_order`, so any attempt to align the order is rejected
+with "Invalid configuration" and the rule silently falls back to its default. Running both gates
+therefore made the two tools fight over the same two files, with no convergent state.
+
+**Decision.** `modifier_order` is listed in `disabled_rules` of `.swiftlint.yml` (with the reason
+written next to it). Modifier ordering is owned by SwiftFormat and still enforced in CI through
+`swiftformat --lint .`, which runs before `swiftlint --strict`. No other rule is relaxed.
+Additional consequence recorded at the same time: `identifier_name` excludes the geometry
+identifiers `x`, `y`, `i`, `j`, `dx`, `dy`, which are meaningful in layout code.
+
+**Consequences.** One gate owns this concern instead of two contradictory ones; anything a
+formatter normalises must not also be policed by the linter. Revisit when a SwiftLint release
+accepts `nonisolated` in `preferred_modifier_order` — then the rule can be re-enabled in the
+formatter's order.
+
+---
+
+## 0011 — Shared error mapping on the Kit type, not per view model (2026-11-10)
+
+**Context.** Two view models (`ReleaseDetailViewModel`, `LatestReleasesViewModel`) each carried an
+identical `mapError` helper, and both tripped the SwiftLint/SwiftFormat `nonisolated` modifier-order
+conflict (ADR 0010) because the helper needed `nonisolated static func`.
+
+**Decision.** The mapping lives once as an extension on the Kit type
+(`AniLibertyError.mapped(_:)` in `App/Sources/Support/AniLibertyError+Mapping.swift`). A non-actor
+type's extension is implicitly `nonisolated`, so no attribute — and therefore no ordering conflict —
+is involved.
+
+**Consequences.** Duplication removed, and the tool conflict can no longer recur through this path.
+The mapping stays in the app (not the Kit) because it converts transport-level errors into the Kit's
+error type and would otherwise pull Foundation networking semantics into the Kit's public surface.
