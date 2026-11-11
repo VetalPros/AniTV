@@ -63,6 +63,7 @@ struct EpisodeCard: View {
         .opacity(isPlayable ? 1 : 0.45)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(verbatim: episode.displayTitle))
+        .accessibilityIdentifier("detail.episodeCard")
     }
 
     /// Short technical label ("480p" / "720p" / "1080p"); `nil` means the episode cannot be played.

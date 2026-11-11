@@ -170,3 +170,49 @@ is involved.
 **Consequences.** Duplication removed, and the tool conflict can no longer recur through this path.
 The mapping stays in the app (not the Kit) because it converts transport-level errors into the Kit's
 error type and would otherwise pull Foundation networking semantics into the Kit's public surface.
+
+---
+
+## 0012 — UI verification goes through XCUITest, and the detail screen claims focus itself (2026-11-11)
+
+**Context.** The first vertical slice was proven only as far as "the feed renders real data": the
+installed Xcode ships **no `Simulator.app`** (`find /Applications/Xcode.app -name Simulator.app`
+returns nothing, and `open -a Simulator` fails with "there is no such file"), so neither a human click
+nor AppleScript/System Events can deliver input to the tvOS simulator. `simctl` has no remote-input
+command at all. A `bundle.ui-testing` target (`AniTVUITests`, driven by `XCUIRemote`) is then the only
+way to exercise the remote, and it is also the only repeatable one.
+
+Writing that test surfaced a real defect rather than a test problem: after the detail screen was
+pushed, nothing on it held focus, so a Menu press was handled by the system and backgrounded the app
+instead of popping the navigation stack. A pushed screen that refetches its own data has no focusable
+content at push time, and the focus engine does not pick one up when the content arrives.
+
+**Decision.** Keep the end-to-end scenarios as XCUITests in `App/UITests/`, assert on
+`accessibilityIdentifier`s rather than on coordinates or Russian strings, and take screenshots as
+`XCTAttachment`s so the evidence survives the run (`docs/screenshots/` is exported from them). The
+detail screen declares `defaultFocus(_:priority: .userInitiated)` on its primary action (the synopsis
+toggle when the release is not playable) and re-requests focus once after the push transition, because
+the engine drops requests made during the transition.
+
+**Consequences.** "The screen compiles" and "the screen works" are now separable: `-only-testing:
+AniTVUITests` answers the second question, and it is the only path to it in this environment. The test
+depends on the live AniLiberty API and a booted simulator, so it is slow and it is advisory in CI
+(ADR 0013). Each new interactive surface is expected to come with an identifier and a scenario.
+
+---
+
+## 0013 — The UI test job in CI is advisory, not required (2026-11-11)
+
+**Context.** The `ui-tests` job runs the XCUITest suite on a GitHub-hosted macOS runner. It boots a
+tvOS simulator (slow and, on a developer machine, occasionally wedged), waits for the live AniLiberty
+API, and had never been executed on a hosted runner when it was written — the only evidence is green
+local runs.
+
+**Decision.** Add the job as an **advisory** check: `continue-on-error: true` on the test step, the
+failing `.xcresult` uploaded as an artifact and a warning written to the job summary. `build-test-lint`
+stays the required gate. The job is not listed in branch protection as required.
+
+**Consequences.** A red UI run is visible but never blocks a pull request, and the failure mode of the
+job itself (runner image without a tvOS runtime, tool download failing) cannot turn `main` red. Promote
+it to required by deleting `continue-on-error: true` after a track record on that runner; if it turns
+out to be flaky only because of simulator boot time, move it to a `schedule:` trigger instead.

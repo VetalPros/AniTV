@@ -52,11 +52,28 @@ targets:
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
 
+  AniTVUITests:
+    type: bundle.ui-testing
+    platform: tvOS
+    sources:
+      - path: App/UITests
+    dependencies:
+      - target: AniTV
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: tv.anitv.client.uitests
+        TEST_TARGET_NAME: AniTV
+        GENERATE_INFOPLIST_FILE: YES
+
 schemes:
   AniTV:
     build:
       targets:
         AniTV: all
+    test:
+      config: Debug
+      targets:
+        - AniTVUITests
     run:
       config: Debug
     archive:

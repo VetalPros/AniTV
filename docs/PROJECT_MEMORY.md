@@ -2,13 +2,14 @@
 
 > Update this file at the end of every session that changes the project's state.
 > Rules and constraints live in `AGENTS.md`; decisions live in `docs/DECISIONS.md`.
-> Last updated: **2026-11-10** (session: first vertical slice — scaffolding + release feed).
+> Last updated: **2026-11-11** (session: UI verification — feed → detail → player proven by XCUITest,
+> CI UI-test job, screenshots).
 
 ## Snapshot
 
 | Item | Value |
 | --- | --- |
-| Stage | **Vertical slice 1 works.** Scaffold + live "Latest releases" feed on the tvOS simulator |
+| Stage | **Vertical slice 1 is end-to-end verified.** Feed, release detail and player driven by XCUITest on the tvOS simulator |
 | Target platform | tvOS 26.0 (single target for now) |
 | Distribution | TestFlight / ad-hoc only. App Store out of scope |
 | Apple Developer | **Free** account (7-day profiles, 3 devices, no App Groups/CloudKit/Push) |
@@ -36,6 +37,16 @@
     **swiftlint 0.65.1**, **swiftformat 0.64.6**.
 - No standalone "Apple TV emulator" exists: the tvOS **Simulator** ships inside Xcode and is driven
   by `xcrun simctl` / `xcodebuild`.
+- **No `Simulator.app` in this Xcode**: `/Applications/Xcode.app/Contents/Developer/Applications` does
+  not exist and `open -a Simulator` fails. The simulator is headless-only (`simctl`), so nothing can be
+  clicked by hand and AppleScript/System Events cannot drive it — input has to come from XCUITest
+  (`XCUIRemote`). Screenshots come from `xcrun simctl io booted screenshot` or `XCTAttachment`.
+- The tvOS runtime is a **patchable cryptex disk image**. It can silently stop being reachable —
+  `simctl list runtimes` prints nothing and devices show `unavailable, runtime profile not found
+  using "System" match policy`, after which every `xcodebuild test` fails with "The tvOS 27.2 simulator
+  runtime is not available. runtime path not found". Recovery, verified 2026-11-11:
+  `xcrun simctl runtime scan-and-mount` (the `simctl runtime list` entry still says `Ready` with a
+  `mountPath` under `/private/var/run/com.apple.security.cryptexd/mnt/`).
 
 ## Done
 
@@ -72,17 +83,35 @@ First vertical slice (feed from the network):
 - [x] Gates green: `swiftformat --lint .` → 0/48 files; `swiftlint --strict` → 0 violations in 48 files;
       `xcodebuild … build` → `** BUILD SUCCEEDED **`, no Swift warnings; `swift test` → 25 tests pass.
 
+UI verification (2026-11-11, XCUITest — the only way to deliver input here, ADR 0012):
+- [x] `AniTVUITests` target in `project.yml` (`bundle.ui-testing`, `TEST_TARGET_NAME: AniTV`) wired into
+      the `AniTV` scheme's test action; `App/UITests/LatestFeedUITests.swift` holds two scenarios.
+- [x] Scenario 1 (feed → detail → back): Down presses move focus onto a poster, Select pushes the
+      detail screen, the selected title is on it, Menu pops back to the feed.
+      `Test Case … testSelectingPosterOpensDetailAndMenuReturnsToFeed passed`.
+- [x] Scenario 2 (detail → player → back): Select on the focused play button presents `player.screen`
+      (a real HLS stream starts — the first frame and the system transport bar are visible in the
+      attachment), Menu dismisses it back to the detail screen.
+      `Test Case … testPlayButtonOpensPlayerAndMenuReturnsToDetail passed`.
+- [x] Whole suite: `** TEST SUCCEEDED **`, 2 tests, no failures — repeated on 2026-11-11 after a
+      simulator reboot and again after the runtime was remounted with `simctl runtime scan-and-mount`.
+- [x] Fixed by that work: Menu on the detail screen backgrounded the app instead of popping, because
+      the pushed screen had nothing focused (ADR 0012).
+- [x] Screenshots taken by the tests themselves (`XCTAttachment` → `xcresulttool export attachments`),
+      committed as `docs/screenshots/{feed,detail,player}.jpg` and shown in `README.md`.
+- [x] Gates re-run on 2026-11-11: `swiftformat --lint .` → 0/49 files require formatting;
+      `swiftlint --strict` → 0 violations in 49 files; `swift test` → 25 tests in 4 suites pass.
+
 ## Next steps (ordered)
 
-1. **Prove the rest of the slice by hand**: open a poster → detail screen → episode → playback.
-   The detail and player screens compile and are wired, but no remote input has been delivered to the
-   simulator yet, so their behaviour is **unverified**. Needs a manual run (simulator + remote) or an
-   XCUITest target.
-2. App icon (layered tvOS icon: 2 layers + App Icon) and Top Shelf decision (static or none, given the
+1. App icon (layered tvOS icon: 2 layers + App Icon) and Top Shelf decision (static or none, given the
    free account cannot share app data).
-3. Каталог tab (genres + catalogue listing) and Профиль tab (Keychain-stored token, login state).
+2. Каталог tab (genres + catalogue listing) and Профиль tab (Keychain-stored token, login state).
+3. Episodes → player from the *episode card* (the current test starts playback from the hero button);
+   plus resume/timecode behaviour, which no test covers yet.
 4. Cache/conditional-request pass on the API client (ETag / `If-None-Match`), per the politeness rule.
-5. Pin `xcode-select` in CI if the `macos-26` image starts shipping a different default Xcode.
+5. Watch the advisory `ui-tests` CI job on a real GitHub runner; only then consider making it required
+   (ADR 0013). Also pin `xcode-select` if the `macos-26` image starts shipping a different default Xcode.
 6. Decide the final product name / bundle identifier **before** the repository goes public (renaming the
    directory means re-registering the DSH workspace).
 
@@ -99,6 +128,9 @@ First vertical slice (feed from the network):
   static Top Shelf imagery or no Top Shelf at all.
 - 7-day signing expiry means the app on a physical Apple TV stops launching weekly until re-signed.
 - The old `api.anilibria.tv` host is gone (HTTP 410). Only `aniliberty.top` / `anilibria.top` work.
+- The tvOS simulator runtime unmounts itself occasionally; `xcrun simctl runtime scan-and-mount` brings it
+  back without re-downloading (see Environment facts). A `simctl bootstatus -b` can fail with "cannot
+  determine the runtime bundle" on a device that `xcodebuild test` then boots by UDID without trouble.
 - DSH loads `AGENTS.md` from the repo root (marked by `.git`) down to the session working directory,
   plus a user-global `$DSH_HOME/AGENTS.md`. Nested `AGENTS.md` files are picked up after the agent
   successfully touches a file in that subtree — they are not preloaded.

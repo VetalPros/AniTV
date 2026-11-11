@@ -6,6 +6,16 @@ import SwiftUI
 struct ReleaseDetailView: View {
     @State private var model: ReleaseDetailViewModel
     @State private var playbackTarget: PlaybackRequest?
+    @FocusState private var focusedControl: FocusedControl?
+
+    /// The screen refetches on its own, so at push time it usually has nothing focusable yet. When
+    /// the hero finally appears the focus engine has already dropped focus, and on tvOS a Menu
+    /// press with nothing focused is handled by the system, which backgrounds the app instead of
+    /// popping back to the feed. The screen therefore claims focus itself as soon as it can.
+    private enum FocusedControl: Hashable {
+        case play
+        case synopsisToggle
+    }
 
     init(route: ReleaseRoute) {
         _model = State(initialValue: ReleaseDetailViewModel(route: route))
@@ -54,6 +64,27 @@ struct ReleaseDetailView: View {
             .padding(.bottom, 88)
         }
         .scrollClipDisabled()
+        .accessibilityIdentifier("detail.screen")
+        .defaultFocus($focusedControl, defaultControl, priority: .userInitiated)
+        .onAppear(perform: takeDefaultFocus)
+    }
+
+    /// The control that owns focus when the screen opens: the primary action, or the synopsis
+    /// toggle when there is nothing playable.
+    private var defaultControl: FocusedControl {
+        model.isPlayable ? .play : .synopsisToggle
+    }
+
+    /// Asks for focus once the content is in the hierarchy. The assignment is made on the next turn
+    /// of the run loop because the push transition is often still running when the hero appears and
+    /// the focus engine drops requests made during it.
+    private func takeDefaultFocus() {
+        let control = defaultControl
+        Task {
+            focusedControl = control
+            try? await Task.sleep(for: .milliseconds(400))
+            focusedControl = control
+        }
     }
 
     // MARK: Hero
@@ -150,6 +181,8 @@ struct ReleaseDetailView: View {
         .disabled(!model.isPlayable)
         .opacity(model.isPlayable ? 1 : 0.5)
         .accessibilityHint(Text(model.playableEpisode?.displayTitle ?? ""))
+        .focused($focusedControl, equals: .play)
+        .accessibilityIdentifier("detail.playButton")
     }
 
     // MARK: Genres
@@ -194,6 +227,8 @@ struct ReleaseDetailView: View {
                     }
                 }
                 .buttonStyle(.glass)
+                .focused($focusedControl, equals: .synopsisToggle)
+                .accessibilityIdentifier("detail.synopsisToggle")
             }
         }
     }

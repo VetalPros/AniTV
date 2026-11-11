@@ -33,6 +33,7 @@ struct PlayerScreen: View {
         .onDisappear { model.stop() }
         .onExitCommand { dismiss() }
         .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("player.screen")
     }
 
     /// Identifies the stream that is playing; the transport bar is hidden until the viewer asks

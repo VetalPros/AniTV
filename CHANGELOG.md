@@ -47,6 +47,12 @@ not been released yet, so everything below is still subject to change.
   image view backed by the Kit cache, screen header and a wrapping layout.
 - Localisation catalog with 44 keys (English source, Russian translations) and an asset catalog with
   an accent colour.
+- XCUITest suite (`App/UITests/LatestFeedUITests.swift`, target `AniTVUITests`) that drives the focus
+  engine through `XCUIRemote`: it opens a release from the feed, checks the detail screen describes the
+  selected title, starts playback from the detail screen and returns through Menu. Screenshots of the
+  feed, detail and player screens are kept as test attachments and published in `docs/screenshots/`.
+- Accessibility identifiers for the elements the tests address (`latest.posterCard`, `detail.screen`,
+  `detail.playButton`, `detail.synopsisToggle`, `detail.episodeCard`, `player.screen`).
 
 ### Changed
 
@@ -56,10 +62,17 @@ not been released yet, so everything below is still subject to change.
   so the pipeline does not depend on device names in the runner image.
 - Error-to-`AniLibertyError` mapping lives once in `App/Sources/Support/AniLibertyError+Mapping.swift`
   instead of being duplicated in two view models.
+- The release detail screen claims focus for its primary action when it appears. Without that, the
+  focus engine had nothing to focus after the push, and a Menu press was handled by the system, which
+  backgrounded the app instead of popping back to the feed (ADR 0012).
+- CI pins every tool it installs (XcodeGen 2.46.0 from a release archive instead of Homebrew,
+  xcbeautify 3.2.1, SwiftFormat 0.64.6, SwiftLint 0.65.1) and gains an advisory `ui-tests` job that
+  runs the XCUITest suite on a tvOS simulator, discovered by UDID rather than by device name.
 
 ### Fixed
 
-- Nothing yet.
+- Menu on the release detail screen sent the app to the home screen instead of returning to the feed,
+  because the pushed screen had no focused element (ADR 0012).
 
 ### Security
 

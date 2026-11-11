@@ -23,6 +23,7 @@ struct PosterCard: View {
         .animation(DesignTokens.Motion.focus, value: isFocused)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(verbatim: "\(release.title). \(release.subtitle)"))
+        .accessibilityIdentifier("latest.posterCard")
     }
 
     private var artwork: some View {

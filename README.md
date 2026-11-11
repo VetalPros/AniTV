@@ -63,6 +63,7 @@ AniTV — клиент для просмотра аниме с AniLiberty на A
 | Top Shelf (статичные изображения) | 📋 | `App/Sources/` |
 | Локализация ru/en (String Catalogs) | 📋 | `App/Resources/Localizable.xcstrings` |
 | Сборка приложения под симулятор tvOS (`generic/platform=tvOS Simulator`) | ✅ | `project.yml`, `App/` |
+| UI-тесты XCUITest: лента → карточка релиза и плеер из карточки | ✅ | `App/UITests/` |
 | Подпись и установка на устройство (бесплатный аккаунт) | 📋 | `project.yml` |
 
 Значок ✅ у модулей `AniLibertyKit` означает, что `swift test --package-path AniLibertyKit`
@@ -70,29 +71,33 @@ AniTV — клиент для просмотра аниме с AniLiberty на A
 Строки со 🚧 — код есть, но поведение на симуляторе/устройстве в рамках этой итерации не
 проверялось; сборка зелёная, но UI ещё не проходили руками.
 
+Строка про UI-тесты — ✅ по локальному прогону (текущая версия с двумя тестами: `Test Succeeded`,
+2 из 2; до неё дважды прогонялась версия с одним тестом). На GitHub-раннере этот job ещё ни разу
+не выполнялся: в CI он помечен как advisory и не является блокирующей проверкой.
+
 Известные ограничения платформы и аккаунта (влияют на дизайн, а не являются временными
 проблемами) перечислены в [AGENTS.md](AGENTS.md) §2 — среди них отсутствие App Groups, CloudKit и
 push-уведомлений, потому что разработка идёт на бесплатном аккаунте Apple Developer.
 
 ## Скриншоты
 
-<!-- TODO: добавить изображения в docs/screenshots/ после первой рабочей сборки UI -->
-Скриншоты появятся здесь, когда будут готовы основные экраны. Планируемые кадры:
+Кадры сняты с работающего приложения на симуляторе tvOS 27.2 **этими же UI-тестами** (вложения
+`XCTAttachment` из зелёного прогона, `docs/screenshots/`), данные — настоящий ответ API AniLiberty.
 
-1. Главный экран с лентой релизов.
-2. Карточка релиза с жанрами и списком серий.
-3. Плеер с системной панелью и кнопкой пропуска опенинга.
-
-Файлы складываются в `docs/screenshots/` (в репозитории пока отсутствуют).
+| Лента «Новинки» | Карточка релиза | Плеер |
+| --- | --- | --- |
+| ![Лента релизов](docs/screenshots/feed.jpg) | ![Карточка релиза](docs/screenshots/detail.jpg) | ![Плеер](docs/screenshots/player.jpg) |
 
 ## Требования
 
 - **macOS** с Xcode, в комплекте которого есть **tvOS SDK 26.0 или новее** (проект проверен на
   Xcode 27.2 / tvOS SDK 27.2, Swift 6.4).
-- **XcodeGen 2.46.0** — `brew install xcodegen`. Файл `AniTV.xcodeproj` не коммитится: он
-  генерируется из `project.yml` (см. [ADR 0004](docs/DECISIONS.md)).
-- **SwiftFormat 0.64.6** и **SwiftLint 0.65.1** — `brew install swiftformat swiftlint`. Версии
-  зафиксированы в комментариях конфигов: правила подобраны и проверены именно на них.
+- **XcodeGen 2.46.0** — CI ставит ровно эту версию из GitHub release; `brew install xcodegen`
+  даст более новую. Файл `AniTV.xcodeproj` не коммитится: он генерируется из `project.yml`
+  (см. [ADR 0004](docs/DECISIONS.md)).
+- **SwiftFormat 0.64.6** и **SwiftLint 0.65.1** — распинуты так же, из releases (не из Homebrew).
+  Версии зафиксированы в комментариях конфигов: правила подобраны и проверены именно на них.
+- **xcbeautify 3.2.1** — для читаемого вывода `xcodebuild`; CI берёт universal-сборку из release.
 - Симулятор tvOS: в рантайме tvOS 27.2 устройства называются `Apple TV 4K (4th generation)`;
   симулятора `3rd generation` в этом рантайме нет.
 
@@ -150,13 +155,36 @@ swift test --package-path AniLibertyKit
 Фикстуры реальных ответов API лежат в `AniLibertyKit/Tests/AniLibertyKitTests/Fixtures/` и
 подключаются через `Bundle.module` — в CI сеть не используется.
 
+### UI-тесты (XCUITest)
+
+`App/UITests/LatestFeedUITests.swift` содержит два сквозных сценария: лента грузится, нажатия
+пульта через `XCUIRemote` двигают фокус на постер, Select открывает карточку релиза, Menu
+возвращает в ленту; второй сценарий с карточки запускает плеер и выходит из него по Menu. Тесты
+ходят в **настоящий API AniLiberty** (иначе ленте нечего показать) и требуют поднятого симулятора
+tvOS:
+
+```bash
+# UDID смотрите в `xcrun simctl list devices available`
+xcodebuild test -project AniTV.xcodeproj -scheme AniTV \
+  -only-testing:AniTVUITests \
+  -destination 'platform=tvOS Simulator,id=1CEE9693-F8EB-45A4-8223-1679EE0EFC5A' \
+  -derivedDataPath .build/DerivedData | xcbeautify
+```
+
+В CI это отдельный job `ui-tests`. Он **advisory**: падение теста не красит весь workflow и не
+блокирует PR (`.xcresult` уходит артефактом, в summary появляется предупреждение). Так сделано
+сознательно: сценарий зависит от живого API апстрима и от загрузки симулятора tvOS, а на
+GitHub-раннере он пока ни разу не запускался. Красным этот job становится только при сбое самого
+раннера (не скачался инструмент, не сгенерировался проект) — то есть по причине, не связанной с
+изменением в PR. В required его переведут после серии зелёных прогонов на раннере.
+
 ## Структура репозитория
 
 ```
 AGENTS.md                  рабочее соглашение для людей и AI-агентов
 docs/                      память проекта, решения (ADR), заметки об API
 project.yml                описание Xcode-проекта (источник истины, XcodeGen)
-.github/workflows/ci.yml   сборка + тесты + формат + линт на macOS-раннере
+.github/workflows/ci.yml   сборка + тесты + формат + линт, плюс advisory UI-тесты на macOS-раннере
 AniLibertyKit/             общий SPM-пакет: модели, API, кэш, плеер
   Package.swift
   Sources/AniLibertyKit/
@@ -172,6 +200,7 @@ App/
     Features/              экраны: Latest (лента), Detail (карточка), Player (плеер)
     Models/                view-модели навигации и воспроизведения
     Support/               локализация ошибок, информация о сборке
+  UITests/                 XCUITest: лента → карточка релиза → возврат по Menu
   Resources/               Assets.xcassets, Localizable.xcstrings
   Info.plist               генерируется XcodeGen — в git не попадает
 ```

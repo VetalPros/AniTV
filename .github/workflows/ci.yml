@@ -4,16 +4,19 @@
 #   1. the Xcode project can be generated from `project.yml` (XcodeGen is the source of truth),
 #   2. the app builds for the tvOS Simulator SDK in Swift 6 language mode,
 #   3. the shared `AniLibertyKit` package passes `swift test` with no network access,
-#   4. the tree is formatted (`swiftformat --lint`) and lint-clean (`swiftlint --strict`).
+#   4. the tree is formatted (`swiftformat --lint`) and lint-clean (`swiftlint --strict`),
+#   5. the XCUITest suite in `App/UITests` drives the feed to the release detail screen on a
+#      booted tvOS simulator — advisory only, see the `ui-tests` job for the reasoning.
 #
-# No secrets are used, no signing material is present, and nothing is uploaded anywhere:
-# the repository is public and runs on GitHub-hosted macOS runners (AGENTS.md §2).
+# No secrets are used and no signing material is present: the repository is public and runs on
+# GitHub-hosted macOS runners (AGENTS.md §2). The only thing uploaded anywhere is the `.xcresult`
+# bundle of a failed UI test run.
 #
-# Determinism: SwiftFormat and SwiftLint are downloaded from pinned GitHub releases instead of
-# Homebrew, because the checked-in configuration files were verified against exactly these
-# versions. A newer linter with new default rules would otherwise turn `main` red for reasons
-# that have nothing to do with the change under review. XcodeGen is installed from Homebrew —
-# it only needs to be new enough to understand `project.yml`.
+# Determinism: every CLI tool the workflow installs (XcodeGen, SwiftFormat, SwiftLint and
+# xcbeautify) is downloaded from a pinned GitHub release instead of Homebrew. The checked-in
+# configuration files and the `project.yml` dialect were verified against exactly these versions;
+# floating versions would otherwise turn `main` red for reasons that have nothing to do with the
+# change under review.
 
 name: CI
 
@@ -33,11 +36,13 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  XCODEGEN_VERSION: "2.46.0"
   SWIFTFORMAT_VERSION: "0.64.6"
   SWIFTLINT_VERSION: "0.65.1"
-  # Build-only destination: GitHub-hosted runners do not ship every simulator runtime, so we
-  # never boot a device and never need a concrete Apple TV device name. Building against
-  # `generic/platform=tvOS Simulator` only requires the tvOS SDK, which ships with Xcode.
+  XCBEAUTIFY_VERSION: "3.2.1"
+  # Build-only destination: GitHub-hosted runners do not ship every simulator runtime, so the
+  # build job never boots a device and never needs a concrete Apple TV device name. Building
+  # against `generic/platform=tvOS Simulator` only requires the tvOS SDK, which ships with Xcode.
   TVOS_DESTINATION: "generic/platform=tvOS Simulator"
   DERIVED_DATA: ".build/DerivedData"
 
@@ -62,16 +67,21 @@ jobs:
           xcrun --sdk appletvos --show-sdk-version
           xcrun --sdk appletvos --show-sdk-path
 
-      - name: Install XcodeGen
-        run: |
-          brew install xcodegen
-          xcodegen --version
-
-      - name: Install pinned SwiftFormat and SwiftLint
+      - name: Install pinned XcodeGen, SwiftFormat and SwiftLint
         run: |
           set -euo pipefail
           tools_dir="$RUNNER_TEMP/ci-tools"
           mkdir -p "$tools_dir/bin" "$tools_dir/src"
+
+          # XcodeGen's portable archive is a directory tree, not a bare binary: the executable
+          # resolves its `share/xcodegen/SettingPresets` relative to itself, so the whole tree is
+          # unpacked together and only its `bin` directory goes on PATH.
+          curl --fail --silent --show-error --location --retry 3 \
+            --output "$tools_dir/src/xcodegen.zip" \
+            "https://github.com/yonaskolb/XcodeGen/releases/download/${XCODEGEN_VERSION}/xcodegen.zip"
+          unzip -q -o "$tools_dir/src/xcodegen.zip" -d "$tools_dir"
+          chmod +x "$tools_dir/xcodegen/bin/xcodegen"
+          echo "$tools_dir/xcodegen/bin" >> "$GITHUB_PATH"
 
           curl --fail --silent --show-error --location --retry 3 \
             --output "$tools_dir/src/swiftformat.zip" \
@@ -84,8 +94,10 @@ jobs:
           unzip -q -o "$tools_dir/src/swiftformat.zip" -d "$tools_dir/bin"
           unzip -q -o "$tools_dir/src/swiftlint.zip" -d "$tools_dir/bin"
           chmod +x "$tools_dir/bin/swiftformat" "$tools_dir/bin/swiftlint"
-
           echo "$tools_dir/bin" >> "$GITHUB_PATH"
+
+          # PATH changes only apply to later steps, so verify the pinned versions by absolute path.
+          "$tools_dir/xcodegen/bin/xcodegen" --version
           "$tools_dir/bin/swiftformat" --version
           "$tools_dir/bin/swiftlint" version
 
@@ -121,3 +133,171 @@ jobs:
 
       - name: Lint Swift sources
         run: swiftlint --strict
+
+  ui-tests:
+    name: UI tests (tvOS simulator, advisory)
+    # The XCUITest suite in `App/UITests` boots a tvOS simulator, drives the focus engine through
+    # `XCUIRemote`, and waits for the feed to arrive over the live AniLiberty API. All three make
+    # the runtime much longer and less predictable on a GitHub-hosted macOS runner than on a
+    # developer machine, and the suite has never been executed on a hosted runner — the only
+    # evidence so far is green local runs (the current two-test suite once, a single-test version
+    # twice before it).
+    #
+    # It is therefore an ADVISORY check, deliberately: the test step uses `continue-on-error`, so a
+    # failing test neither fails the workflow nor blocks a pull request. `build-test-lint` remains
+    # the required gate, and this check must not be listed as required in branch protection. The
+    # signal is not thrown away: the failing `.xcresult` bundle is uploaded as an artifact and a
+    # warning annotation is added to the job summary.
+    #
+    # The only way this job goes red is a broken runner image (a tool download, `xcodegen generate`
+    # or the simulator lookup failing) — i.e. a problem with the environment, not with the change
+    # under review. Even the simulator warm-up is non-blocking for the same reason.
+    #
+    # It runs in parallel with `build-test-lint` instead of `needs:`-ing it: runner minutes are free
+    # for a public repository, and skipping the UI run whenever the build job fails would hide
+    # exactly the regressions this job exists to catch.
+    #
+    # Promote it to a required check by deleting `continue-on-error: true` once the suite has a
+    # track record on this runner (for example ten consecutive green runs, with no upstream API
+    # outage in between). If it turns out to be flaky only because the simulator boots slowly,
+    # move it to a `schedule:` trigger and keep the pull-request pipeline fast instead.
+    runs-on: macos-26
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Show the toolchain and the simulator runtimes
+        run: |
+          xcodebuild -version
+          swift --version
+          xcrun simctl list runtimes
+
+      - name: Install pinned XcodeGen and xcbeautify
+        run: |
+          set -euo pipefail
+          tools_dir="$RUNNER_TEMP/ci-tools"
+          mkdir -p "$tools_dir/src"
+
+          curl --fail --silent --show-error --location --retry 3 \
+            --output "$tools_dir/src/xcodegen.zip" \
+            "https://github.com/yonaskolb/XcodeGen/releases/download/${XCODEGEN_VERSION}/xcodegen.zip"
+          unzip -q -o "$tools_dir/src/xcodegen.zip" -d "$tools_dir"
+          chmod +x "$tools_dir/xcodegen/bin/xcodegen"
+          echo "$tools_dir/xcodegen/bin" >> "$GITHUB_PATH"
+
+          curl --fail --silent --show-error --location --retry 3 \
+            --output "$tools_dir/src/xcbeautify.zip" \
+            "https://github.com/cpisciotta/xcbeautify/releases/download/${XCBEAUTIFY_VERSION}/xcbeautify-${XCBEAUTIFY_VERSION}-universal-apple-macosx.zip"
+          unzip -q -o "$tools_dir/src/xcbeautify.zip" -d "$tools_dir/xcbeautify"
+          chmod +x "$tools_dir/xcbeautify/release/xcbeautify"
+          echo "$tools_dir/xcbeautify/release" >> "$GITHUB_PATH"
+
+          "$tools_dir/xcodegen/bin/xcodegen" --version
+          "$tools_dir/xcbeautify/release/xcbeautify" --version
+
+      - name: Cache Swift Package Manager artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build/DerivedData/SourcePackages
+            AniLibertyKit/.build
+          key: spm-${{ runner.os }}-${{ hashFiles('AniLibertyKit/Package.swift') }}
+          restore-keys: |
+            spm-${{ runner.os }}-
+
+      - name: Generate the Xcode project
+        run: xcodegen generate
+
+      # Device names differ between Xcode releases (the tvOS 27 runtime only ships
+      # "Apple TV 4K (4th generation)", older ones only the 3rd generation), so the runner image is
+      # never trusted to contain a specific name: the newest available tvOS device is discovered
+      # and addressed by UDID, which is also what AGENTS.md §6 recommends.
+      - name: Pick a tvOS simulator
+        id: simulator
+        run: |
+          set -euo pipefail
+          python3 - > "$RUNNER_TEMP/simulator-udid.txt" <<'PY'
+          import json
+          import subprocess
+          import sys
+
+          listing = json.loads(
+              subprocess.check_output(
+                  ["xcrun", "simctl", "list", "devices", "available", "--json"],
+                  text=True,
+              )
+          )["devices"]
+          candidates = [
+              (runtime, device)
+              for runtime, devices in listing.items()
+              if "tvOS" in runtime
+              for device in devices
+              if device.get("isAvailable", False)
+          ]
+          if not candidates:
+              sys.exit("No available tvOS simulator runtime on this runner")
+
+          # Newest runtime wins: the app targets tvOS 26.0 and up.
+          runtime, device = sorted(candidates, key=lambda pair: pair[0])[-1]
+          print(device["udid"])
+          print(f"Simulator: {device['name']} ({runtime})", file=sys.stderr)
+          PY
+          udid="$(cat "$RUNNER_TEMP/simulator-udid.txt")"
+          echo "udid=$udid" >> "$GITHUB_OUTPUT"
+          echo "Using tvOS simulator $udid"
+
+      # Best effort on purpose: `simctl bootstatus` resolves the runtime bundle itself and fails on
+      # some images even when `xcodebuild test` boots the very same device by UDID just fine (seen
+      # on a developer machine while the suite was green). The boot is therefore only moved out of
+      # the test step so that a slow cold boot is visible as its own line in the log — the test step
+      # is the only gate, and it boots the simulator itself when this one cannot.
+      - name: Warm up the simulator (best effort)
+        continue-on-error: true
+        env:
+          SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
+        run: xcrun simctl bootstatus "$SIMULATOR_UDID" -b
+
+      - name: Run the UI test suite
+        id: ui-tests
+        # Advisory on purpose — see the job comment. `steps.ui-tests.outcome` is still `failure`,
+        # which the two steps below use to publish the result bundle without failing the run.
+        continue-on-error: true
+        env:
+          SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
+        run: |
+          set -o pipefail
+          # A stale bundle from an earlier attempt makes -resultBundlePath abort the run.
+          rm -rf TestResults/UITests.xcresult
+          mkdir -p TestResults
+          xcodebuild test \
+            -project AniTV.xcodeproj \
+            -scheme AniTV \
+            -only-testing:AniTVUITests \
+            -destination "platform=tvOS Simulator,id=$SIMULATOR_UDID" \
+            -derivedDataPath "$DERIVED_DATA" \
+            -resultBundlePath TestResults/UITests.xcresult \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcbeautify --renderer github-actions
+
+      - name: Upload the UI test result bundle
+        if: steps.ui-tests.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-results
+          path: TestResults/UITests.xcresult
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Report the advisory UI test result
+        if: steps.ui-tests.outcome == 'failure'
+        run: |
+          echo "::warning title=UI tests failed (advisory)::The tvOS UI suite failed. Download the 'ui-test-results' artifact for the .xcresult bundle. This check does not block the pull request."
+          {
+            echo "## UI tests: advisory failure"
+            echo ""
+            echo "The XCUITest suite failed, but this check is advisory and did not fail the workflow."
+            echo "The \`.xcresult\` bundle is attached to the run as the \`ui-test-results\` artifact."
+            echo "See the job comment in \`.github/workflows/ci.yml\` for when this becomes required."
+          } >> "$GITHUB_STEP_SUMMARY"

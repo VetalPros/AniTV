@@ -181,6 +181,19 @@ Test the Kit with the host toolchain (fast loop, no simulator):
 swift test --package-path AniLibertyKit
 ```
 
+Run the UI tests (they drive the app through XCUITest on the simulator, so they need the app to
+reach the network):
+
+```bash
+xcodebuild test -project AniTV.xcodeproj -scheme AniTV \
+  -destination 'platform=tvOS Simulator,id=1CEE9693-F8EB-45A4-8223-1679EE0EFC5A' \
+  -derivedDataPath .build/DerivedData | xcbeautify
+```
+
+> This Xcode installation ships **no `Simulator.app`**, so the app cannot be clicked by hand and
+> AppleScript/System Events cannot drive it. Anything that needs remote input has to be expressed as
+> an XCUITest (`App/UITests/`). Screenshots come from `xcrun simctl io booted screenshot`.
+
 Install / launch in the simulator:
 
 ```bash
