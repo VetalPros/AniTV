@@ -84,9 +84,13 @@ push-уведомлений, потому что разработка идёт �
 Кадры сняты с работающего приложения на симуляторе tvOS 27.2 **этими же UI-тестами** (вложения
 `XCTAttachment` из зелёного прогона, `docs/screenshots/`), данные — настоящий ответ API AniLiberty.
 
-| Лента «Новинки» | Карточка релиза | Плеер |
+| Лента «Новинки» | Карточка релиза | Список серий |
 | --- | --- | --- |
-| ![Лента релизов](docs/screenshots/feed.jpg) | ![Карточка релиза](docs/screenshots/detail.jpg) | ![Плеер](docs/screenshots/player.jpg) |
+| ![Лента релизов](docs/screenshots/feed.jpg) | ![Карточка релиза](docs/screenshots/detail.jpg) | ![Список серий](docs/screenshots/episodes.jpg) |
+
+| Плеер | Выбор качества |
+| --- | --- |
+| ![Плеер](docs/screenshots/player.jpg) | ![Выбор качества](docs/screenshots/quality.jpg) |
 
 ## Требования
 

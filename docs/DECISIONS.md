@@ -216,3 +216,53 @@ stays the required gate. The job is not listed in branch protection as required.
 job itself (runner image without a tvOS runtime, tool download failing) cannot turn `main` red. Promote
 it to required by deleting `continue-on-error: true` after a track record on that runner; if it turns
 out to be flaky only because of simulator boot time, move it to a `schedule:` trigger instead.
+
+---
+
+## 0014 — Quality switching is a modal chooser, not a transport-bar item (2026-11-11)
+
+**Context.** The player had no way to change stream quality. The sanctioned hook,
+`AVPlayerViewController.transportBarCustomMenuItems`, was implemented first: one `UIAction` per
+quality, each carrying a rendered "1080p / 720p / 480p" image (tvOS renders these items from their
+image only — the title never appears on screen, it stays the VoiceOver label). The items did appear
+in the transport bar and were listed in the accessibility tree as `Cell`s with the right labels. They
+were still unusable: with a tree dump taken between remote presses, focus sat on the pill only until
+the first arrow press, after which the player view took focus (`Other` covering the whole screen) and
+the items could never be reached again — no press sequence found a path back. The same happened to a
+SwiftUI row drawn over the player: it received default focus, and the first arrow press handed focus
+back to AVKit, whose transport bar owns every direction while the player is on screen.
+
+**Decision.** The player shows one glass pill with the running quality (`player.qualityButton`,
+top-trailing, holding default focus when the player opens). Choosing it presents
+`QualityPickerScreen` through `fullScreenCover`: a modal that gets the focus engine to itself exactly
+like the player does when the detail screen presents it, with one large button per available stream
+and the current one checked. Selecting replaces the player item and seeks back to the playhead
+(`PlayerModel.selectQuality`).
+
+**Consequences.** Quality switching works with the remote and is covered by a UI test. It is not part
+of the system transport bar, which is a departure from "no custom transport UI": the system genuinely
+cannot express the choice here, and the alternative — items that render but cannot be focused — is
+worse than an honest app-level control. The system timeline, info panel and scrubbing stay
+first-party and untouched. Revisit if AVKit starts giving transport-bar items focus.
+
+---
+
+## 0015 — The detail screen must not disable scroll clipping (2026-11-11)
+
+**Context.** The release detail screen pushed from the feed never scrolled: five Down presses left the
+screen pixel-identical and `detail.episodeCard` never entered the accessibility tree, so genres, the
+synopsis and the whole episode list were unreachable (found by the user on a manual run, reproduced by
+an XCUITest probe). Two causes compounded: `.scrollClipDisabled()` on the `ScrollView` makes it report
+its entire content as visible, so the focus engine believes everything is already on screen and never
+scrolls; and `LazyVGrid` only instantiates cells that intersect the visible area, so the episode list —
+whose first row is below the fold — had no cells at all, hence nothing focusable, hence no reason for
+anyone to scroll.
+
+**Decision.** Drop `.scrollClipDisabled()` (a comment in the view says why it must not come back), and
+build the episode list with the eager `Grid` instead of `LazyVGrid`. A release has a handful of
+episodes, so rendering them all costs nothing.
+
+**Consequences.** Down/Up walk the whole screen with the focus engine scrolling it, which the new UI
+test asserts by focusing an episode card and playing it. The same trap applies to any future
+scrollable screen: `scrollClipDisabled` + lazy containers is a combination that silently disables
+remote navigation.

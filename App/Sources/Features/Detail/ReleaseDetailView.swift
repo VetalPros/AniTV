@@ -49,6 +49,12 @@ struct ReleaseDetailView: View {
         }
     }
 
+    /// The screen is one long scroll view: the hero, genres, synopsis and the episode grid all have
+    /// to be reachable with Down/Up from the remote.
+    ///
+    /// Do not add `.scrollClipDisabled()` here. It makes the scroll view report its content as
+    /// visible, so the focus engine believes the whole page is on screen: Down never leaves the
+    /// hero and the episode list is unreachable.
     private func loaded(_ release: Release) -> some View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: 48) {
@@ -63,7 +69,6 @@ struct ReleaseDetailView: View {
             .padding(.top, 36)
             .padding(.bottom, 88)
         }
-        .scrollClipDisabled()
         .accessibilityIdentifier("detail.screen")
         .defaultFocus($focusedControl, defaultControl, priority: .userInitiated)
         .onAppear(perform: takeDefaultFocus)
@@ -92,8 +97,13 @@ struct ReleaseDetailView: View {
     private func hero(_ release: Release) -> some View {
         HStack(alignment: .top, spacing: 52) {
             RemoteImage(url: model.posterURL)
-                .frame(width: DesignTokens.heroPosterWidth)
-                .aspectRatio(DesignTokens.posterAspectRatio, contentMode: .fit)
+                // `RemoteImage` fills whatever frame it is given, so both dimensions have to come
+                // from the 2:3 poster ratio — a width-only frame leaves the height unbounded and
+                // slices the artwork.
+                .frame(
+                    width: DesignTokens.heroPosterWidth,
+                    height: DesignTokens.heroPosterWidth / DesignTokens.posterAspectRatio
+                )
                 .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                 .shadow(color: .black.opacity(0.6), radius: 30, y: 16)
 
@@ -245,15 +255,24 @@ struct ReleaseDetailView: View {
                     .font(DesignTokens.Typography.body)
                     .foregroundStyle(.secondary)
             } else {
-                LazyVGrid(
-                    columns: [
-                        GridItem(.flexible(), spacing: 20, alignment: .top),
-                        GridItem(.flexible(), spacing: 20, alignment: .top),
-                    ],
-                    alignment: .leading,
-                    spacing: 20
-                ) {
-                    ForEach(release.episodes) { episode in
+                episodeGrid(release.episodes)
+            }
+        }
+    }
+
+    /// Two-column episode list built with the eager `Grid` on purpose.
+    ///
+    /// `LazyVGrid` only instantiates the cells that intersect the visible area, and here the first
+    /// row sits below the fold: no cell ever exists, so nothing is focusable, so focus never scrolls
+    /// down to the list and the list never materialises. The grid holds a handful of rows, so
+    /// building it eagerly costs nothing and keeps the whole list reachable with the remote.
+    private func episodeGrid(_ episodes: [Episode]) -> some View {
+        let rowCount = (episodes.count + 1) / 2
+        return Grid(alignment: .leading, horizontalSpacing: 20, verticalSpacing: 20) {
+            ForEach(0 ..< rowCount, id: \.self) { row in
+                GridRow(alignment: .top) {
+                    ForEach(Array((row * 2) ..< min(row * 2 + 2, episodes.count)), id: \.self) { index in
+                        let episode = episodes[index]
                         EpisodeCard(
                             episode: episode,
                             playableQuality: playbackQuality(for: episode)

@@ -146,7 +146,13 @@ final class LatestFeedUITests: XCTestCase {
     /// never land on the detail screen (where Select would start playback).
     @MainActor
     private func openDetail(in app: XCUIApplication, showing detailScreen: XCUIElement) -> Bool {
+        let cards = app.descendants(matching: .any).matching(identifier: "latest.posterCard")
         for attempt in 0 ..< pressAttempts {
+            // The feed re-renders when the images arrive and can drop focus back to the tab bar, so
+            // every attempt starts by making sure a poster card is the focused element again.
+            if !cards.matching(NSPredicate(format: "hasFocus == 1")).firstMatch.exists {
+                _ = focusPosterCard(in: app)
+            }
             XCUIRemote.shared.press(.select)
             if detailScreen.waitForExistence(timeout: pressTimeout) {
                 return true

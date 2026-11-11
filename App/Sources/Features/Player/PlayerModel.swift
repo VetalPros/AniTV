@@ -19,6 +19,13 @@ final class PlayerModel {
     let request: PlaybackRequest
     let player: AVPlayer
 
+    /// Every quality the episode offers, best first. Switching replaces the item instead of
+    /// starting a new session, so the playhead survives it.
+    let sources: [PlaybackSource]
+
+    /// Quality of the item currently in the player; starts as the one the detail screen resolved.
+    private(set) var selectedQuality: StreamQuality
+
     /// The skip segment the playhead currently sits inside, or `nil` when no button should exist.
     private(set) var activeSkip: SkipTimecode?
 
@@ -33,9 +40,11 @@ final class PlayerModel {
 
     init(request: PlaybackRequest) {
         self.request = request
+        sources = StreamResolver.sources(for: request.episode)
+        selectedQuality = request.source.quality
         let item = AVPlayerItem(url: request.source.url)
         // tvOS carries the info-panel metadata on the item, not on the view controller.
-        item.externalMetadata = PlayerMetadata.items(for: request)
+        item.externalMetadata = PlayerMetadata.items(for: request, quality: request.source.quality)
         timecodes = TimecodeResolver.timecodes(for: request.episode)
         player = AVPlayer(playerItem: item)
         player.allowsExternalPlayback = false
@@ -43,12 +52,37 @@ final class PlayerModel {
         observeStatus(of: item)
     }
 
+    // MARK: Quality
+
+    /// Replaces the stream with the same episode rendered at `quality`, keeping the playhead and
+    /// re-deriving the skip-intro state from it.
+    func selectQuality(_ quality: StreamQuality) {
+        guard quality != selectedQuality,
+              let source = sources.first(where: { $0.quality == quality })
+        else {
+            return
+        }
+        let playhead = player.currentTime()
+        let item = AVPlayerItem(url: source.url)
+        item.externalMetadata = PlayerMetadata.items(for: request, quality: quality)
+        statusObservation?.invalidate()
+        observeStatus(of: item)
+        player.replaceCurrentItem(with: item)
+        player.seek(to: playhead, toleranceBefore: .zero, toleranceAfter: .zero)
+        selectedQuality = quality
+        // The periodic observer re-derives this half a second later anyway; doing it here keeps the
+        // skip button from showing the state of the previous item in between.
+        activeSkip = TimecodeResolver.activeSkip(for: timecodes, playhead: playhead.seconds)
+        player.play()
+        Self.logger.info("Switched to \(quality.rawValue, privacy: .public)p at \(playhead.seconds, privacy: .public)s")
+    }
+
     // MARK: Lifecycle
 
     func start() {
         addPlayheadObserver()
         player.play()
-        Self.logger.info("Playback started at \(self.request.source.quality.rawValue, privacy: .public)p")
+        Self.logger.info("Playback started at \(self.selectedQuality.rawValue, privacy: .public)p")
     }
 
     func stop() {

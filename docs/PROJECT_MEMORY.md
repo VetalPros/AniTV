@@ -2,8 +2,8 @@
 
 > Update this file at the end of every session that changes the project's state.
 > Rules and constraints live in `AGENTS.md`; decisions live in `docs/DECISIONS.md`.
-> Last updated: **2026-11-11** (session: UI verification — feed → detail → player proven by XCUITest,
-> CI UI-test job, screenshots).
+> Last updated: **2026-11-11** (session 2: manual-run feedback — detail screen scrolls, poster no longer
+> cropped, player title badge removed, quality chooser added; ADR 0014-0015).
 
 ## Snapshot
 
@@ -102,13 +102,28 @@ UI verification (2026-11-11, XCUITest — the only way to deliver input here, AD
 - [x] Gates re-run on 2026-11-11: `swiftformat --lint .` → 0/49 files require formatting;
       `swiftlint --strict` → 0 violations in 49 files; `swift test` → 25 tests in 4 suites pass.
 
+Second pass (same day, after the user's own run on the simulator):
+- [x] Fixed, with the user's three findings reproduced first: the detail screen never scrolled (so
+      genres/synopsis/episodes were unreachable dead content), the hero poster was sliced by a
+      width-only frame, and the player drew a permanent title badge that duplicated the system info
+      panel (ADR 0015 for the scroll trap, ADR 0014 for the player).
+- [x] Episode list is now reachable: Down walks from the hero into genres → synopsis → episodes, and
+      choosing an episode starts that episode (`testDetailScrollsToEpisodeListAndPlaysAnEpisode`).
+- [x] Quality switching: glass pill top-trailing → «Качество» modal → 1080p / 720p / 480p, item
+      replaced and playhead kept (`testQualityControlSwitchesTheStream`).
+- [x] Full UI suite green on the committed tree: 4 tests, `** TEST SUCCEEDED **`; `swiftformat --lint .`
+      → 0/51 files; `swiftlint --strict` → 0 violations in 51 files; `swift test` → 25 tests pass.
+- [x] Screenshots in `docs/screenshots/` re-taken from the test attachments (detail, episodes, player,
+      quality chooser).
+
 ## Next steps (ordered)
 
-1. App icon (layered tvOS icon: 2 layers + App Icon) and Top Shelf decision (static or none, given the
-   free account cannot share app data).
-2. Каталог tab (genres + catalogue listing) and Профиль tab (Keychain-stored token, login state).
-3. Episodes → player from the *episode card* (the current test starts playback from the hero button);
-   plus resume/timecode behaviour, which no test covers yet.
+1. "Продолжить просмотр": store the playhead per episode (Keychain is wrong for this — a small
+   `UserDefaults`/file store in the app's container) and offer it on the detail screen and in the player.
+   Nothing of this exists yet; the player only reports progress through the system transport bar.
+2. App icon (layered tvOS icon: 2 layers + App Icon) and Top Shelf decision (static or none, given the
+   free account cannot share app data). The build currently warns about the missing brand assets.
+3. Каталог tab (genres + catalogue listing) and Профиль tab (Keychain-stored token, login state).
 4. Cache/conditional-request pass on the API client (ETag / `If-None-Match`), per the politeness rule.
 5. Watch the advisory `ui-tests` CI job on a real GitHub runner; only then consider making it required
    (ADR 0013). Also pin `xcode-select` if the `macos-26` image starts shipping a different default Xcode.

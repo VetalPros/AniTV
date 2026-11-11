@@ -3,11 +3,11 @@ import AVFoundation
 
 /// Builds the `externalMetadata` the system transport bar and the TV app use to describe a stream.
 enum PlayerMetadata {
-    /// Title = release, subtitle = episode, description = quality of the selected stream.
+    /// Title = release, subtitle = episode, description = quality of the stream being played.
     ///
     /// Artwork is intentionally omitted: loading it would turn the player's appearance into an
     /// asynchronous operation, and the system falls back to the app icon.
-    static func items(for request: PlaybackRequest) -> [AVMetadataItem] {
+    static func items(for request: PlaybackRequest, quality: StreamQuality) -> [AVMetadataItem] {
         [
             item(
                 identifier: .commonIdentifierTitle,
@@ -19,7 +19,7 @@ enum PlayerMetadata {
             ),
             item(
                 identifier: .commonIdentifierDescription,
-                value: "\(request.source.quality.rawValue)p · HLS"
+                value: "\(quality.rawValue)p · HLS"
             ),
         ]
     }

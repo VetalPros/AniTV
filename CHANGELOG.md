@@ -53,6 +53,14 @@ not been released yet, so everything below is still subject to change.
   feed, detail and player screens are kept as test attachments and published in `docs/screenshots/`.
 - Accessibility identifiers for the elements the tests address (`latest.posterCard`, `detail.screen`,
   `detail.playButton`, `detail.synopsisToggle`, `detail.episodeCard`, `player.screen`).
+- Episode list on the release detail screen is a two-column grid of episode cards with preview,
+  title, duration and the best available quality; picking one starts exactly that episode in the
+  player.
+- Quality switching in the player: the running stream is shown as one glass pill in the top-trailing
+  corner, and choosing it opens a modal «Качество» screen with every stream the episode publishes
+  (1080p / 720p / 480p). Switching replaces the player item and keeps the playhead (ADR 0014).
+- Two more UI-test scenarios (`DetailAndPlayerUITests`): scrolling the detail screen down to the
+  episode list and playing an episode from it, and switching the stream quality through the chooser.
 
 ### Changed
 
@@ -62,6 +70,14 @@ not been released yet, so everything below is still subject to change.
   so the pipeline does not depend on device names in the runner image.
 - Error-to-`AniLibertyError` mapping lives once in `App/Sources/Support/AniLibertyError+Mapping.swift`
   instead of being duplicated in two view models.
+- The player no longer draws its own title badge over the video: the system info panel already shows
+  the release, the episode and the stream, and the badge only duplicated it (and could not be hidden).
+- The player's per-quality transport-bar items were dropped in favour of the modal chooser: tvOS
+  renders `transportBarCustomMenuItems` as unlabelled icons and never gives them focus, because the
+  player view consumes every arrow press itself (ADR 0014).
+- The episode list is built with the eager `Grid` instead of `LazyVGrid`: the first row sits below the
+  fold, so no cell was ever instantiated, nothing was focusable, and focus could never scroll down to
+  a list that therefore never materialised.
 - The release detail screen claims focus for its primary action when it appears. Without that, the
   focus engine had nothing to focus after the push, and a Menu press was handled by the system, which
   backgrounded the app instead of popping back to the feed (ADR 0012).
@@ -73,6 +89,12 @@ not been released yet, so everything below is still subject to change.
 
 - Menu on the release detail screen sent the app to the home screen instead of returning to the feed,
   because the pushed screen had no focused element (ADR 0012).
+- The release detail screen could not be scrolled at all: `.scrollClipDisabled()` made the scroll view
+  report its whole content as visible, so Down presses never left the hero and genres, synopsis and
+  the episode list were unreachable dead content (ADR 0015).
+- The hero poster on the release detail screen was sliced horizontally: it was given a width-only
+  frame while the image view fills whatever frame it gets, so the artwork was cropped to a narrow
+  strip. Both dimensions now come from the 2:3 poster ratio.
 
 ### Security
 

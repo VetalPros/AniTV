@@ -6,6 +6,17 @@ import SwiftUI
 struct PlayerScreen: View {
     @Environment(\.dismiss) private var dismiss
     @State private var model: PlayerModel
+    /// The player screen hands focus to its own control when it opens: the system transport bar only
+    /// appears after a press, so an unreachable control would otherwise stay unreachable for good.
+    @FocusState private var qualityFocus: QualityFocus?
+    /// The quality chooser is a modal: the system player steals focus on the first arrow press, so a
+    /// row drawn over it can be focused once and never navigated (ADR 0014).
+    @State private var isQualityPickerPresented = false
+
+    /// Focus target of the quality row: the pill of one stream.
+    private enum QualityFocus: Hashable {
+        case quality(StreamQuality)
+    }
 
     init(request: PlaybackRequest) {
         _model = State(initialValue: PlayerModel(request: request))
@@ -19,41 +30,85 @@ struct PlayerScreen: View {
             PlayerViewController(player: model.player)
                 .ignoresSafeArea()
 
-            VStack {
-                topBar
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, 56)
-            .padding(.top, 40)
-
+            qualityOverlay
             skipOverlay
             failureOverlay
         }
-        .onAppear { model.start() }
+        .onAppear {
+            model.start()
+            takeDefaultFocus()
+        }
         .onDisappear { model.stop() }
         .onExitCommand { dismiss() }
+        .fullScreenCover(isPresented: $isQualityPickerPresented) {
+            QualityPickerScreen(
+                sources: model.sources,
+                selectedQuality: model.selectedQuality,
+                onSelect: { quality in
+                    model.selectQuality(quality)
+                    isQualityPickerPresented = false
+                },
+                onClose: { isQualityPickerPresented = false }
+            )
+        }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("player.screen")
+        // Announced by VoiceOver and asserted by the UI tests: the stream the player is running.
+        .accessibilityValue(Text(verbatim: "\(model.selectedQuality.rawValue)p"))
     }
 
-    /// Identifies the stream that is playing; the transport bar is hidden until the viewer asks
-    /// for it, so the title needs its own home.
-    private var topBar: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 14) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(verbatim: model.request.releaseTitle)
-                    .font(DesignTokens.Typography.cardTitle)
-                    .foregroundStyle(.white.opacity(0.9))
-                Text(verbatim: model.request.episodeTitle)
-                    .font(DesignTokens.Typography.cardMeta)
-                    .foregroundStyle(.white.opacity(0.65))
-            }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 12)
-            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-            Spacer(minLength: 0)
+    /// Hands focus to the pill of the running stream. Requested twice, because the cover transition
+    /// swallows the first request (ADR 0012).
+    private func takeDefaultFocus() {
+        let control = QualityFocus.quality(model.selectedQuality)
+        Task {
+            // The player opens with the system transport bar up, and every arrow press goes to it
+            // until it hides itself a few seconds later.
+            try? await Task.sleep(for: .milliseconds(6000))
+            qualityFocus = control
+            try? await Task.sleep(for: .milliseconds(600))
+            qualityFocus = control
         }
-        .accessibilityElement(children: .combine)
+    }
+
+    /// Quality control, bottom-trailing: one glass pill per stream of the episode.
+    ///
+    /// The system transport bar owns every direction the remote has while it is up, and the items the
+    /// sanctioned `transportBarCustomMenuItems` hook draws there are not reachable by the focus engine
+    /// on tvOS 27.2 (ADR 0014): they render, but no press ever focuses them. The pills are therefore
+    /// ordinary focus targets of the screen, and the one that matches the running stream holds focus
+    /// when the player opens, so the control is reachable without hunting for it.
+    @ViewBuilder
+    private var qualityOverlay: some View {
+        if model.sources.count > 1 {
+            VStack {
+                HStack {
+                    Spacer(minLength: 0)
+                    qualityRow
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.trailing, 72)
+            .padding(.top, 44)
+        }
+    }
+
+    private var qualityRow: some View {
+        Button {
+            isQualityPickerPresented = true
+        } label: {
+            Label {
+                Text(verbatim: "\(model.selectedQuality.rawValue)p")
+            } icon: {
+                Image(systemName: "rectangle.stack")
+            }
+            .font(DesignTokens.Typography.callout)
+        }
+        .buttonStyle(.glass)
+        .focused($qualityFocus, equals: .quality(model.selectedQuality))
+        .defaultFocus($qualityFocus, .quality(model.selectedQuality), priority: .userInitiated)
+        .accessibilityIdentifier("player.qualityButton")
+        .accessibilityHint(Text("player.quality.hint"))
     }
 
     @ViewBuilder
