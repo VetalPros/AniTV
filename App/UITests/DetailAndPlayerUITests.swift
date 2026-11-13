@@ -46,7 +46,7 @@ final class DetailAndPlayerUITests: XCTestCase {
     // MARK: Player transport bar
 
     @MainActor
-    func testQualityControlSwitchesTheStream() throws {
+    func testTransportBarQualityMenuSwitchesTheStream() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launch()
@@ -56,38 +56,73 @@ final class DetailAndPlayerUITests: XCTestCase {
         XCUIRemote.shared.press(.select)
         let player = app.descendants(matching: .any)["player.screen"].firstMatch
         XCTAssertTrue(player.waitForExistence(timeout: screenTimeout), "The play button did not open the player")
-        // The system transport bar owns the remote until it hides itself again.
-        Thread.sleep(forTimeInterval: 9)
-        attach(app, named: "player-quality")
+        Thread.sleep(forTimeInterval: 5)
+        attach(app, named: "player-idle")
+
+        // The entry lives in the system transport bar, so it only exists once the bar is up.
+        XCUIRemote.shared.press(.select)
+        Thread.sleep(forTimeInterval: 2)
+        // The menu is a system element without an accessibility identifier, so it is addressed by the
+        // title the catalog gives it in either app language.
+        let qualityEntry = app.descendants(matching: .any).matching(
+            NSPredicate(format: "label IN %@", ["Качество", "Quality"])
+        ).firstMatch
+        XCTAssertTrue(
+            qualityEntry.waitForExistence(timeout: screenTimeout),
+            "The transport bar has no quality entry"
+        )
+        XCTAssertTrue(
+            focusInTransportBar(qualityEntry, in: app),
+            "The quality entry is in the transport bar but the remote never focuses it"
+        )
+        attach(app, named: "transport-quality-focused")
 
         let current = player.value as? String
-        XCTAssertNotNil(current, "The player does not report the quality it is running")
-
-        let button = app.buttons["player.qualityButton"]
-        XCTAssertTrue(button.waitForExistence(timeout: screenTimeout), "The player offers no quality control")
-        XCTAssertTrue(button.hasFocus, "The quality control does not hold focus when the player opens")
+        let target = try XCTUnwrap(qualityLabels.first { $0 != current }, "The episode offers a single stream")
         XCUIRemote.shared.press(.select)
+        Thread.sleep(forTimeInterval: 2)
+        attach(app, named: "quality-menu-open")
 
-        let picker = app.descendants(matching: .any)["qualityPicker.screen"].firstMatch
-        XCTAssertTrue(
-            picker.waitForExistence(timeout: screenTimeout),
-            "Selecting the quality control did not open the chooser"
-        )
-        attach(app, named: "quality-picker")
-
-        let target = try XCTUnwrap(
-            qualityLabels.first { $0 != current },
-            "The episode offers a single stream, so there is nothing to switch to"
-        )
-        let targetButton = app.buttons["qualityPicker.\(target.prefix(3))"]
-        XCTAssertTrue(targetButton.waitForExistence(timeout: screenTimeout), "The chooser does not offer \(target)")
-        XCTAssertTrue(focus(targetButton, in: app, vertical: true), "The chooser cannot focus \(target)")
+        // The menu is a system popup: its items are addressed through the focus engine (Down walks
+        // them) rather than by label, because "1080p" also names an episode card underneath.
+        var focusedLabel = focusedElementLabel(in: app)
+        for _ in 0 ..< focusAttempts where focusedLabel != target {
+            XCUIRemote.shared.press(.down)
+            Thread.sleep(forTimeInterval: 0.6)
+            focusedLabel = focusedElementLabel(in: app)
+        }
+        XCTAssertEqual(focusedLabel, target, "The quality menu never focused \(target)")
         XCUIRemote.shared.press(.select)
         Thread.sleep(forTimeInterval: 4)
 
-        XCTAssertFalse(picker.exists, "Choosing a quality did not close the chooser")
         XCTAssertEqual(player.value as? String, target, "The player did not switch to \(target)")
-        attach(app, named: "player-quality-switched")
+        attach(app, named: "quality-switched")
+    }
+
+    /// Walks the transport bar until `element` holds focus.
+    ///
+    /// The bar is a system collection with its own traversal order (timeline, info row, trailing
+    /// buttons), so a single direction is not enough: the cycle below is the sequence that reaches the
+    /// trailing entries in practice.
+    @MainActor
+    private func focusInTransportBar(_ element: XCUIElement, in _: XCUIApplication) -> Bool {
+        let cycle: [XCUIRemote.Button] = [.right, .down, .left, .up]
+        for step in 0 ..< cycle.count * 3 {
+            if element.exists, element.hasFocus {
+                return true
+            }
+            XCUIRemote.shared.press(cycle[step % cycle.count])
+            Thread.sleep(forTimeInterval: 0.8)
+        }
+        return element.exists && element.hasFocus
+    }
+
+    /// Label of whatever currently holds focus.
+    @MainActor
+    private func focusedElementLabel(in app: XCUIApplication) -> String? {
+        let focused = app.descendants(matching: .any).matching(NSPredicate(format: "hasFocus == 1"))
+        guard !focused.allElementsBoundByIndex.isEmpty else { return nil }
+        return focused.firstMatch.label
     }
 
     /// Presses Down (or Right, when the target shares the row) until `element` holds focus.

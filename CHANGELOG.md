@@ -56,9 +56,11 @@ not been released yet, so everything below is still subject to change.
 - Episode list on the release detail screen is a two-column grid of episode cards with preview,
   title, duration and the best available quality; picking one starts exactly that episode in the
   player.
-- Quality switching in the player: the running stream is shown as one glass pill in the top-trailing
-  corner, and choosing it opens a modal «Качество» screen with every stream the episode publishes
-  (1080p / 720p / 480p). Switching replaces the player item and keeps the playhead (ADR 0014).
+- Quality switching in the player, as a native transport-bar entry: the button carries the running
+  quality ("1080p") and opens the system «Качество» menu with every stream the episode publishes
+  (1080p / 720p / 480p). It is visible exactly as long as the transport bar is, never permanently over
+  the video. Switching replaces the player item and keeps the playhead (ADR 0016, superseding
+  ADR 0014).
 - Two more UI-test scenarios (`DetailAndPlayerUITests`): scrolling the detail screen down to the
   episode list and playing an episode from it, and switching the stream quality through the chooser.
 
@@ -72,9 +74,10 @@ not been released yet, so everything below is still subject to change.
   instead of being duplicated in two view models.
 - The player no longer draws its own title badge over the video: the system info panel already shows
   the release, the episode and the stream, and the badge only duplicated it (and could not be hidden).
-- The player's per-quality transport-bar items were dropped in favour of the modal chooser: tvOS
-  renders `transportBarCustomMenuItems` as unlabelled icons and never gives them focus, because the
-  player view consumes every arrow press itself (ADR 0014).
+- The player's in-screen title badge and its floating quality pill are gone: quality now lives in the
+  system transport bar as a single `UIMenu` entry. A flat list of `UIAction`s in the same place is
+  rendered as unlabelled circles the focus engine never reaches, while one `UIMenu` becomes a real
+  button that opens the system menu (ADR 0016, superseding ADR 0014).
 - The episode list is built with the eager `Grid` instead of `LazyVGrid`: the first row sits below the
   fold, so no cell was ever instantiated, nothing was focusable, and focus could never scroll down to
   a list that therefore never materialised.

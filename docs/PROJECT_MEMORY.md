@@ -2,8 +2,8 @@
 
 > Update this file at the end of every session that changes the project's state.
 > Rules and constraints live in `AGENTS.md`; decisions live in `docs/DECISIONS.md`.
-> Last updated: **2026-11-11** (session 2: manual-run feedback — detail screen scrolls, poster no longer
-> cropped, player title badge removed, quality chooser added; ADR 0014-0015).
+> Last updated: **2026-11-13** (session 3: quality moved into the system transport bar as a `UIMenu`
+> entry after the user's manual check; ADR 0016 supersedes 0014).
 
 ## Snapshot
 
@@ -109,8 +109,11 @@ Second pass (same day, after the user's own run on the simulator):
       panel (ADR 0015 for the scroll trap, ADR 0014 for the player).
 - [x] Episode list is now reachable: Down walks from the hero into genres → synopsis → episodes, and
       choosing an episode starts that episode (`testDetailScrollsToEpisodeListAndPlaysAnEpisode`).
-- [x] Quality switching: glass pill top-trailing → «Качество» modal → 1080p / 720p / 480p, item
-      replaced and playhead kept (`testQualityControlSwitchesTheStream`).
+- [x] Quality switching, in the system transport bar: one `UIMenu` entry whose image is the running
+      quality ("1080p") opens the native «Качество» popup with 1080p / 720p / 480p; item replaced and
+      playhead kept (`testTransportBarQualityMenuSwitchesTheStream`). The entry is only on screen while
+      the transport bar is — the floating pill and the modal chooser from ADR 0014 are gone (ADR 0016).
+      Confirmed by the user on a manual run: switching works and the position is preserved.
 - [x] Full UI suite green on the committed tree: 4 tests, `** TEST SUCCEEDED **`; `swiftformat --lint .`
       → 0/51 files; `swiftlint --strict` → 0 violations in 51 files; `swift test` → 25 tests pass.
 - [x] Screenshots in `docs/screenshots/` re-taken from the test attachments (detail, episodes, player,

@@ -88,7 +88,7 @@ push-уведомлений, потому что разработка идёт �
 | --- | --- | --- |
 | ![Лента релизов](docs/screenshots/feed.jpg) | ![Карточка релиза](docs/screenshots/detail.jpg) | ![Список серий](docs/screenshots/episodes.jpg) |
 
-| Плеер | Выбор качества |
+| Плеер (транспорт-бар) | Качество в транспорт-баре |
 | --- | --- |
 | ![Плеер](docs/screenshots/player.jpg) | ![Выбор качества](docs/screenshots/quality.jpg) |
 

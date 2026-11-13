@@ -221,6 +221,10 @@ out to be flaky only because of simulator boot time, move it to a `schedule:` tr
 
 ## 0014 — Quality switching is a modal chooser, not a transport-bar item (2026-11-11)
 
+**Superseded by ADR 0016 (2026-11-13):** a single `UIMenu` in the same API *is* reachable, so the
+modal chooser described below no longer exists. The findings about flat `UIAction`s and about a
+SwiftUI overlay drawn over the player still hold.
+
 **Context.** The player had no way to change stream quality. The sanctioned hook,
 `AVPlayerViewController.transportBarCustomMenuItems`, was implemented first: one `UIAction` per
 quality, each carrying a rendered "1080p / 720p / 480p" image (tvOS renders these items from their
@@ -266,3 +270,29 @@ episodes, so rendering them all costs nothing.
 test asserts by focusing an episode card and playing it. The same trap applies to any future
 scrollable screen: `scrollClipDisabled` + lazy containers is a combination that silently disables
 remote navigation.
+
+---
+
+## 0016 — Quality is a `UIMenu` in the system transport bar (2026-11-13)
+
+Supersedes ADR 0014, which concluded that the transport bar cannot host a usable quality control.
+
+**Context.** ADR 0014 was written after flat `UIAction`s passed to
+`transportBarCustomMenuItems` rendered in the bar but never took focus: with a debug tree dump taken
+between remote presses, every arrow press handed focus back to `AVPlayerViewController` and the items
+were unreachable. Re-testing that conclusion with the *other* shape of the same API changed it: one
+`UIMenu` (title, image, one action per stream) becomes a real transport-bar button that the focus
+engine reaches and that opens the system popup menu. The remaining difficulty is only traversal —
+the bar's focus order is not "two presses to the right" but a system collection order, so the UI test
+walks it instead of assuming a path.
+
+**Decision.** The quality control is one `UIMenu` entry in `transportBarCustomMenuItems` whose image is
+the running quality drawn as text ("1080p"), because tvOS renders these entries from the image alone
+and never shows the title. It therefore appears and disappears with the transport bar — no permanent
+overlay over the video — and the popup is the system one («Качество», 1080p ✓ / 720p / 480p). The
+modal `QualityPickerScreen` and the floating pill from ADR 0014 are deleted.
+
+**Consequences.** The player has no custom chrome again: one system entry, the system menu, the
+system timeline. The entry is re-applied only when the selected quality or the stream list changes, so
+it does not close under the viewer's finger. Cost: the entry has no accessibility identifier (it is a
+system element), so the UI test addresses it by its localized title and walks the bar to focus it.
