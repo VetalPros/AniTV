@@ -92,6 +92,10 @@ push-уведомлений, потому что разработка идёт �
 | --- | --- |
 | ![Плеер](docs/screenshots/player.jpg) | ![Выбор качества](docs/screenshots/quality.jpg) |
 
+| Домашний экран tvOS: иконка в доке и Top Shelf |
+| --- |
+| ![Иконка и Top Shelf](docs/screenshots/home.jpg) |
+
 ## Требования
 
 - **macOS** с Xcode, в комплекте которого есть **tvOS SDK 26.0 или новее** (проект проверен на
