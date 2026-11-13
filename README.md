@@ -92,7 +92,7 @@ push-уведомлений, потому что разработка идёт �
 | --- | --- |
 | ![Плеер](docs/screenshots/player.jpg) | ![Выбор качества](docs/screenshots/quality.jpg) |
 
-| Домашний экран tvOS: иконка в доке и Top Shelf |
+| Домашний экран tvOS: иконка и Top Shelf при фокусе |
 | --- |
 | ![Иконка и Top Shelf](docs/screenshots/home.jpg) |
 

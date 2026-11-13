@@ -325,7 +325,8 @@ the instruction to replace the mark before publishing.
 - A plain `AppIcon.appiconset` is not an option for this SDK: actool reports the image as an
   "unassigned child" and emits nothing.
 
-**Consequences.** The app has a real icon and a static Top Shelf image (visible on the simulator home
-screen). The licensing and trademark questions are open by design and are tracked in
+**Consequences.** The app has a real icon and a static Top Shelf image. Note for future sessions: the
+Top Shelf is only drawn while the app tile holds focus on the home screen; with focus elsewhere the
+system shows its own wallpaper, so an unfocused screenshot proves nothing about the asset. The licensing and trademark questions are open by design and are tracked in
 `docs/THIRD_PARTY_ASSETS.md` — resolving them means commissioning an original mark, which is a
 product decision, not a coding one.
