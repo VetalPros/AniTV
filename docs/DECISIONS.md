@@ -296,3 +296,36 @@ modal `QualityPickerScreen` and the floating pill from ADR 0014 are deleted.
 system timeline. The entry is re-applied only when the selected quality or the stream list changes, so
 it does not close under the viewer's finger. Cost: the entry has no accessibility identifier (it is a
 system element), so the UI test addresses it by its localized title and walks the bar to focus it.
+
+---
+
+## 0017 — The app icon is the upstream AniLibria mark (2026-11-13)
+
+**Context.** The build had no icon at all: `Assets.xcassets` contained only `AccentColor`, so actool
+warned that no `App Icon & Top Shelf Image` collection existed and the app appeared on the tvOS home
+screen as a white placeholder. The user asked for the icon of the official Android TV app, pointing at
+<https://github.com/anilibria/anilibria-app>.
+
+Two facts about that source: the repository is **GPL-3.0** while this one is MIT, and the artwork is
+AniLibria's brand mark — the very thing `AGENTS.md` §1 forbids using as product identity.
+
+**Decision.** Take it anyway, at the owner's explicit request, and record the trade-off instead of
+hiding it: the monogram was extracted from `ic_launcher-playstore.png`, re-composed into tvOS layers
+(`Back` plate + `Front` mark, 400×240 and @2x) plus a static Top Shelf image, and
+`docs/THIRD_PARTY_ASSETS.md` states the provenance, the GPL-3.0 origin and the trademark caveat with
+the instruction to replace the mark before publishing.
+
+**What it cost to make it work** (all found by compiling, not by reading docs):
+- A brandassets entry with `size: 1280x768` makes the whole image stack 1280×768, and then the last
+  layer must fill it — which contradicts the 400×240/800×480 layer sizes tvOS actually renders. With
+  `size: 400x240` every rendition (flattened + radiosity, 1x and 2x) is produced.
+- Layers must be named `Back` and `Front` and live in `Content.imageset` folders with both scales.
+- The **first** entry in `layers` is the visible one; with the plate listed first the icon rendered as
+  a plain red rectangle with no mark (seen on the simulator home screen), so the mark layer comes first.
+- A plain `AppIcon.appiconset` is not an option for this SDK: actool reports the image as an
+  "unassigned child" and emits nothing.
+
+**Consequences.** The app has a real icon and a static Top Shelf image (visible on the simulator home
+screen). The licensing and trademark questions are open by design and are tracked in
+`docs/THIRD_PARTY_ASSETS.md` — resolving them means commissioning an original mark, which is a
+product decision, not a coding one.

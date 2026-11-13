@@ -47,6 +47,10 @@ not been released yet, so everything below is still subject to change.
   image view backed by the Kit cache, screen header and a wrapping layout.
 - Localisation catalog with 44 keys (English source, Russian translations) and an asset catalog with
   an accent colour.
+- App icon and static Top Shelf image as a tvOS `App Icon & Top Shelf Image` brand assets collection:
+  a two-layer icon (`Back` plate + `Front` mark, 400×240 and @2x) and Top Shelf artwork at 1920×720
+  and 2320×720. The mark is taken from the official Android TV app, which is recorded with its
+  GPL-3.0 provenance and trademark caveat in `docs/THIRD_PARTY_ASSETS.md` (ADR 0017).
 - XCUITest suite (`App/UITests/LatestFeedUITests.swift`, target `AniTVUITests`) that drives the focus
   engine through `XCUIRemote`: it opens a release from the feed, checks the detail screen describes the
   selected title, starts playback from the detail screen and returns through Menu. Screenshots of the

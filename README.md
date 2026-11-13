@@ -60,7 +60,7 @@ AniTV — клиент для просмотра аниме с AniLiberty на A
 | Пропуск опенинга/эндинга по таймкодам | 📋 | `App/Sources/Features/Player/` |
 | Избранное на стороне сервера | 📋 | `AniLibertyKit/Sources/AniLibertyKit/API/` |
 | Поиск и каталог по жанрам | 📋 | `App/Sources/Features/` |
-| Top Shelf (статичные изображения) | 📋 | `App/Sources/` |
+| Иконка приложения и статичный Top Shelf | ✅ | `App/Resources/Assets.xcassets/` |
 | Локализация ru/en (String Catalogs) | 📋 | `App/Resources/Localizable.xcstrings` |
 | Сборка приложения под симулятор tvOS (`generic/platform=tvOS Simulator`) | ✅ | `project.yml`, `App/` |
 | UI-тесты XCUITest: лента → карточка релиза и плеер из карточки | ✅ | `App/UITests/` |

@@ -2,8 +2,8 @@
 
 > Update this file at the end of every session that changes the project's state.
 > Rules and constraints live in `AGENTS.md`; decisions live in `docs/DECISIONS.md`.
-> Last updated: **2026-11-13** (session 3: quality moved into the system transport bar as a `UIMenu`
-> entry after the user's manual check; ADR 0016 supersedes 0014).
+> Last updated: **2026-11-13** (session 4: app icon + static Top Shelf from the upstream Android TV app;
+> ADR 0017, provenance in `docs/THIRD_PARTY_ASSETS.md`).
 
 ## Snapshot
 
@@ -118,14 +118,18 @@ Second pass (same day, after the user's own run on the simulator):
       → 0/51 files; `swiftlint --strict` → 0 violations in 51 files; `swift test` → 25 tests pass.
 - [x] Screenshots in `docs/screenshots/` re-taken from the test attachments (detail, episodes, player,
       quality chooser).
+- [x] App icon and static Top Shelf image (ADR 0017): two-layer tvOS brand assets compiled by actool
+      (`CFBundleIcons → CFBundlePrimaryIcon = App Icon` in the built `Info.plist`, flattened and
+      radiosity renditions present in `Assets.car`), verified on the simulator home screen — the dock
+      shows the red plate with the white mark and the Top Shelf area shows the static artwork.
+      Provenance and the GPL-3.0/trademark caveat: `docs/THIRD_PARTY_ASSETS.md`.
 
 ## Next steps (ordered)
 
-1. "Продолжить просмотр": store the playhead per episode (Keychain is wrong for this — a small
-   `UserDefaults`/file store in the app's container) and offer it on the detail screen and in the player.
-   Nothing of this exists yet; the player only reports progress through the system transport bar.
-2. App icon (layered tvOS icon: 2 layers + App Icon) and Top Shelf decision (static or none, given the
-   free account cannot share app data). The build currently warns about the missing brand assets.
+1. "Продолжить просмотр": store the playhead per episode (a small `UserDefaults`/file store in the app
+   container) and offer it on the detail screen and in the player. Nothing of this exists yet.
+2. Replace the borrowed app icon with an original mark before publishing anywhere — see
+   `docs/THIRD_PARTY_ASSETS.md`; the current one is AniLibria's brand and comes from a GPL-3.0 repo.
 3. Каталог tab (genres + catalogue listing) and Профиль tab (Keychain-stored token, login state).
 4. Cache/conditional-request pass on the API client (ETag / `If-None-Match`), per the politeness rule.
 5. Watch the advisory `ui-tests` CI job on a real GitHub runner; only then consider making it required
