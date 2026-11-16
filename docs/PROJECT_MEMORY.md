@@ -145,6 +145,41 @@ Second pass (same day, after the user's own run on the simulator):
 6. Decide the final product name / bundle identifier **before** the repository goes public (renaming the
    directory means re-registering the DSH workspace).
 
+## Deferred ideas (agreed, deliberately not scheduled)
+
+### Dynamic Top Shelf — a carousel of fresh releases instead of the static artwork
+
+**What.** Replace the static `Top Shelf Image` with a carousel: posters of the latest releases,
+supplied by a **TV Services extension** (`TVTopShelfContentProvider` returning
+`TVTopShelfCarouselContent` with `TVTopShelfCarouselItem`s).
+
+**Why it is not done now.** The shipped Top Shelf is a PNG baked into the bundle: it changes only
+with a new build. A live strip is a new target, a new bundle identifier, its own signing and its own
+cache — a feature, not a tweak. Agreed with the owner on 2026-11-16 to keep the static artwork and
+revisit this later.
+
+**What to verify first (a spike, not a design task).**
+
+1. Does a TV Services extension display at all on tvOS 27.2 in the **simulator**, and with a **free**
+   Apple Developer account? Nothing about this has been tested in this project yet.
+2. How often does the system actually ask the provider for content (on focus? on a schedule? never
+   again after the first fetch)? This decides whether "fresh" is even true.
+3. Can the extension fetch `GET /anime/releases/latest` on its own? It cannot read the app's cache or
+   any app data (no App Groups on the free account), so it needs its own `AniLibertyClient` instance,
+   its own `ImageCache`, its own error handling, and it must honour the politeness rule (one request
+   per refresh, conditional requests).
+4. What does the system do when the extension fails or the network is down — empty carousel, stale
+   content, or nothing at all?
+
+**Consequences to accept if it ships.** `AGENTS.md` §2 ("Top Shelf must be either static imagery or
+omitted") must be rewritten: its premise is that an extension cannot read app data, which no longer
+blocks a self-fetching extension. CI gains a target that cannot be exercised without a booted
+simulator plus network. Budget: roughly half a day for the spike, then the carousel design.
+
+**Fallback that needs no extension.** The "Новинки" tab already is the fresh-releases surface inside
+the app; if the system turns out to refresh the Top Shelf too rarely to be worth it, keep the static
+artwork and drop this idea.
+
 ## Open questions for the user
 
 - Final **product name** and **bundle identifier** — deliberately deferred; the working name is

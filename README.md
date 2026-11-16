@@ -37,12 +37,12 @@ AniTV — клиент для просмотра аниме с AniLiberty на A
 ### Статус проекта
 
 Проект в активной разработке: сборочный пайплайн и ядро `AniLibertyKit` готовы и покрыты
-тестами, экраны приложения написаны для трёх основных сценариев (лента, карточка релиза,
-плеер) и пока не проверены на устройстве. Статус в таблице отражает то, что лежит в
-репозитории сейчас, а не планы.
+тестами, три основных сценария (лента, карточка релиза, плеер) проходят **UI-тесты на
+симуляторе tvOS**, на физическом устройстве приложение ещё не запускалось. Статус в таблице
+отражает то, что лежит в репозитории сейчас, а не планы.
 
 Обозначения: ✅ проверено командой · 🚧 код есть, нужна доработка или проверка на устройстве ·
-📋 запланировано · ❓ не проверено
+📋 запланировано · 💡 идея, отложена (обоснование — `docs/PROJECT_MEMORY.md`) · ❓ не проверено
 
 | Возможность | Статус | Где живёт |
 | --- | --- | --- |
@@ -53,17 +53,18 @@ AniTV — клиент для просмотра аниме с AniLiberty на A
 | HTTP-клиент: эндпоинты, кэш ответов, типизированные ошибки | ✅ | `AniLibertyKit/Sources/AniLibertyKit/API/` |
 | Кэш постеров (`ImageCache`, actor; память и диск) | ✅ | `AniLibertyKit/Sources/AniLibertyKit/Cache/` |
 | Резолвер HLS-потоков и таймкодов опенинга/эндинга | ✅ | `AniLibertyKit/Sources/AniLibertyKit/Player/` |
-| Экран «Последние релизы»: сетка постеров, состояния загрузки | 🚧 | `App/Sources/Features/Latest/` |
-| Карточка релиза: описание, жанры, список серий | 🚧 | `App/Sources/Features/Detail/` |
-| Плеер: `AVPlayerViewController`, `externalMetadata`, resume | 🚧 | `App/Sources/Features/Player/` |
-| Дизайн-система: токены, стеклянные плашки, focus-стили | 🚧 | `App/Sources/Design/` |
-| Пропуск опенинга/эндинга по таймкодам | 📋 | `App/Sources/Features/Player/` |
+| Экран «Последние релизы»: сетка постеров, состояния загрузки | ✅ | `App/Sources/Features/Latest/` |
+| Карточка релиза: описание, жанры, список серий | ✅ | `App/Sources/Features/Detail/` |
+| Плеер: `AVPlayerViewController`, `externalMetadata`, переключение качества | ✅ | `App/Sources/Features/Player/` |
+| Дизайн-система: токены, стеклянные плашки, focus-стили | ✅ | `App/Sources/Design/` |
+| Пропуск опенинга/эндинга по таймкодам | 🚧 | `App/Sources/Features/Player/` |
 | Избранное на стороне сервера | 📋 | `AniLibertyKit/Sources/AniLibertyKit/API/` |
 | Поиск и каталог по жанрам | 📋 | `App/Sources/Features/` |
 | Иконка приложения и статичный Top Shelf | ✅ | `App/Resources/Assets.xcassets/` |
-| Локализация ru/en (String Catalogs) | 📋 | `App/Resources/Localizable.xcstrings` |
+| Динамический Top Shelf: карусель свежих релизов (TV Services) | 💡 | `docs/PROJECT_MEMORY.md` |
+| Локализация ru/en (String Catalogs) | ✅ | `App/Resources/Localizable.xcstrings` |
 | Сборка приложения под симулятор tvOS (`generic/platform=tvOS Simulator`) | ✅ | `project.yml`, `App/` |
-| UI-тесты XCUITest: лента → карточка релиза и плеер из карточки | ✅ | `App/UITests/` |
+| UI-тесты XCUITest: лента → карточка → серии → плеер, переключение качества | ✅ | `App/UITests/` |
 | Подпись и установка на устройство (бесплатный аккаунт) | 📋 | `project.yml` |
 
 Значок ✅ у модулей `AniLibertyKit` означает, что `swift test --package-path AniLibertyKit`
