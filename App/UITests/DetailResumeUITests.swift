@@ -28,9 +28,17 @@ final class DetailResumeUITests: XCTestCase {
         // persist a position (it saves every few seconds and once more on the way out).
         XCUIRemote.shared.press(.select)
         let playerScreen = app.descendants(matching: .any)["player.screen"].firstMatch
+        // «Смотреть» opens the episode picker first; the picker focuses the episode the player would
+        // have started, so one more Select starts it.
+        let picker = app.descendants(matching: .any)["episodePicker.screen"].firstMatch
+        if picker.waitForExistence(timeout: 10) {
+            let pickerCards = app.descendants(matching: .any).matching(identifier: "detail.pickerEpisodeCard")
+            XCTAssertGreaterThan(pickerCards.count, 0, "The episode picker rendered no episodes")
+            XCUIRemote.shared.press(.select)
+        }
         XCTAssertTrue(
             playerScreen.waitForExistence(timeout: screenTimeout),
-            "Selecting «Смотреть» did not open the player"
+            "Selecting the hero action (picker path included) did not open the player"
         )
         Thread.sleep(forTimeInterval: watchedSeconds)
 

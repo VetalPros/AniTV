@@ -123,12 +123,13 @@ final class LatestFeedUITests: XCTestCase {
             focusedHeroAction.firstMatch.waitForExistence(timeout: focusTimeout),
             "The detail screen never focused its primary action, so Select could not start playback"
         )
-        XCUIRemote.shared.press(.select)
-
-        let playerScreen = app.descendants(matching: .any)["player.screen"].firstMatch
+        // «Смотреть» now opens the episode picker; «Продолжить» still starts the saved position
+        // directly, and which of the two holds focus depends on the stored progress. Both paths are
+        // asserted, the picker one explicitly.
+        let playerScreen = startPlaybackFromHeroAction(in: app)
         XCTAssertTrue(
             playerScreen.waitForExistence(timeout: detailTimeout),
-            "Selecting the play button did not present the player screen"
+            "The hero action did not reach the player (picker path included)"
         )
         keepScreenshot(of: app, named: "3-player")
 
@@ -139,6 +140,26 @@ final class LatestFeedUITests: XCTestCase {
             "Menu did not dismiss the player back to the detail screen"
         )
         XCTAssertFalse(playerScreen.exists, "The player screen is still presented after Menu")
+    }
+
+    /// Selects the focused hero action and, when that opens the episode picker (what «Смотреть» does now),
+    /// picks the episode the picker starts on. Returns once the player is on screen.
+    @MainActor
+    private func startPlaybackFromHeroAction(in app: XCUIApplication) -> XCUIElement {
+        let player = app.descendants(matching: .any)["player.screen"].firstMatch
+        let picker = app.descendants(matching: .any)["episodePicker.screen"].firstMatch
+        XCUIRemote.shared.press(.select)
+        if picker.waitForExistence(timeout: 10) {
+            let pickerCards = app.descendants(matching: .any).matching(identifier: "detail.pickerEpisodeCard")
+            XCTAssertGreaterThan(
+                pickerCards.count,
+                0,
+                "The episode picker behind «Смотреть» rendered no episodes"
+            )
+            // The picker focuses the episode the player would have started, so Select starts it.
+            XCUIRemote.shared.press(.select)
+        }
+        return player
     }
 
     /// Presses Select while a poster card holds focus and waits for the detail screen to be pushed.

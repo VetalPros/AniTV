@@ -16,6 +16,9 @@ private struct SynopsisWidthPreference: PreferenceKey {
 struct ReleaseDetailView: View {
     @State private var model: ReleaseDetailViewModel
     @State private var playbackTarget: PlaybackRequest?
+    @State private var isPickerPresented = false
+    /// Episode chosen in the picker; playback starts when the cover finishes dismissing.
+    @State private var pendingEpisode: Episode?
     @FocusState private var focusedControl: FocusedControl?
 
     /// Width the synopsis is actually laid out at, reported by the text itself. It feeds the
@@ -42,6 +45,26 @@ struct ReleaseDetailView: View {
             content
         }
         .task { await model.loadIfNeeded() }
+        .fullScreenCover(
+            isPresented: $isPickerPresented,
+            onDismiss: {
+                if let episode = pendingEpisode {
+                    pendingEpisode = nil
+                    playbackTarget = model.playbackRequest(for: episode)
+                }
+            },
+            content: {
+                EpisodePickerScreen(
+                    episodes: model.episodes,
+                    initialFocusEpisodeID: model.resumeProgress?.episodeID ?? model.playableEpisode?.id,
+                    playableQuality: playbackQuality(for:),
+                    onSelect: { episode in
+                        pendingEpisode = episode
+                        isPickerPresented = false
+                    }
+                )
+            }
+        )
         .fullScreenCover(
             item: $playbackTarget,
             onDismiss: {
@@ -84,7 +107,11 @@ struct ReleaseDetailView: View {
                     genresRow
                 }
                 synopsisSection
-                episodesSection(release)
+                EpisodeSection(
+                    episodes: release.episodes,
+                    playableQuality: playbackQuality(for:),
+                    onSelect: play
+                )
             }
             .padding(.horizontal, DesignTokens.screenInset)
             .padding(.top, 36)
@@ -261,7 +288,7 @@ struct ReleaseDetailView: View {
 
     private func playButton(_: Release) -> some View {
         Button {
-            playbackTarget = model.primaryPlaybackRequest
+            isPickerPresented = true
         } label: {
             Label("detail.watch", systemImage: "play.fill")
                 .font(.system(size: 22, weight: .semibold))
@@ -338,49 +365,6 @@ struct ReleaseDetailView: View {
 
     private var isSynopsisCollapsed: Bool {
         isSynopsisClipped && !model.isDescriptionExpanded
-    }
-
-    // MARK: Episodes
-
-    private func episodesSection(_ release: Release) -> some View {
-        VStack(alignment: .leading, spacing: 18) {
-            Text("detail.episodes.title")
-                .font(DesignTokens.Typography.sectionTitle)
-                .foregroundStyle(.white)
-            if release.episodes.isEmpty {
-                Text("detail.episodes.empty")
-                    .font(DesignTokens.Typography.body)
-                    .foregroundStyle(.secondary)
-            } else {
-                episodeGrid(release.episodes)
-            }
-        }
-        .focusSection()
-    }
-
-    /// Two-column episode list built with the eager `Grid` on purpose.
-    ///
-    /// `LazyVGrid` only instantiates the cells that intersect the visible area, and here the first
-    /// row sits below the fold: no cell ever exists, so nothing is focusable, so focus never scrolls
-    /// down to the list and the list never materialises. The grid holds a handful of rows, so
-    /// building it eagerly costs nothing and keeps the whole list reachable with the remote.
-    private func episodeGrid(_ episodes: [Episode]) -> some View {
-        let rowCount = (episodes.count + 1) / 2
-        return Grid(alignment: .leading, horizontalSpacing: 20, verticalSpacing: 20) {
-            ForEach(0 ..< rowCount, id: \.self) { row in
-                GridRow(alignment: .top) {
-                    ForEach(Array((row * 2) ..< min(row * 2 + 2, episodes.count)), id: \.self) { index in
-                        let episode = episodes[index]
-                        EpisodeCard(
-                            episode: episode,
-                            playableQuality: playbackQuality(for: episode)
-                        ) {
-                            play(episode)
-                        }
-                    }
-                }
-            }
-        }
     }
 
     private func playbackQuality(for episode: Episode) -> StreamQuality? {

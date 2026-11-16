@@ -359,3 +359,30 @@ initialiser, and thread safety is `UserDefaults`'s own documented guarantee.
   «Продолжить» always returns to the most recently watched episode of that release.
 - The detail screen waits for the release before taking focus, so the button it focuses is the one that
   matches the stored progress. Tests that assert "the screen took focus" accept either hero action.
+
+---
+
+## 0019 — Episode cards follow the site, and «Смотреть» asks which episode (2026-11-16)
+
+**Context.** The user compared the release screen with the official site and asked for the site's
+episode grid: full-bleed previews in three columns with the title, «N эпизод» and a length pill over
+the still. They also asked for «Смотреть» to stop guessing which episode to start and offer a choice.
+
+**Decision.** The card is rebuilt as an overlay (`EpisodeCard`): the preview fills it, a bottom scrim
+carries the text, the length sits in a pill, and focus scales and outlines it like every other card.
+The eager three-column `Grid` moved into `EpisodeGrid`, the section into `EpisodeSection`. «Смотреть»
+presents `EpisodePickerScreen` — a `fullScreenCover` with its own focus engine, default focus on the
+episode the player would have chosen (the resumable one first), Menu closing it without playing.
+«Продолжить» deliberately does not open the picker: it means "go on with exactly that episode".
+
+**Two parts of the site's UI are consciously not reproduced**, and the report says so rather than
+faking them:
+- the «⋮» button in the card's corner — on tvOS it needs its own focusable control inside a focusable
+  card and a behaviour nobody has defined;
+- the «Просмотрено N из M» counter — the progress store keeps one record per release, so the app
+  cannot honestly count how many episodes were watched. That becomes possible with the per-episode
+  progress listed in the roadmap.
+
+**Consequences.** Episodes are now three per row, so a release with many episodes makes the detail
+screen taller; the picker is the quick path. The UI tests that used to assume Select on «Смотреть»
+starts playback now assert the picker leg first — the behaviour change is covered, not worked around.

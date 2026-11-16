@@ -65,6 +65,11 @@ not been released yet, so everything below is still subject to change.
   (1080p / 720p / 480p). It is visible exactly as long as the transport bar is, never permanently over
   the video. Switching replaces the player item and keeps the playhead (ADR 0016, superseding
   ADR 0014).
+- Episode cards in the style of the official site: a three-column grid of full-bleed previews with a
+  scrim, the episode title over the still, «N эпизод» with the number in bold and the length in a pill
+  in the corner; episodes without a stream stay dimmed and disabled.
+- «Смотреть» now opens a modal episode picker (same card style, focus on the episode the player would
+  have picked, Menu closes it without playing) instead of jumping straight into the first stream.
 - Playback progress memory: the player stores the position of the current episode every five seconds
   and once more when it is dismissed, and the release screen offers «Продолжить» to the left of
   «Смотреть» when that position is worth resuming (past the first 15 s and not inside the last 30 s).

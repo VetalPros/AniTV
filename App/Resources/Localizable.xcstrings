@@ -103,6 +103,23 @@
         }
       }
     },
+    "detail.episodeLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "episode"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "эпизод"
+          }
+        }
+      }
+    },
     "detail.episodes.empty": {
       "extractionState": "manual",
       "localizations": {

@@ -127,6 +127,11 @@ final class ReleaseDetailViewModel {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    /// Episodes of the loaded release, empty until it arrives.
+    var episodes: [Episode] {
+        release?.episodes ?? []
+    }
+
     var genres: [Genre] {
         release?.genres ?? []
     }

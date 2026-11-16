@@ -54,7 +54,7 @@ AniTV — клиент для просмотра аниме с AniLiberty на A
 | Кэш постеров (`ImageCache`, actor; память и диск) | ✅ | `AniLibertyKit/Sources/AniLibertyKit/Cache/` |
 | Резолвер HLS-потоков и таймкодов опенинга/эндинга | ✅ | `AniLibertyKit/Sources/AniLibertyKit/Player/` |
 | Экран «Последние релизы»: сетка постеров, состояния загрузки | ✅ | `App/Sources/Features/Latest/` |
-| Карточка релиза: описание, жанры, список серий | ✅ | `App/Sources/Features/Detail/` |
+| Карточка релиза: описание, жанры, список серий, выбор серии за «Смотреть» | ✅ | `App/Sources/Features/Detail/` |
 | Плеер: `AVPlayerViewController`, `externalMetadata`, переключение качества | ✅ | `App/Sources/Features/Player/` |
 | Память позиции просмотра и кнопка «Продолжить» на карточке | ✅ | `App/Sources/Features/Player/`, `AniLibertyKit/Sources/AniLibertyKit/Persistence/` |
 | Дизайн-система: токены, стеклянные плашки, focus-стили | ✅ | `App/Sources/Design/` |
@@ -89,6 +89,10 @@ push-уведомлений, потому что разработка идёт �
 | Лента «Новинки» | Карточка релиза | Список серий |
 | --- | --- | --- |
 | ![Лента релизов](docs/screenshots/feed.jpg) | ![Карточка релиза](docs/screenshots/detail.jpg) | ![Список серий](docs/screenshots/episodes.jpg) |
+
+| Выбор серии за кнопкой «Смотреть» |
+| --- |
+| ![Выбор серии](docs/screenshots/episode-picker.jpg) |
 
 | Плеер (транспорт-бар) | Качество в транспорт-баре |
 | --- | --- |

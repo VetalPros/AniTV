@@ -1,78 +1,120 @@
 import AniLibertyKit
 import SwiftUI
 
-/// One row of the flat episode list: preview frame, title, length and a play affordance.
+/// One episode of the grid: the preview fills the card, a scrim carries the text, the length sits in a
+/// pill in the corner.
+///
+/// The card is deliberately not focus-generic: the detail screen lets every card own its focus, while
+/// the picker needs to decide which card starts focused. Both cases are served by ``focus``, which the
+/// picker passes and the detail screen leaves `nil`.
 struct EpisodeCard: View {
     let episode: Episode
     let playableQuality: StreamQuality?
+    /// Accessibility identifier; the detail grid and the picker publish different ones.
+    var identifier = "detail.episodeCard"
+    /// Focus owner when a parent screen decides where focus starts.
+    var focus: FocusState<UUID?>.Binding?
+
     let action: () -> Void
 
-    @FocusState private var isFocused: Bool
+    @FocusState private var innerFocused: Bool
+
+    /// Whether the card is focused, whichever focus owner the screen uses.
+    private var isFocused: Bool {
+        if let focus {
+            return focus.wrappedValue == episode.id
+        }
+        return innerFocused
+    }
+
+    /// Preview cards are wide: 16:9 matches the artwork the API ships.
+    private static let aspectRatio: CGFloat = 16.0 / 9.0
 
     private var isPlayable: Bool {
         playableQuality != nil
     }
 
     var body: some View {
+        if let focus {
+            card.focused(focus, equals: episode.id)
+        } else {
+            card.focused($innerFocused)
+        }
+    }
+
+    private var card: some View {
         Button(action: action) {
-            HStack(spacing: 18) {
+            ZStack(alignment: .bottomLeading) {
                 RemoteImage(url: episode.previewURL)
-                    .frame(width: 176, height: 99)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(verbatim: episode.displayTitle)
-                        .font(DesignTokens.Typography.callout)
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-                    if let duration = episode.localizedDuration {
-                        Text(verbatim: duration)
-                            .font(DesignTokens.Typography.cardMeta)
-                            .foregroundStyle(.secondary)
-                            .monospacedDigit()
-                    }
-                    if let qualityLabel {
-                        Text(verbatim: qualityLabel)
-                            .font(DesignTokens.Typography.cardMeta)
-                            .foregroundStyle(.secondary)
-                    } else {
-                        Text("episode.unavailable")
-                            .font(DesignTokens.Typography.cardMeta)
-                            .foregroundStyle(Palette.accent.opacity(0.9))
-                    }
+                // The scrim keeps the text legible over bright frames, like the site's cards.
+                LinearGradient(
+                    colors: [.clear, .black.opacity(0.15), .black.opacity(0.8)],
+                    startPoint: .center,
+                    endPoint: .bottom
+                )
+                labels
+                // Episodes without a stream stay visible but cannot be selected, hence the grey-out.
+                if !isPlayable {
+                    Color.black.opacity(0.55)
                 }
-
-                Spacer(minLength: 8)
-
-                Image(systemName: isPlayable ? "play.circle.fill" : "slash.circle")
-                    .font(.system(size: 26, weight: .regular))
-                    .foregroundStyle(.white.opacity(isFocused && isPlayable ? 1 : 0.55))
             }
-            .padding(12)
-            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .aspectRatio(Self.aspectRatio, contentMode: .fit)
+            .frame(maxWidth: .infinity)
+            .overlay(alignment: .bottomTrailing) { durationPill }
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.cardCornerRadius, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .strokeBorder(Color.white.opacity(isFocused ? 0.85 : 0), lineWidth: 2.5)
+                RoundedRectangle(cornerRadius: DesignTokens.cardCornerRadius, style: .continuous)
+                    .strokeBorder(Color.white.opacity(isFocused ? 0.9 : 0), lineWidth: 3)
             }
         }
         .buttonStyle(PosterCardButtonStyle())
-        .focused($isFocused)
-        .scaleEffect(isFocused ? 1.015 : 1)
+        .scaleEffect(isFocused ? 1.03 : 1)
         .animation(DesignTokens.Motion.focus, value: isFocused)
         .disabled(!isPlayable)
-        .opacity(isPlayable ? 1 : 0.45)
+        .opacity(isPlayable ? 1 : 0.5)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(verbatim: episode.displayTitle))
-        .accessibilityIdentifier("detail.episodeCard")
+        .accessibilityLabel(Text(verbatim: accessibilityLabel))
+        .accessibilityIdentifier(identifier)
     }
 
-    /// Short technical label ("480p" / "720p" / "1080p"); `nil` means the episode cannot be played.
-    private var qualityLabel: String? {
-        switch playableQuality {
-        case .sd480: "480p"
-        case .hd720: "720p"
-        case .uhd1080: "1080p"
-        case nil: nil
+    private var labels: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(verbatim: episode.displayTitle)
+                .font(DesignTokens.Typography.cardTitle)
+                .foregroundStyle(.white)
+                .lineLimit(1)
+            // "N эпизод" with the number emphasised, like the catalogue: the two parts are separate
+            // texts so the label stays localisable without markdown in the catalog.
+            HStack(spacing: 5) {
+                Text(verbatim: "\(episode.ordinal)")
+                    .fontWeight(.bold)
+                Text("detail.episodeLabel")
+            }
+            .font(DesignTokens.Typography.cardMeta)
+            .foregroundStyle(.white.opacity(0.8))
         }
+        .padding(16)
+        .padding(.trailing, 72)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private var durationPill: some View {
+        if let duration = episode.localizedDuration {
+            Text(verbatim: duration)
+                .font(DesignTokens.Typography.cardMeta)
+                .foregroundStyle(.white)
+                .monospacedDigit()
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(.black.opacity(0.7), in: Capsule())
+                .padding(14)
+        }
+    }
+
+    /// VoiceOver hears the episode title, the ordinal and — when the episode cannot be played — why.
+    private var accessibilityLabel: String {
+        let base = "\(episode.displayTitle), \(episode.ordinal)"
+        return isPlayable ? base : "\(base), \(String(localized: "episode.unavailable"))"
     }
 }

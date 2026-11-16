@@ -52,10 +52,16 @@ final class DetailAndPlayerUITests: XCTestCase {
         app.launch()
         openFirstRelease(in: app)
 
-        // The primary action holds default focus on the detail screen (ADR 0012).
+        // «Смотреть» opens the episode picker; «Продолжить» holds default focus when the release has saved
+        // progress and skips the picker, so «Смотреть» is focused explicitly first.
+        focusPlayButton(in: app)
+        XCUIRemote.shared.press(.select)
+        let picker = app.descendants(matching: .any)["episodePicker.screen"].firstMatch
+        XCTAssertTrue(picker.waitForExistence(timeout: screenTimeout), "«Смотреть» did not open the episode picker")
+        attach(app, named: "episode-picker")
         XCUIRemote.shared.press(.select)
         let player = app.descendants(matching: .any)["player.screen"].firstMatch
-        XCTAssertTrue(player.waitForExistence(timeout: screenTimeout), "The play button did not open the player")
+        XCTAssertTrue(player.waitForExistence(timeout: screenTimeout), "Picking an episode did not open the player")
         Thread.sleep(forTimeInterval: 5)
         attach(app, named: "player-idle")
 
@@ -208,6 +214,22 @@ final class DetailAndPlayerUITests: XCTestCase {
         root.descendants(matching: .any)
             .matching(NSPredicate(format: "hasFocus == 1 AND label == %@", label))
             .firstMatch.exists
+    }
+
+    /// Puts focus on «Смотреть», which sits next to «Продолжить» and is not necessarily the focused action.
+    @MainActor
+    private func focusPlayButton(in app: XCUIApplication) {
+        for _ in 0 ..< focusAttempts {
+            if isFocused(identifier: "detail.playButton", in: app) {
+                return
+            }
+            XCUIRemote.shared.press(.right)
+            Thread.sleep(forTimeInterval: 0.6)
+        }
+        XCTAssertTrue(
+            isFocused(identifier: "detail.playButton", in: app),
+            "«Смотреть» cannot be focused with the remote"
+        )
     }
 
     /// Elapsed playback time shown by the system transport bar, in seconds.

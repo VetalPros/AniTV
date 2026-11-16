@@ -127,6 +127,10 @@ Second pass (same day, after the user's own run on the simulator):
       box: the home screen aspect-fills it and cuts the sides (the first version lost the mark's left
       edge). Verified on the simulator; the capture procedure is "leave the app with Menu, then take a
       screen-wide screenshot from a UI test".
+- [x] Episode cards look like the official site (three columns, full-bleed previews, «N эпизод»,
+      length pill) and «Смотреть» opens a modal episode picker with focus on the episode the player
+      would have chosen (ADR 0019). Covered by `DetailEpisodePickerUITests` (picker opens with the same
+      number of cards as the list, selection starts that episode, Menu closes it without playing).
 - [x] Playback progress: the Kit stores one position per release (`PlaybackProgress`/`Store`, 17 tests),
       the player writes it every 5 s and on dismissal, and the detail screen shows «Продолжить» left of
       «Смотреть» with default focus when the position is resumable (ADR 0018). Verified end to end by
