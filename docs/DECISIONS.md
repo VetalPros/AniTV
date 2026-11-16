@@ -335,3 +335,27 @@ Top Shelf is only drawn while the app tile holds focus on the home screen; with 
 system shows its own wallpaper, so an unfocused screenshot proves nothing about the asset. The licensing and trademark questions are open by design and are tracked in
 `docs/THIRD_PARTY_ASSETS.md` — resolving them means commissioning an original mark, which is a
 product decision, not a coding one.
+
+---
+
+## 0018 — Playback progress lives in the Kit, one record per release (2026-11-16)
+
+**Context.** The viewer had no way back into an episode: the player forgot the position the moment it
+was dismissed. The data is small (a position, a duration, a timestamp), but it sits behind the same
+rule as everything else here — logic in the Kit, thin views — and it needs to survive relaunches,
+which rules out in-memory state.
+
+**Decision.** `AniLibertyKit/Persistence/` owns it: a `PlaybackProgress` value with the resume rules as
+pure logic (resumable only past 15 s and not inside the last 30 s; unknown duration means only the
+lower bound applies), a `PlaybackProgressStoring` protocol for injection, and a `PlaybackProgressStore`
+writing one JSON object per release alias into `UserDefaults`. The store is a `Sendable` class rather
+than an actor: Swift 6 region isolation refuses to hand a non-`Sendable` `UserDefaults` to an actor's
+initialiser, and thread safety is `UserDefaults`'s own documented guarantee.
+
+**Consequences.**
+- The app stores honestly — even a position the Kit considers unresumable is written — and the UI asks
+  `resumableProgress(forReleaseAlias:)`. One place decides what "resumable" means.
+- One position per release, not per episode: watching another episode moves the single record, so
+  «Продолжить» always returns to the most recently watched episode of that release.
+- The detail screen waits for the release before taking focus, so the button it focuses is the one that
+  matches the stored progress. Tests that assert "the screen took focus" accept either hero action.

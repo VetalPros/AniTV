@@ -72,7 +72,7 @@ final class LatestFeedUITests: XCTestCase {
         let focusedControl = app.descendants(matching: .any).matching(
             NSPredicate(
                 format: "hasFocus == 1 AND identifier IN %@",
-                ["detail.playButton", "detail.synopsisToggle"]
+                ["detail.playButton", "detail.resumeButton", "detail.synopsisToggle"]
             )
         )
         XCTAssertTrue(
@@ -114,13 +114,14 @@ final class LatestFeedUITests: XCTestCase {
             "Selecting a poster card did not push the detail screen"
         )
 
-        // Focus must land on the primary action, otherwise Select cannot reach the player at all.
-        let focusedPlayButton = app.descendants(matching: .any).matching(
-            NSPredicate(format: "hasFocus == 1 AND identifier == %@", "detail.playButton")
+        // Focus must land on the hero's action, otherwise Select cannot reach the player at all. Which
+        // of the two it is depends on whether this release has saved progress («Продолжить» then).
+        let focusedHeroAction = app.descendants(matching: .any).matching(
+            NSPredicate(format: "hasFocus == 1 AND identifier IN %@", ["detail.playButton", "detail.resumeButton"])
         )
         XCTAssertTrue(
-            focusedPlayButton.firstMatch.waitForExistence(timeout: focusTimeout),
-            "The detail screen never focused its play button, so Select could not start playback"
+            focusedHeroAction.firstMatch.waitForExistence(timeout: focusTimeout),
+            "The detail screen never focused its primary action, so Select could not start playback"
         )
         XCUIRemote.shared.press(.select)
 

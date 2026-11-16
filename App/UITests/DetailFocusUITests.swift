@@ -43,10 +43,10 @@ final class DetailFocusUITests: XCTestCase {
             openFocusedPoster(in: app, waitsForFeed: false)
         }
 
-        XCTAssertEqual(
-            focusedIdentifier(in: app),
-            "detail.playButton",
-            "The detail screen must open with focus on its primary action (ADR 0012)"
+        XCTAssertTrue(
+            heroActionIdentifiers.contains(focusedIdentifier(in: app) ?? ""),
+            "The detail screen must open with focus on its primary action (ADR 0012), got "
+                + (focusedIdentifier(in: app) ?? "nothing")
         )
 
         if hasToggle {
@@ -75,10 +75,10 @@ final class DetailFocusUITests: XCTestCase {
             )
             XCUIRemote.shared.press(.up)
             Thread.sleep(forTimeInterval: settleTimeout)
-            XCTAssertEqual(
-                focusedIdentifier(in: app),
-                "detail.playButton",
-                "Up from the synopsis must come back to the play button"
+            XCTAssertTrue(
+                heroActionIdentifiers.contains(focusedIdentifier(in: app) ?? ""),
+                "Up from the synopsis must come back to the hero action, got "
+                    + (focusedIdentifier(in: app) ?? "nothing")
             )
             return
         }
@@ -95,12 +95,15 @@ final class DetailFocusUITests: XCTestCase {
         )
         XCUIRemote.shared.press(.up)
         Thread.sleep(forTimeInterval: settleTimeout)
-        XCTAssertEqual(
-            focusedIdentifier(in: app),
-            "detail.playButton",
-            "Up from the episode list must come back to the play button"
+        XCTAssertTrue(
+            heroActionIdentifiers.contains(focusedIdentifier(in: app) ?? ""),
+            "Up from the episode list must come back to the hero action, got "
+                + (focusedIdentifier(in: app) ?? "nothing")
         )
     }
+
+    /// The hero's action can be either «Смотреть» or, when the release has saved progress, «Продолжить».
+    private let heroActionIdentifiers: Set<String> = ["detail.playButton", "detail.resumeButton"]
 
     // MARK: Synopsis truncation rule
 
@@ -213,7 +216,7 @@ final class DetailFocusUITests: XCTestCase {
                 .matching(
                     NSPredicate(
                         format: "hasFocus == 1 AND identifier IN %@",
-                        ["detail.playButton", "detail.synopsisToggle"]
+                        ["detail.playButton", "detail.resumeButton", "detail.synopsisToggle"]
                     )
                 )
                 .firstMatch.waitForExistence(timeout: screenTimeout),

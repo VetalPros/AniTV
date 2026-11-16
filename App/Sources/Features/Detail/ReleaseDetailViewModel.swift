@@ -20,11 +20,21 @@ final class ReleaseDetailViewModel {
     let route: ReleaseRoute
     private(set) var state: State = .idle
 
-    @ObservationIgnored private let client: AniLibertyClient
+    /// Position the viewer stopped at, when it is worth resuming. `nil` means the screen offers only
+    /// «Смотреть» from the beginning.
+    private(set) var resumeProgress: PlaybackProgress?
 
-    init(route: ReleaseRoute, client: AniLibertyClient = AniLibertyClient()) {
+    @ObservationIgnored private let client: AniLibertyClient
+    @ObservationIgnored private let progressStore: PlaybackProgressStoring
+
+    init(
+        route: ReleaseRoute,
+        client: AniLibertyClient = AniLibertyClient(),
+        progressStore: PlaybackProgressStoring = PlaybackProgressStore()
+    ) {
         self.route = route
         self.client = client
+        self.progressStore = progressStore
     }
 
     // MARK: Derived presentation
@@ -70,17 +80,43 @@ final class ReleaseDetailViewModel {
     }
 
     /// `nil` when the episode has no usable stream, which the UI renders as a disabled row.
-    func playbackRequest(for episode: Episode) -> PlaybackRequest? {
+    ///
+    /// - Parameters:
+    ///   - episode: Episode to play.
+    ///   - startAt: Position to start at, or `nil` for the beginning.
+    func playbackRequest(for episode: Episode, startAt: TimeInterval? = nil) -> PlaybackRequest? {
         guard let release, let source = StreamResolver.preferredSource(for: episode) else {
             return nil
         }
         return PlaybackRequest(
             id: episode.id,
+            releaseAlias: release.alias,
             releaseTitle: release.title,
             episodeTitle: episode.displayTitle,
             episode: episode,
-            source: source
+            source: source,
+            startAt: startAt
         )
+    }
+
+    /// The remembered episode played from the remembered position, or `nil` when there is nothing
+    /// worth resuming.
+    var resumeRequest: PlaybackRequest? {
+        guard let resumeProgress,
+              let episode = release?.episodes.first(where: { $0.id == resumeProgress.episodeID })
+        else {
+            return nil
+        }
+        return playbackRequest(for: episode, startAt: resumeProgress.position)
+    }
+
+    /// Asks the store again — used when the player closes, so the screen reflects the position that was
+    /// just saved instead of the one it was opened with.
+    func refreshResumeProgress() async {
+        let alias = route.alias
+        let progress = await progressStore.resumableProgress(forReleaseAlias: alias)
+        guard !Task.isCancelled else { return }
+        resumeProgress = progress
     }
 
     /// Plain text for the synopsis: the API ships `\r\n` pairs that SwiftUI would otherwise honour.
@@ -120,6 +156,7 @@ final class ReleaseDetailViewModel {
             let release = try await client.release(idOrAlias: route.alias)
             guard !Task.isCancelled else { return }
             state = .loaded(release)
+            await refreshResumeProgress()
             Self.logger
                 .info(
                     "Loaded release \(release.alias, privacy: .public) with \(release.episodes.count, privacy: .public) episodes"

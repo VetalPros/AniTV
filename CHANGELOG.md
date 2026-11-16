@@ -65,6 +65,11 @@ not been released yet, so everything below is still subject to change.
   (1080p / 720p / 480p). It is visible exactly as long as the transport bar is, never permanently over
   the video. Switching replaces the player item and keeps the playhead (ADR 0016, superseding
   ADR 0014).
+- Playback progress memory: the player stores the position of the current episode every five seconds
+  and once more when it is dismissed, and the release screen offers «Продолжить» to the left of
+  «Смотреть» when that position is worth resuming (past the first 15 s and not inside the last 30 s).
+  The store lives in the Kit (`PlaybackProgress`, `PlaybackProgressStoring`,
+  `PlaybackProgressStore`, 17 tests, one record per release, `UserDefaults`).
 - Two more UI-test scenarios (`DetailAndPlayerUITests`): scrolling the detail screen down to the
   episode list and playing an episode from it, and switching the stream quality through the chooser.
 
@@ -85,6 +90,9 @@ not been released yet, so everything below is still subject to change.
 - The episode list is built with the eager `Grid` instead of `LazyVGrid`: the first row sits below the
   fold, so no cell was ever instantiated, nothing was focusable, and focus could never scroll down to
   a list that therefore never materialised.
+- The release detail screen waits for the release (and with it the resume decision) before it takes
+  focus, so a release with saved progress opens with «Продолжить» focused instead of «Смотреть». The
+  UI tests accept either hero action, because both are correct depending on the stored progress.
 - The release detail screen claims focus for its primary action when it appears. Without that, the
   focus engine had nothing to focus after the push, and a Menu press was handled by the system, which
   backgrounded the app instead of popping back to the feed (ADR 0012).

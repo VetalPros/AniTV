@@ -127,6 +127,11 @@ Second pass (same day, after the user's own run on the simulator):
       box: the home screen aspect-fills it and cuts the sides (the first version lost the mark's left
       edge). Verified on the simulator; the capture procedure is "leave the app with Menu, then take a
       screen-wide screenshot from a UI test".
+- [x] Playback progress: the Kit stores one position per release (`PlaybackProgress`/`Store`, 17 tests),
+      the player writes it every 5 s and on dismissal, and the detail screen shows «Продолжить» left of
+      «Смотреть» with default focus when the position is resumable (ADR 0018). Verified end to end by
+      `DetailResumeUITests`: watch ~20 s → exit → reopen → «Продолжить» → the system timeline starts at
+      00:24 instead of 00:00, and the record is visible in the app container's `UserDefaults` plist.
 - [x] The static Top Shelf artwork renders on the home screen **only while the app icon holds focus**
       (verified after `simctl erase` + install + launch + terminate: dark plate, red glow, red mark).
       With focus on another tile the system shows its own wallpaper, which is why the earlier screenshot
@@ -134,12 +139,12 @@ Second pass (same day, after the user's own run on the simulator):
 
 ## Next steps (ordered)
 
-1. "Продолжить просмотр": store the playhead per episode (a small `UserDefaults`/file store in the app
-   container) and offer it on the detail screen and in the player. Nothing of this exists yet.
-2. Replace the borrowed app icon with an original mark before publishing anywhere — see
+1. Replace the borrowed app icon with an original mark before publishing anywhere — see
    `docs/THIRD_PARTY_ASSETS.md`; the current one is AniLibria's brand and comes from a GPL-3.0 repo.
-3. Каталог tab (genres + catalogue listing) and Профиль tab (Keychain-stored token, login state).
-4. Cache/conditional-request pass on the API client (ETag / `If-None-Match`), per the politeness rule.
+2. Каталог tab (genres + catalogue listing) and Профиль tab (Keychain-stored token, login state).
+3. Cache/conditional-request pass on the API client (ETag / `If-None-Match`), per the politeness rule.
+4. Per-episode progress (the store keeps one record per release today, ADR 0018): a map of episodes
+   would let «Продолжить» point at any episode and let the cards show their own progress.
 5. Watch the advisory `ui-tests` CI job on a real GitHub runner; only then consider making it required
    (ADR 0013). Also pin `xcode-select` if the `macos-26` image starts shipping a different default Xcode.
 6. Decide the final product name / bundle identifier **before** the repository goes public (renaming the

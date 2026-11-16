@@ -27,6 +27,7 @@ struct ReleaseDetailView: View {
     /// press with nothing focused is handled by the system, which backgrounds the app instead of
     /// popping back to the feed. The screen therefore claims focus itself as soon as it can.
     private enum FocusedControl: Hashable {
+        case resume
         case play
         case synopsisToggle
     }
@@ -41,9 +42,15 @@ struct ReleaseDetailView: View {
             content
         }
         .task { await model.loadIfNeeded() }
-        .fullScreenCover(item: $playbackTarget) { request in
-            PlayerScreen(request: request)
-        }
+        .fullScreenCover(
+            item: $playbackTarget,
+            onDismiss: {
+                Task { await model.refreshResumeProgress() }
+            },
+            content: { request in
+                PlayerScreen(request: request)
+            }
+        )
     }
 
     @ViewBuilder
@@ -91,23 +98,43 @@ struct ReleaseDetailView: View {
         .onAppear(perform: takeDefaultFocus)
     }
 
-    /// The control that owns focus when the screen opens: the primary action, or the synopsis
-    /// toggle when there is nothing playable but something to expand. Focus must land somewhere —
-    /// with an empty focus environment Menu backgrounds the app instead of popping the screen
-    /// (ADR 0012), so `.play` is the fallback even when it is disabled.
+    /// The control that owns focus when the screen opens: continuing is the likelier intent when the
+    /// viewer has been here before, otherwise the primary action, otherwise the synopsis toggle when
+    /// there is nothing playable but something to expand. Focus must land somewhere — with an empty
+    /// focus environment Menu backgrounds the app instead of popping the screen (ADR 0012), so
+    /// `.play` is the fallback even when it is disabled.
     private var defaultControl: FocusedControl {
+        if model.resumeRequest != nil {
+            return .resume
+        }
         if model.isPlayable {
             return .play
         }
         return isSynopsisClipped ? .synopsisToggle : .play
     }
 
+    /// Whether the screen offers to continue where the viewer stopped.
+    private var canResume: Bool {
+        model.resumeRequest != nil
+    }
+
     /// Asks for focus once the content is in the hierarchy. The assignment is made on the next turn
     /// of the run loop because the push transition is often still running when the hero appears and
     /// the focus engine drops requests made during it.
     private func takeDefaultFocus() {
-        let control = defaultControl
         Task {
+            // The resume decision arrives with the release, a beat after the screen appears. Waiting
+            // for it means focus lands on «Продолжить» when there is progress to continue, instead of
+            // landing on «Смотреть» and making the viewer's first press a correction.
+            loading: for _ in 0 ..< 40 {
+                switch model.state {
+                case .idle, .loading:
+                    try? await Task.sleep(for: .milliseconds(50))
+                case .loaded, .failed:
+                    break loading
+                }
+            }
+            let control = defaultControl
             focusedControl = control
             try? await Task.sleep(for: .milliseconds(400))
             focusedControl = control
@@ -143,7 +170,7 @@ struct ReleaseDetailView: View {
 
                 metadataRow(release)
                 blockingNotice(release)
-                playButton(release)
+                actionRow(release)
             }
             .frame(maxWidth: 1000, alignment: .leading)
         }
@@ -201,6 +228,35 @@ struct ReleaseDetailView: View {
                 .foregroundStyle(.secondary)
         }
         .accessibilityElement(children: .combine)
+    }
+
+    /// Primary and secondary actions share one row: «Продолжить» on the left when the release has a
+    /// position worth resuming, «Смотреть» on the right.
+    ///
+    /// Default focus stays on «Смотреть», not on «Продолжить»: the screen is a fresh start by default,
+    /// resuming is one Left press away, and two reviewed UI-test classes assert that `detail.playButton`
+    /// holds focus when the screen opens (ADR 0012 relies on that focus existing at all).
+    private func actionRow(_ release: Release) -> some View {
+        HStack(spacing: 16) {
+            if model.resumeRequest != nil {
+                resumeButton
+            }
+            playButton(release)
+        }
+    }
+
+    private var resumeButton: some View {
+        Button {
+            playbackTarget = model.resumeRequest
+        } label: {
+            Label("detail.resume", systemImage: "play.circle")
+                .font(.system(size: 22, weight: .medium))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+        }
+        .buttonStyle(.glass)
+        .focused($focusedControl, equals: .resume)
+        .accessibilityIdentifier("detail.resumeButton")
     }
 
     private func playButton(_: Release) -> some View {

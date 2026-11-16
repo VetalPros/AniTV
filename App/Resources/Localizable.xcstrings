@@ -205,6 +205,23 @@
         }
       }
     },
+    "detail.resume": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Продолжить"
+          }
+        }
+      }
+    },
     "detail.synopsis.collapse": {
       "extractionState": "manual",
       "localizations": {

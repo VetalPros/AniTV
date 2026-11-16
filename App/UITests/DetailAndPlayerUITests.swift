@@ -166,7 +166,7 @@ final class DetailAndPlayerUITests: XCTestCase {
             app.descendants(matching: .any).matching(
                 NSPredicate(
                     format: "hasFocus == 1 AND identifier IN %@",
-                    ["detail.playButton", "detail.synopsisToggle"]
+                    ["detail.playButton", "detail.resumeButton", "detail.synopsisToggle"]
                 )
             ).firstMatch.waitForExistence(timeout: screenTimeout),
             "The detail screen never took focus"

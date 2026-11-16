@@ -16,6 +16,10 @@ final class PlayerModel {
     /// within a comfortable margin of its first frame.
     private static let playheadInterval = CMTime(seconds: 0.5, preferredTimescale: 600)
 
+    /// How often the position is persisted while playback runs. Five seconds is short enough to
+    /// survive a crash and long enough not to write on every poll.
+    private static let progressSaveInterval: TimeInterval = 5
+
     let request: PlaybackRequest
     let player: AVPlayer
 
@@ -35,11 +39,19 @@ final class PlayerModel {
     /// Every skippable range of the episode, resolved once because the episode never changes.
     @ObservationIgnored private let timecodes: [SkipTimecode]
 
+    /// Where the position is persisted; injected so tests and previews can use a fake.
+    @ObservationIgnored private let progressStore: PlaybackProgressStoring
+
+    /// When the position was written last, so the periodic observer writes at most every
+    /// ``progressSaveInterval`` seconds.
+    @ObservationIgnored private var lastSavedAt = Date.distantPast
+
     @ObservationIgnored private var timeObserver: Any?
     @ObservationIgnored private var statusObservation: NSKeyValueObservation?
 
-    init(request: PlaybackRequest) {
+    init(request: PlaybackRequest, progressStore: PlaybackProgressStoring = PlaybackProgressStore()) {
         self.request = request
+        self.progressStore = progressStore
         sources = StreamResolver.sources(for: request.episode)
         selectedQuality = request.source.quality
         let item = AVPlayerItem(url: request.source.url)
@@ -81,11 +93,23 @@ final class PlayerModel {
 
     func start() {
         addPlayheadObserver()
+        if let startAt = request.startAt, startAt > 0 {
+            player.seek(
+                to: CMTime(seconds: startAt, preferredTimescale: 600),
+                toleranceBefore: .zero,
+                toleranceAfter: .zero
+            )
+            activeSkip = TimecodeResolver.activeSkip(for: timecodes, playhead: startAt)
+            Self.logger.info("Resuming at \(startAt, privacy: .public)s")
+        }
         player.play()
         Self.logger.info("Playback started at \(self.selectedQuality.rawValue, privacy: .public)p")
     }
 
     func stop() {
+        // Persist before tearing the player down: the last periodic save can be seconds behind, and a
+        // viewer who leaves right after rewinding would otherwise lose the position.
+        saveProgress(at: player.currentTime().seconds)
         player.pause()
         if let timeObserver {
             player.removeTimeObserver(timeObserver)
@@ -94,6 +118,43 @@ final class PlayerModel {
         statusObservation?.invalidate()
         statusObservation = nil
         Self.logger.info("Playback stopped")
+    }
+
+    // MARK: Progress
+
+    /// Writes the current position when the last write is older than ``progressSaveInterval``.
+    private func saveProgressIfDue(at playhead: Double) {
+        guard Date().timeIntervalSince(lastSavedAt) >= Self.progressSaveInterval else { return }
+        lastSavedAt = .now
+        saveProgress(at: playhead)
+    }
+
+    /// Persists `playhead` together with the item duration when it is known.
+    ///
+    /// The position is stored as it is, even when the Kit's ``PlaybackProgress/isResumable`` would
+    /// refuse it: the detail screen decides whether to offer «Продолжить», and an unfinished episode
+    /// keeps an honest record of where it stopped.
+    private func saveProgress(at playhead: Double) {
+        guard playhead.isFinite, playhead > 0 else { return }
+        let progress = PlaybackProgress(
+            releaseAlias: request.releaseAlias,
+            episodeID: request.episode.id,
+            position: playhead,
+            duration: itemDuration()
+        )
+        let store = progressStore
+        Task {
+            await store.save(progress)
+        }
+        Self.logger.debug("Saved progress at \(playhead, privacy: .public)s")
+    }
+
+    /// Length of the current item, or `nil` while it is still indefinite.
+    private func itemDuration() -> Double? {
+        guard let duration = player.currentItem?.duration, duration.isNumeric else { return nil }
+        let seconds = duration.seconds
+        guard seconds.isFinite, seconds > 0 else { return nil }
+        return seconds
     }
 
     // MARK: Skip intro / outro
@@ -120,6 +181,7 @@ final class PlayerModel {
             guard seconds.isFinite else { return }
             Task { @MainActor in
                 self?.updateSkip(for: seconds)
+                self?.saveProgressIfDue(at: seconds)
             }
         }
     }

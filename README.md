@@ -56,6 +56,7 @@ AniTV — клиент для просмотра аниме с AniLiberty на A
 | Экран «Последние релизы»: сетка постеров, состояния загрузки | ✅ | `App/Sources/Features/Latest/` |
 | Карточка релиза: описание, жанры, список серий | ✅ | `App/Sources/Features/Detail/` |
 | Плеер: `AVPlayerViewController`, `externalMetadata`, переключение качества | ✅ | `App/Sources/Features/Player/` |
+| Память позиции просмотра и кнопка «Продолжить» на карточке | ✅ | `App/Sources/Features/Player/`, `AniLibertyKit/Sources/AniLibertyKit/Persistence/` |
 | Дизайн-система: токены, стеклянные плашки, focus-стили | ✅ | `App/Sources/Design/` |
 | Пропуск опенинга/эндинга по таймкодам | 🚧 | `App/Sources/Features/Player/` |
 | Избранное на стороне сервера | 📋 | `AniLibertyKit/Sources/AniLibertyKit/API/` |
