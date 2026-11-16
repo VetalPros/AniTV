@@ -1,12 +1,26 @@
 import AniLibertyKit
 import SwiftUI
 
+/// Width the synopsis occupies, reported from a background reader so the truncation rule is measured
+/// against the real layout instead of a guess.
+private struct SynopsisWidthPreference: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
+}
+
 /// Detail screen: hero with cover and title, metadata, genres, expandable synopsis, episode list
 /// and the play action for the preferred stream.
 struct ReleaseDetailView: View {
     @State private var model: ReleaseDetailViewModel
     @State private var playbackTarget: PlaybackRequest?
     @FocusState private var focusedControl: FocusedControl?
+
+    /// Width the synopsis is actually laid out at, reported by the text itself. It feeds the
+    /// truncation measurement, so the toggle only exists when there is something to reveal.
+    @State private var synopsisWidth: CGFloat = 0
 
     /// The screen refetches on its own, so at push time it usually has nothing focusable yet. When
     /// the hero finally appears the focus engine has already dropped focus, and on tvOS a Menu
@@ -70,14 +84,22 @@ struct ReleaseDetailView: View {
             .padding(.bottom, 88)
         }
         .accessibilityIdentifier("detail.screen")
+        .onPreferenceChange(SynopsisWidthPreference.self) { width in
+            synopsisWidth = width
+        }
         .defaultFocus($focusedControl, defaultControl, priority: .userInitiated)
         .onAppear(perform: takeDefaultFocus)
     }
 
     /// The control that owns focus when the screen opens: the primary action, or the synopsis
-    /// toggle when there is nothing playable.
+    /// toggle when there is nothing playable but something to expand. Focus must land somewhere —
+    /// with an empty focus environment Menu backgrounds the app instead of popping the screen
+    /// (ADR 0012), so `.play` is the fallback even when it is disabled.
     private var defaultControl: FocusedControl {
-        model.isPlayable ? .play : .synopsisToggle
+        if model.isPlayable {
+            return .play
+        }
+        return isSynopsisClipped ? .synopsisToggle : .play
     }
 
     /// Asks for focus once the content is in the hierarchy. The assignment is made on the next turn
@@ -125,6 +147,9 @@ struct ReleaseDetailView: View {
             }
             .frame(maxWidth: 1000, alignment: .leading)
         }
+        // Sections make the vertical chain predictable: the engine moves between blocks, so Down
+        // from the hero lands on the synopsis control instead of jumping over it into the grid.
+        .focusSection()
     }
 
     private func metadataRow(_ release: Release) -> some View {
@@ -227,10 +252,16 @@ struct ReleaseDetailView: View {
             Text(verbatim: model.synopsis)
                 .font(DesignTokens.Typography.body)
                 .foregroundStyle(.secondary)
-                .lineSpacing(5)
-                .lineLimit(model.isSynopsisExpandable && !model.isDescriptionExpanded ? 6 : nil)
+                .lineSpacing(SynopsisFitting.lineSpacing)
+                .lineLimit(isSynopsisCollapsed ? SynopsisFitting.collapsedLines : nil)
                 .frame(maxWidth: 1300, alignment: .leading)
-            if model.isSynopsisExpandable {
+                .background {
+                    GeometryReader { proxy in
+                        Color.clear.preference(key: SynopsisWidthPreference.self, value: proxy.size.width)
+                    }
+                }
+                .accessibilityIdentifier("detail.synopsisText")
+            if isSynopsisClipped {
                 Button(model.isDescriptionExpanded ? "detail.synopsis.collapse" : "detail.synopsis.expand") {
                     withAnimation(DesignTokens.Motion.reveal) {
                         model.toggleDescriptionExpanded()
@@ -241,6 +272,16 @@ struct ReleaseDetailView: View {
                 .accessibilityIdentifier("detail.synopsisToggle")
             }
         }
+        .focusSection()
+    }
+
+    /// Whether the collapsed synopsis would really be cut off at the width it is rendered with.
+    private var isSynopsisClipped: Bool {
+        SynopsisFitting.isClipped(model.synopsis, width: synopsisWidth)
+    }
+
+    private var isSynopsisCollapsed: Bool {
+        isSynopsisClipped && !model.isDescriptionExpanded
     }
 
     // MARK: Episodes
@@ -258,6 +299,7 @@ struct ReleaseDetailView: View {
                 episodeGrid(release.episodes)
             }
         }
+        .focusSection()
     }
 
     /// Two-column episode list built with the eager `Grid` on purpose.

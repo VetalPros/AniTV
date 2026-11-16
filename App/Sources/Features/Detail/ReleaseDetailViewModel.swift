@@ -95,14 +95,9 @@ final class ReleaseDetailViewModel {
         release?.genres ?? []
     }
 
-    /// Synopsis longer than this is collapsed behind a "read more" control.
-    static let synopsisThreshold = 420
-
+    /// Whether the viewer asked for the full synopsis. Whether the text *can* be collapsed is a
+    /// rendering question and is measured by the view, not guessed from a character count here.
     private(set) var isDescriptionExpanded = false
-
-    var isSynopsisExpandable: Bool {
-        synopsis.count > Self.synopsisThreshold
-    }
 
     func toggleDescriptionExpanded() {
         isDescriptionExpanded.toggle()

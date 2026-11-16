@@ -82,7 +82,7 @@ struct PlayerViewController: UIViewControllerRepresentable {
             ]
             let textSize = text.size(withAttributes: attributes)
             let size = CGSize(width: ceil(textSize.width) + 8, height: ceil(textSize.height))
-            let format = UIGraphicsImageRendererFormat.default()
+            let format = UIGraphicsImageRendererFormat.preferred()
             format.opaque = false
             let image = UIGraphicsImageRenderer(size: size, format: format).image { _ in
                 text.draw(at: CGPoint(x: 4, y: 0), withAttributes: attributes)
