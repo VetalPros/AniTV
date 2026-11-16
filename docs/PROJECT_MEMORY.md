@@ -127,6 +127,11 @@ Second pass (same day, after the user's own run on the simulator):
       box: the home screen aspect-fills it and cuts the sides (the first version lost the mark's left
       edge). Verified on the simulator; the capture procedure is "leave the app with Menu, then take a
       screen-wide screenshot from a UI test".
+- [x] «Каталог» tab with search and filters (ADR 0020): `CatalogView`/`CatalogViewModel` over the Kit's
+      catalogue client, single-choice chips for genre/type/year/sorting behind modal pickers, a result
+      counter, «Показать ещё» paging and reset. `CatalogUITests` proves the tab loads 1946 releases, a
+      genre filter changes the count, typing «маска» through the tvOS keyboard narrows it to 6, reset
+      restores it, and a poster opens the release screen.
 - [x] Episode cards look like the official site (three columns, full-bleed previews, «N эпизод»,
       length pill) and «Смотреть» opens a modal episode picker with focus on the episode the player
       would have chosen (ADR 0019). Covered by `DetailEpisodePickerUITests` (picker opens with the same
@@ -145,7 +150,7 @@ Second pass (same day, after the user's own run on the simulator):
 
 1. Replace the borrowed app icon with an original mark before publishing anywhere — see
    `docs/THIRD_PARTY_ASSETS.md`; the current one is AniLibria's brand and comes from a GPL-3.0 repo.
-2. Каталог tab (genres + catalogue listing) and Профиль tab (Keychain-stored token, login state).
+2. Профиль tab (Keychain-stored token, login state, favorites/watch lists) — the only placeholder left.
 3. Cache/conditional-request pass on the API client (ETag / `If-None-Match`), per the politeness rule.
 4. Per-episode progress (the store keeps one record per release today, ADR 0018): a map of episodes
    would let «Продолжить» point at any episode and let the cards show their own progress.

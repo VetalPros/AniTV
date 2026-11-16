@@ -386,3 +386,37 @@ faking them:
 **Consequences.** Episodes are now three per row, so a release with many episodes makes the detail
 screen taller; the picker is the quick path. The UI tests that used to assume Select on «Смотреть»
 starts playback now assert the picker leg first — the behaviour change is covered, not worked around.
+
+---
+
+## 0020 — The catalogue is a search field over chips, and the grid must not steal focus (2026-11-16)
+
+**Context.** The «Каталог» tab was a placeholder. The API offers one paged endpoint with everything
+under an `f` object (`POST /anime/catalog/releases`), plus five reference endpoints for the filter
+values; the useful numbers are recorded in `docs/api-notes.md`.
+
+**Decision.**
+- **One filter chip per dimension**, single choice each: genre, type, year, sorting. Genres are not
+  multi-select because the API *intersects* them — `[25]` returns 147 releases, `[25,24]` returns 10 —
+  so a multi-select would quietly produce empty screens.
+- **Year is sent as a one-year range** (`from_year = to_year`), because the reference years are not
+  contiguous (1997 is missing) and a continuous range would invent values.
+- **Search is a real `TextField`** with the system keyboard, debounced 400 ms, and the empty string is
+  sent as "no search" rather than as an empty query.
+- **Paging appends; filtering replaces.** A filter change resets to page 1, «Показать ещё» appends and
+  de-duplicates by release id.
+- **The results grid gives up its default focus** (`ReleasePosterGrid(takesDefaultFocus: false)`): with
+  it, entering the tab jumped straight into the posters and the search field never got focus. The tab
+  now opens on the search field.
+
+**Focus layout, learned the hard way.** With the chips *inside* the grid's scroll view, the focus
+engine never reached them: entering the screen landed on the first poster row and Up from the grid
+went straight to the tab bar. Moving the controls back out, above the scroll view, produced a working
+chain (tab bar → search field → chip row → grid and back). The chips row is one focus section, and
+Down from the search field lands on the chip under the field's centre — usually «Год», not «Жанр» — so
+the UI test walks that row leftwards instead of pretending the first chip is one press away.
+
+**Verified end to end** by `CatalogUITests`: the tab loads 1946 releases, a genre filter changes the
+count and shows on the chip, typing «маска» into the system keyboard narrows the catalogue to 6
+results (the same number the API returns when asked directly), reset restores the full count, and a
+poster still opens the release screen.

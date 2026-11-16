@@ -60,7 +60,7 @@ AniTV — клиент для просмотра аниме с AniLiberty на A
 | Дизайн-система: токены, стеклянные плашки, focus-стили | ✅ | `App/Sources/Design/` |
 | Пропуск опенинга/эндинга по таймкодам | 🚧 | `App/Sources/Features/Player/` |
 | Избранное на стороне сервера | 📋 | `AniLibertyKit/Sources/AniLibertyKit/API/` |
-| Поиск и каталог по жанрам | 📋 | `App/Sources/Features/` |
+| Каталог: поиск, фильтры (жанр, тип, год, сортировка), страницы | ✅ | `App/Sources/Features/Catalog/`, `AniLibertyKit/Sources/AniLibertyKit/Models/Catalog*.swift` |
 | Иконка приложения и статичный Top Shelf | ✅ | `App/Resources/Assets.xcassets/` |
 | Динамический Top Shelf: карусель свежих релизов (TV Services) | 💡 | `docs/PROJECT_MEMORY.md` |
 | Локализация ru/en (String Catalogs) | ✅ | `App/Resources/Localizable.xcstrings` |
@@ -90,9 +90,9 @@ push-уведомлений, потому что разработка идёт �
 | --- | --- | --- |
 | ![Лента релизов](docs/screenshots/feed.jpg) | ![Карточка релиза](docs/screenshots/detail.jpg) | ![Список серий](docs/screenshots/episodes.jpg) |
 
-| Выбор серии за кнопкой «Смотреть» |
-| --- |
-| ![Выбор серии](docs/screenshots/episode-picker.jpg) |
+| Выбор серии за кнопкой «Смотреть» | Каталог: поиск и фильтры | Фильтр по жанру |
+| --- | --- | --- |
+| ![Выбор серии](docs/screenshots/episode-picker.jpg) | ![Каталог](docs/screenshots/catalog.jpg) | ![Фильтр по жанру](docs/screenshots/catalog-filter.jpg) |
 
 | Плеер (транспорт-бар) | Качество в транспорт-баре |
 | --- | --- |

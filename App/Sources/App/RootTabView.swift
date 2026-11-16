@@ -16,7 +16,7 @@ struct RootTabView: View {
                 .tabItem { Label("tab.latest", systemImage: "sparkles.tv") }
                 .tag(AppTab.latest)
 
-            CatalogPlaceholderView()
+            CatalogView()
                 .tabItem { Label("tab.catalog", systemImage: "square.grid.2x2") }
                 .tag(AppTab.catalog)
 

@@ -65,6 +65,10 @@ not been released yet, so everything below is still subject to change.
   (1080p / 720p / 480p). It is visible exactly as long as the transport bar is, never permanently over
   the video. Switching replaces the player item and keeps the playhead (ADR 0016, superseding
   ADR 0014).
+- «Каталог» tab: search over the catalogue, single-choice filters for genre, type, year and sorting
+  (each behind a modal picker that shows the active choice on its chip), a result counter, paging with
+  «Показать ещё» and reset. Search debounces at 400 ms; the screen reuses the poster grid and pushes
+  the same release detail screen as the «Новинки» tab.
 - Episode cards in the style of the official site: a three-column grid of full-bleed previews with a
   scrim, the episode title over the still, «N эпизод» with the number in bold and the length in a pill
   in the corner; episodes without a stream stay dimmed and disabled.
