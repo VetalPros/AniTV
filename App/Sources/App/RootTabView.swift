@@ -20,7 +20,7 @@ struct RootTabView: View {
                 .tabItem { Label("tab.catalog", systemImage: "square.grid.2x2") }
                 .tag(AppTab.catalog)
 
-            ProfilePlaceholderView()
+            ProfileView()
                 .tabItem { Label("tab.profile", systemImage: "person.crop.circle") }
                 .tag(AppTab.profile)
         }

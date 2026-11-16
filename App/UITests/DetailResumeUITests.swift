@@ -56,9 +56,20 @@ final class DetailResumeUITests: XCTestCase {
         )
 
         // Reopen the release that was just watched: the store has to have survived the round trip.
-        XCUIRemote.shared.press(.select)
+        //
+        // The pop back to the feed can leave focus on the tab bar instead of the card that was open, and a
+        // dropped Select then goes nowhere, so focus is re-established and the press repeated.
+        let detail = element(identifier: "detail.screen", in: app)
+        for _ in 0 ..< 4 where !isFocused(identifier: "latest.posterCard", in: app) {
+            XCUIRemote.shared.press(.down)
+            Thread.sleep(forTimeInterval: 0.6)
+        }
+        for _ in 0 ..< 3 where !detail.exists {
+            XCUIRemote.shared.press(.select)
+            _ = detail.waitForExistence(timeout: 8)
+        }
         XCTAssertTrue(
-            element(identifier: "detail.screen", in: app).waitForExistence(timeout: screenTimeout),
+            detail.waitForExistence(timeout: screenTimeout),
             "Reopening the release did not show its detail screen"
         )
         let resumeButton = element(identifier: "detail.resumeButton", in: app)

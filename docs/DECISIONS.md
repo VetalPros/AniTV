@@ -420,3 +420,33 @@ the UI test walks that row leftwards instead of pretending the first chip is one
 count and shows on the chip, typing «маска» into the system keyboard narrows the catalogue to 6
 results (the same number the API returns when asked directly), reset restores the full count, and a
 poster still opens the release screen.
+
+---
+
+## 0021 — Signing in on a TV is a pairing code, not a password form (2026-11-16)
+
+**Context.** The «Профиль» tab needs an account: the service's favourites and history endpoints are
+bearer-authenticated. On a ten-foot UI with a directional remote, a login/password form is hostile —
+and it would have put a password through our own code path for no reason.
+
+**Decision.** The tab signs in by device pairing: `POST /accounts/otp/get` with a per-install device id
+returns a six-digit code that lives five minutes; the viewer enters it on the site or in the mobile
+app; the TV polls `POST /accounts/otp/login` every three seconds and trades the accepted code for a
+token. The token goes straight into the Keychain (`AuthTokenStoring`/`KeychainTokenStore`), never into
+`UserDefaults`, a log line or a view. A rejected token (403 on `profile`) is deleted silently and the
+screen returns to pairing instead of showing an error. The password flow exists in the Kit for other
+clients but the TV screen does not use it.
+
+**Two behaviours of the live service shaped this.**
+- `otp/login` answers **500 `{"message":"Server Error"}`** while the code is not yet accepted. That is
+  now a dedicated, documented `otpNotAccepted` case — treating it as a failure would have made the
+  polling loop give up immediately.
+- Repeating `otp/get` with the **same** device id returns the **same** code and expiry (verified with
+  curl). A «Обновить код» button would therefore have done nothing visible, so refreshing rotates the
+  stored device id first; the id stays stable across launches and only changes on an explicit refresh.
+
+**Consequences.** Pairing works without ever handling a password, and the app has no login form to
+secure. What the tab cannot prove by itself is everything behind the token: the profile view, the
+favourites grid, «Выйти» and the dead-token branch have never run against the live service, because
+this project has no account to accept a code with. They stay marked 🚧 in the README until someone
+with an account completes the pairing once.

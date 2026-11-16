@@ -647,6 +647,23 @@
         }
       }
     },
+    "error.otpNotAccepted": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The pairing code has not been confirmed yet"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Код привязки ещё не подтверждён"
+          }
+        }
+      }
+    },
     "error.rateLimited": {
       "extractionState": "manual",
       "localizations": {
@@ -749,40 +766,6 @@
         }
       }
     },
-    "placeholder.catalog.message": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search, genres and curated lists are coming in the next release. For now only the latest releases are available."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Поиск по каталогу, жанры и подборки появятся в следующей версии. Сейчас доступен только список новинок."
-          }
-        }
-      }
-    },
-    "placeholder.profile.message": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Authorization is not implemented: the app has no accounts, keeps no session and never sends tokens. This screen arrives together with sign-in support."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Авторизация не реализована: приложение не хранит учётные записи и не отправляет токены. Экран появится вместе с поддержкой входа."
-          }
-        }
-      }
-    },
     "player.close": {
       "extractionState": "manual",
       "localizations": {
@@ -868,6 +851,227 @@
         }
       }
     },
+    "profile.failed.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profile is unavailable"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Профиль недоступен"
+          }
+        }
+      }
+    },
+    "profile.favorites.empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing in favorites yet"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "В избранном пока пусто"
+          }
+        }
+      }
+    },
+    "profile.favorites.failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favorites did not load"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Избранное не загрузилось"
+          }
+        }
+      }
+    },
+    "profile.favorites.more": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show more"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показать ещё"
+          }
+        }
+      }
+    },
+    "profile.favorites.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favorites"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Избранное"
+          }
+        }
+      }
+    },
+    "profile.loading": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading profile…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Загружаем профиль…"
+          }
+        }
+      }
+    },
+    "profile.pairing.codeLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pairing code"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Код привязки"
+          }
+        }
+      }
+    },
+    "profile.pairing.expired": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The code has expired"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Код истёк"
+          }
+        }
+      }
+    },
+    "profile.pairing.expires %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expires in %lld s"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Истекает через %lld с"
+          }
+        }
+      }
+    },
+    "profile.pairing.explanation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter this code on aniliberty.top or in the mobile app to sign in on this TV. The TV picks up the session by itself — nothing has to be typed with the remote."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Введите этот код на aniliberty.top или в мобильном приложении, чтобы войти на этом телевизоре. Телевизор подхватит сессию сам — печатать на пульте ничего не нужно."
+          }
+        }
+      }
+    },
+    "profile.pairing.refresh": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get a new code"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обновить код"
+          }
+        }
+      }
+    },
+    "profile.pairing.waiting": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for confirmation…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ждём подтверждения…"
+          }
+        }
+      }
+    },
+    "profile.signOut": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign out"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выйти"
+          }
+        }
+      }
+    },
     "screen.catalog.subtitle": {
       "extractionState": "manual",
       "localizations": {
@@ -942,13 +1146,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sign-in is not available yet"
+            "value": "Account, favorites and TV pairing"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Вход пока недоступен"
+            "value": "Аккаунт, избранное и привязка телевизора"
           }
         }
       }

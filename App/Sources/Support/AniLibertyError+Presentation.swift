@@ -18,6 +18,8 @@ extension AniLibertyError {
             "error.server"
         case .httpStatus:
             "error.http"
+        case .otpNotAccepted:
+            "error.otpNotAccepted"
         case .decoding:
             "error.decoding"
         case .network:

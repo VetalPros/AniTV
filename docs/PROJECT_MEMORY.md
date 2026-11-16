@@ -127,6 +127,12 @@ Second pass (same day, after the user's own run on the simulator):
       box: the home screen aspect-fills it and cuts the sides (the first version lost the mark's left
       edge). Verified on the simulator; the capture procedure is "leave the app with Menu, then take a
       screen-wide screenshot from a UI test".
+- [x] «Профиль» tab (ADR 0021): pairing by one-time code (`otp/get` + polling `otp/login`), token in the
+      Keychain only, signed-in profile with avatar/display name, favourites grid with paging and
+      «Выйти». `ProfileUITests` proves the screen shows a live six-digit code from the service, the
+      countdown ticks and «Обновить код» produces a different code. **Unverified:** everything behind
+      the token — profile, favourites, logout and the dead-token branch — because no account exists to
+      accept a code with; the README marks the tab 🚧 for that reason.
 - [x] «Каталог» tab with search and filters (ADR 0020): `CatalogView`/`CatalogViewModel` over the Kit's
       catalogue client, single-choice chips for genre/type/year/sorting behind modal pickers, a result
       counter, «Показать ещё» paging and reset. `CatalogUITests` proves the tab loads 1946 releases, a
@@ -148,15 +154,18 @@ Second pass (same day, after the user's own run on the simulator):
 
 ## Next steps (ordered)
 
-1. Replace the borrowed app icon with an original mark before publishing anywhere — see
+1. Complete the pairing once with a real account and record what the profile and favourites actually
+   return — the Kit's profile/favourites fixtures are synthesised from the OpenAPI schema, and the
+   signed-in UI has never run. This is the only way those 🚧 marks become ✅.
+2. Replace the borrowed app icon with an original mark before publishing anywhere — see
    `docs/THIRD_PARTY_ASSETS.md`; the current one is AniLibria's brand and comes from a GPL-3.0 repo.
-2. Профиль tab (Keychain-stored token, login state, favorites/watch lists) — the only placeholder left.
 3. Cache/conditional-request pass on the API client (ETag / `If-None-Match`), per the politeness rule.
-4. Per-episode progress (the store keeps one record per release today, ADR 0018): a map of episodes
-   would let «Продолжить» point at any episode and let the cards show their own progress.
-5. Watch the advisory `ui-tests` CI job on a real GitHub runner; only then consider making it required
+4. Per-episode progress (the store keeps one record per release today, ADR 0018).
+5. Favourites from the detail screen (`POST /accounts/users/me/favorites`), and `views/history` for a
+   "continue watching" row — both need a token, so both wait for step 1.
+6. Watch the advisory `ui-tests` CI job on a real GitHub runner; only then consider making it required
    (ADR 0013). Also pin `xcode-select` if the `macos-26` image starts shipping a different default Xcode.
-6. Decide the final product name / bundle identifier **before** the repository goes public (renaming the
+7. Decide the final product name / bundle identifier **before** the repository goes public (renaming the
    directory means re-registering the DSH workspace).
 
 ## Deferred ideas (agreed, deliberately not scheduled)
