@@ -54,6 +54,53 @@ enum Fixtures {
     static func reference(_ name: String) throws -> Data {
         try data(named: "reference_\(name)")
     }
+
+    /// Live response of `POST /accounts/otp/get`; carries a real but expired code.
+    static func otpGet() throws -> Data {
+        try data(named: "otp_get")
+    }
+
+    /// Recorded body of the HTTP 500 answer `POST /accounts/otp/login` gives while a code
+    /// is still waiting for confirmation.
+    static func otpLoginPending() throws -> Data {
+        try data(named: "otp_login_pending")
+    }
+
+    /// **Synthesized** profile payload built from the OpenAPI schema — never recorded,
+    /// because no account is available to record it from.
+    static func userProfile() throws -> Data {
+        try data(named: "user_profile")
+    }
+
+    /// **Synthesized** favourites page built from the OpenAPI schema — never recorded,
+    /// because no account is available to record it from.
+    static func favoritesReleases() throws -> Data {
+        try data(named: "favorites_releases")
+    }
+}
+
+/// In-memory ``AuthTokenStoring`` for tests and previews.
+actor InMemoryTokenStore: AuthTokenStoring {
+    private var token: String?
+
+    /// Creates a store, optionally already holding a token.
+    ///
+    /// - Parameter token: Initial token value.
+    init(token: String? = nil) {
+        self.token = token
+    }
+
+    func load() async throws -> String? {
+        token
+    }
+
+    func save(_ token: String) async throws {
+        self.token = token
+    }
+
+    func delete() async throws {
+        token = nil
+    }
 }
 
 /// Transport double that records every request and answers with a fixed handler.
@@ -73,6 +120,8 @@ actor StubTransport: HTTPTransport {
         let userAgent: String?
         /// `Content-Type` header value, set on requests that carry a body.
         let contentType: String?
+        /// `Authorization` header value; carries the bearer token on authenticated calls.
+        let authorization: String?
         /// Raw body of the request, when it has one.
         let body: Data?
         /// Per-request timeout in seconds.
@@ -127,6 +176,7 @@ actor StubTransport: HTTPTransport {
                 accept: request.value(forHTTPHeaderField: "Accept"),
                 userAgent: request.value(forHTTPHeaderField: "User-Agent"),
                 contentType: request.value(forHTTPHeaderField: "Content-Type"),
+                authorization: request.value(forHTTPHeaderField: "Authorization"),
                 body: request.httpBody,
                 timeout: request.timeoutInterval
             )

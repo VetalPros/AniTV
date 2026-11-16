@@ -13,6 +13,14 @@ public enum AniLibertyError: Error, Sendable, Equatable, LocalizedError {
     case decoding(String)
     /// The request failed at the transport level.
     case network(String)
+    /// The one-time pairing code has not been confirmed by the user yet.
+    ///
+    /// While a code waits for confirmation the service answers
+    /// `POST /accounts/otp/login` with **HTTP 500** and `{"message":"Server Error"}`.
+    /// That is the API's way of saying «keep polling», not a service failure, so
+    /// ``AniLibertyClient/loginWithOTP(code:deviceID:)`` maps the status here instead of
+    /// letting a generic server error reach the UI.
+    case otpNotAccepted
     /// The task was cancelled before or during the request.
     case cancelled
 
@@ -27,6 +35,8 @@ public enum AniLibertyError: Error, Sendable, Equatable, LocalizedError {
             "Could not decode the server response: \(details)"
         case let .network(details):
             "The request failed: \(details)"
+        case .otpNotAccepted:
+            "The one-time code has not been confirmed yet."
         case .cancelled:
             "The request was cancelled."
         }

@@ -1,0 +1,30 @@
+{
+  "_provenance": "SYNTHESIZED from the OpenAPI schema models.users.v1.user on 2026-11-16. No authenticated request was ever made: no account is available. All values are fictional; the passkey is a placeholder on purpose.",
+  "id": 4837362,
+  "login": "animeshnik_488",
+  "email": "animeshnik_488@example.com",
+  "nickname": "Animeshnik488",
+  "avatar": {
+    "src": "/storage/users/avatars/4837362/avatar.jpg",
+    "preview": "/storage/users/avatars/4837362/avatar-preview.jpg",
+    "thumbnail": "/storage/users/avatars/4837362/avatar-thumbnail.jpg",
+    "optimized": {
+      "src": "/storage/users/avatars/4837362/avatar-optimized.webp",
+      "preview": "/storage/users/avatars/4837362/avatar-optimized.webp",
+      "thumbnail": "/storage/users/avatars/4837362/avatar-thumbnail-optimized.webp"
+    }
+  },
+  "torrents": {
+    "passkey": "synthetic-passkey-not-a-credential",
+    "uploaded": 998234623,
+    "downloaded": 2397162874432
+  },
+  "is_banned": false,
+  "is_new": false,
+  "is_admin": false,
+  "permissions": [
+    "anime:releases:release:access"
+  ],
+  "created_at": "2019-03-31T20:43:52+00:00",
+  "is_with_ads": false
+}

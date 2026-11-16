@@ -3,8 +3,13 @@ import Foundation
 /// Actor-based client for the public AniLiberty REST API.
 ///
 /// The implemented endpoints are the latest-releases feed, a single release with its
-/// episodes, the filtered catalogue and its reference data. URL building, headers and
-/// error mapping live here, so the app never touches `URLSession` directly.
+/// episodes, the filtered catalogue with its reference data, and the account layer: OTP
+/// pairing, password login, the profile and favourites. URL building, headers and error
+/// mapping live here, so the app never touches `URLSession` directly.
+///
+/// Authenticated calls take the session token as a parameter and send it as
+/// `Authorization: Bearer`. The client keeps no auth state of its own, so signing out is
+/// simply forgetting the token in the ``AuthTokenStoring`` store.
 public actor AniLibertyClient {
     private let configuration: AniLibertyConfiguration
     private let transport: any HTTPTransport
@@ -133,42 +138,71 @@ public actor AniLibertyClient {
     }
 
     private func fetch<T: Decodable>(path: String, as _: T.Type) async throws -> T {
-        try await fetch(path: path, method: "GET", body: nil, as: T.self)
+        try await fetch(path: path, method: "GET", as: T.self)
     }
 
-    private func fetch<T: Decodable>(
+    func fetch<T: Decodable>(
         path: String,
         method: String,
-        body: Data?,
+        body: Data? = nil,
+        query: [URLQueryItem] = [],
+        token: String? = nil,
         as _: T.Type
     ) async throws -> T {
-        var request = try makeRequest(path: path)
+        let request = try makeRequest(path: path, method: method, body: body, query: query, token: token)
+        let data = try await send(request)
+        return try decode(T.self, from: data)
+    }
+
+    func makeRequest(
+        path: String,
+        method: String,
+        body: Data? = nil,
+        query: [URLQueryItem] = [],
+        token: String? = nil
+    ) throws -> URLRequest {
+        guard let endpoint = ServiceURL.endpoint(base: configuration.baseURL, path: path) else {
+            throw AniLibertyError.invalidURL(path)
+        }
+        let url = query.isEmpty ? endpoint : endpoint.appending(queryItems: query)
+
+        var request = URLRequest(url: url)
         request.httpMethod = method
+        request.timeoutInterval = 30
+        request.cachePolicy = .useProtocolCachePolicy
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue(configuration.userAgent, forHTTPHeaderField: "User-Agent")
         if let body {
             request.httpBody = body
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         }
-        let data = try await send(request)
+        if let token {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        return request
+    }
+
+    /// Decodes a payload with the shared, tolerant decoder.
+    func decode<T: Decodable>(_ type: T.Type, from data: Data) throws -> T {
         do {
-            return try JSONDecoder.aniLiberty.decode(T.self, from: data)
+            return try JSONDecoder.aniLiberty.decode(type, from: data)
         } catch {
             throw AniLibertyError.decoding(Self.describe(error))
         }
     }
 
-    private func makeRequest(path: String) throws -> URLRequest {
-        guard let url = ServiceURL.endpoint(base: configuration.baseURL, path: path) else {
-            throw AniLibertyError.invalidURL(path)
+    /// Encodes a request body, mapping the (practically impossible) failure to the kit's
+    /// error type.
+    static func encode(_ value: some Encodable) throws -> Data {
+        do {
+            return try JSONEncoder().encode(value)
+        } catch {
+            throw AniLibertyError.decoding("Could not encode the request body: \(error)")
         }
-        var request = URLRequest(url: url)
-        request.timeoutInterval = 30
-        request.cachePolicy = .useProtocolCachePolicy
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.setValue(configuration.userAgent, forHTTPHeaderField: "User-Agent")
-        return request
     }
 
-    private func send(_ request: URLRequest) async throws -> Data {
+    /// Performs a request and returns the payload with its status, without judging it.
+    func perform(_ request: URLRequest) async throws -> (data: Data, status: Int) {
         if Task.isCancelled {
             throw AniLibertyError.cancelled
         }
@@ -182,8 +216,14 @@ public actor AniLibertyClient {
         guard let http = response as? HTTPURLResponse else {
             throw AniLibertyError.network("The server returned a non-HTTP response.")
         }
-        guard (200 ..< 300).contains(http.statusCode) else {
-            throw AniLibertyError.httpStatus(http.statusCode)
+        return (data, http.statusCode)
+    }
+
+    /// Performs a request and rejects any non-2xx status.
+    private func send(_ request: URLRequest) async throws -> Data {
+        let (data, status) = try await perform(request)
+        guard (200 ..< 300).contains(status) else {
+            throw AniLibertyError.httpStatus(status)
         }
         return data
     }
