@@ -27,7 +27,9 @@ struct PairingView: View {
             Text("profile.pairing.codeLabel")
                 .font(DesignTokens.Typography.cardTitle)
                 .foregroundStyle(.secondary)
-            Text(verbatim: model.challenge?.code ?? "——————")
+            // A placeholder that reads as "no code yet" instead of a solid bar: six em dashes at this
+            // size touch each other and look like a broken label.
+            Text(verbatim: model.challenge?.code ?? "· · · · · ·")
                 .font(.system(size: 132, weight: .bold, design: .monospaced))
                 .monospacedDigit()
                 .foregroundStyle(.white)

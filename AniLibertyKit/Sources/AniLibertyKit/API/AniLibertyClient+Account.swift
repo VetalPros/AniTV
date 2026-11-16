@@ -1,10 +1,13 @@
 import Foundation
+import os
 
 /// Account endpoints: OTP pairing, password login, the profile and favourites.
 ///
 /// The token always arrives as a parameter, never as actor state, so signing out is
 /// forgetting it in the ``AuthTokenStoring`` store rather than resetting the client.
 public extension AniLibertyClient {
+    private static let accountLogger = Logger(subsystem: "tv.anitv.client", category: "Account")
+
     /// Requests a one-time pairing code for a TV device.
     ///
     /// `POST /api/v1/accounts/otp/get` is anonymous: it takes the device identifier and
@@ -53,7 +56,14 @@ public extension AniLibertyClient {
         if (200 ..< 300).contains(status) {
             return try decode(TokenResponse.self, from: data).token
         }
-        if status == 500 {
+        // A code that nobody has accepted yet is refused with whatever the service feels like that day:
+        // 500 `{"message": "Server Error"}` from a request made with a bare `curl`, 403
+        // `{"message": "This action is unauthorized."}` from the app's URLSession (which carries the
+        // cookies of the `otp/get` call). Both mean "keep waiting". A 422 is different — it is the
+        // service rejecting the code itself — and stays a real error so the screen can say so.
+        let refusal = String(bytes: data.prefix(120), encoding: .utf8) ?? ""
+        Self.accountLogger.debug("otp/login refused with \(status, privacy: .public): \(refusal, privacy: .public)")
+        if status == 403 || status == 500 {
             throw AniLibertyError.otpNotAccepted
         }
         throw AniLibertyError.httpStatus(status)
