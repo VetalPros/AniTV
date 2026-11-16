@@ -10,7 +10,7 @@ runtime (posters, covers, episode previews). This file records the few assets th
 | Source | <https://github.com/anilibria/anilibria-app> (`develop`) |
 | Files used | `app-tv/src/main/res/mipmap-xxxhdpi/ic_launcher.png` (512 px artwork taken from `app-mobile/src/main/ic_launcher-playstore.png`), same monogram |
 | Upstream licence | **GPL-3.0** (`LICENSE` in that repository) |
-| What we did | Cropped the white "AL" monogram out of the red plate, then composed tvOS layers (400×240 and 800×480, `Back`/`Front`) and the Top Shelf image in `App/Resources/Assets.xcassets/App Icon & Top Shelf Image.brandassets/` |
+| What we did | Cropped the white "AL" monogram out of the red plate, then composed tvOS layers (400×240 and 800×480, `Back`/`Front`) and the Top Shelf artwork (wordmark "AniTV" + "неофициальный клиент") in `App/Resources/Assets.xcassets/App Icon & Top Shelf Image.brandassets/` |
 | Trademark | The monogram is AniLibria's brand identity |
 
 **This is accepted knowingly, and it is the one place where the project does not follow

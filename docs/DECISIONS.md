@@ -325,7 +325,12 @@ the instruction to replace the mark before publishing.
 - A plain `AppIcon.appiconset` is not an option for this SDK: actool reports the image as an
   "unassigned child" and emits nothing.
 
-**Consequences.** The app has a real icon and a static Top Shelf image. Note for future sessions: the
+**Consequences.** The app has a real icon and a static Top Shelf image.
+One more property of the format, learned the same way: the system **aspect-fills** the Top Shelf
+artwork and cuts the sides, so the first version — mark at 8.5 % of the width — came out clipped on
+the home screen. The artwork is now composed inside a safe box (left margin 14.5 %) with the wordmark
+and the "неофициальный клиент" note next to the mark.
+ Note for future sessions: the
 Top Shelf is only drawn while the app tile holds focus on the home screen; with focus elsewhere the
 system shows its own wallpaper, so an unfocused screenshot proves nothing about the asset. The licensing and trademark questions are open by design and are tracked in
 `docs/THIRD_PARTY_ASSETS.md` — resolving them means commissioning an original mark, which is a
