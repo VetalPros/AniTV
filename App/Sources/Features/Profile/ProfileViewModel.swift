@@ -19,6 +19,13 @@ final class ProfileViewModel {
         case failed(AniLibertyError)
     }
 
+    /// One code the screen asked the service for, kept so an older confirmation still logs the TV in.
+    private struct PendingPairing {
+        let deviceID: String
+        let code: String
+        let expiresAt: Date
+    }
+
     private static let logger = Logger(subsystem: "tv.anitv.client", category: "Profile")
 
     /// How often the pairing code is polled while it is alive.
@@ -42,6 +49,12 @@ final class ProfileViewModel {
     @ObservationIgnored private let client: AniLibertyClient
     @ObservationIgnored private let tokenStore: AuthTokenStoring
     @ObservationIgnored private var deviceID: String
+    /// Every (device id, code) pair this screen asked for and that has not expired yet.
+    ///
+    /// «Обновить код» has to rotate the device id — the service answers a repeated request for the same
+    /// id with the same pending code — and rotating orphans whatever the viewer may already be typing.
+    /// Polling the whole set means a confirmation of the previous code still lets this TV in.
+    @ObservationIgnored private var pendingPairings: [PendingPairing] = []
     @ObservationIgnored private var token: String?
     @ObservationIgnored private var favoritesPage = 0
     @ObservationIgnored private var hasLoaded = false
@@ -179,8 +192,13 @@ final class ProfileViewModel {
             let challenge = try await client.requestOTP(deviceID: deviceID)
             guard !Task.isCancelled else { return }
             self.challenge = challenge
+            rememberPairing(code: challenge.code, deviceID: deviceID, expiresAt: challenge.expiresAt)
             secondsRemaining = Int(challenge.secondsRemaining(at: .now).rounded())
-            Self.logger.info("Pairing code requested, expires in \(self.secondsRemaining, privacy: .public)s")
+            // The code is shown on screen and is single-use, so logging it is safe and it is the only way
+            // to tell which code the app is actually polling when a confirmation "does not arrive".
+            Self.logger.info(
+                "Pairing code requested: \(challenge.code, privacy: .public), expires in \(self.secondsRemaining, privacy: .public)s"
+            )
             pollUntilAccepted()
         } catch {
             guard !Task.isCancelled else { return }
@@ -200,22 +218,25 @@ final class ProfileViewModel {
                 try? await Task.sleep(for: Self.tickInterval)
                 guard let self, let challenge else { return }
                 secondsRemaining = max(0, Int(challenge.secondsRemaining(at: .now).rounded()))
-                if challenge.isExpired(at: .now) {
+                if challenge.isExpired(at: .now), livePairings().isEmpty {
                     secondsRemaining = 0
                     return
                 }
                 ticksSincePoll += 1
                 guard ticksSincePoll * 500 >= Int(Self.pollInterval.components.seconds * 1000) else { continue }
                 ticksSincePoll = 0
-                await attemptLogin(code: challenge.code)
+                for pairing in livePairings() where await attemptLogin(code: pairing.code, deviceID: pairing.deviceID) {
+                    return
+                }
             }
         }
     }
 
-    private func attemptLogin(code: String) async {
+    @discardableResult
+    private func attemptLogin(code: String, deviceID: String) async -> Bool {
         do {
             let token = try await client.loginWithOTP(code: code, deviceID: deviceID)
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled else { return false }
             try? await tokenStore.save(token)
             self.token = token
             stopPairing()
@@ -223,18 +244,37 @@ final class ProfileViewModel {
             pairingError = nil
             Self.logger.info("Pairing accepted, profile is loading")
             await loadProfile(with: token)
+            return true
         } catch {
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled else { return false }
             let mapped = AniLibertyError.mapped(error)
             if case .otpNotAccepted = mapped {
-                return
+                return false
             }
             if case .cancelled = mapped {
-                return
+                return false
             }
             pairingError = mapped
             Self.logger.error("Pairing poll failed: \(String(describing: mapped), privacy: .public)")
+            return false
         }
+    }
+
+    // MARK: Pending codes
+
+    /// Keeps the last few requested codes; anything expired is dropped on the way.
+    private func rememberPairing(code: String, deviceID: String, expiresAt: Date) {
+        pendingPairings.removeAll { $0.expiresAt <= .now || $0.code == code }
+        pendingPairings.append(PendingPairing(deviceID: deviceID, code: code, expiresAt: expiresAt))
+        if pendingPairings.count > 3 {
+            pendingPairings.removeFirst(pendingPairings.count - 3)
+        }
+    }
+
+    /// Codes still worth polling: the service only binds a code for a while.
+    private func livePairings() -> [PendingPairing] {
+        pendingPairings.removeAll { $0.expiresAt <= .now }
+        return pendingPairings
     }
 
     private func stopPairing() {
