@@ -123,6 +123,10 @@ Second pass (same day, after the user's own run on the simulator):
       radiosity renditions present in `Assets.car`), verified on the simulator home screen — the dock
       shows the red plate with the white mark and the Top Shelf area shows the static artwork.
       Provenance and the GPL-3.0/trademark caveat: `docs/THIRD_PARTY_ASSETS.md`.
+- [x] Top Shelf artwork carries the wordmark "AniTV" + «неофициальный клиент» and sits inside a safe
+      box: the home screen aspect-fills it and cuts the sides (the first version lost the mark's left
+      edge). Verified on the simulator; the capture procedure is "leave the app with Menu, then take a
+      screen-wide screenshot from a UI test".
 - [x] The static Top Shelf artwork renders on the home screen **only while the app icon holds focus**
       (verified after `simctl erase` + install + launch + terminate: dark plate, red glow, red mark).
       With focus on another tile the system shows its own wallpaper, which is why the earlier screenshot
