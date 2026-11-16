@@ -75,6 +75,26 @@ The full OpenAPI document used to check all of the above lives at
 `https://anilibria.top/storage/api/docs/v1?aniliberty-api-v1-docs.json` (71 paths); the browsable
 rendition is `https://anilibria.top/api/docs/v1`.
 
+## Accounts, device pairing and favourites (verified 2026-11-16)
+
+Auth is bearer: the OpenAPI document declares one security scheme, `sessionToken` (`http`, `bearer`).
+Without it, `/accounts/users/me/profile` answers **403 `{"message": "This action is unauthorized."}`**.
+
+| Endpoint | Notes |
+| --- | --- |
+| `POST /accounts/otp/get` `{"device_id": "<uuid>"}` | **Anonymous, 200.** Returns `{"otp": {"code": "485733", "device_id": …, "expired_at": "…+00:00"}, "remaining_time": 299.56}` — the code is a **string** of digits and lives ~5 minutes. |
+| `POST /accounts/otp/accept` `{"code": 54233}` | Called by the user's *other* client (site or phone), not by the TV. |
+| `POST /accounts/otp/login` `{"code": 485733, "device_id": "…"}` | Returns `{"token": …}` once the code was accepted. **Before that it answers 500 `{"message": "Server Error"}`** — polling has to read that as "not accepted yet", not as a broken server. |
+| `POST /accounts/users/auth/login` `{login, password}` | `{"token": …}`. |
+| `GET /accounts/users/me/profile` | The user model (`id`, `login`, `email`, `nickname`, `avatar{src,preview,thumbnail,optimized}`, …). |
+| `GET /accounts/users/me/favorites/releases` | Favourites list; `POST /accounts/users/me/favorites` takes `[{"release_id": 9023}]`. |
+| `GET /accounts/users/me/views/history` | Episode view history. |
+
+Nothing authenticated has been called against the live service yet: no account credentials exist for
+this project, so every authenticated response shape below is derived from the OpenAPI schema rather
+than observed. Treat profile/favourites fixtures as synthesised until someone with an account records
+them.
+
 ## Release DTO (verified keys)
 
 `id, type, year, name{main, english, alternative}, alias, season, shikimori, mal, rating,
