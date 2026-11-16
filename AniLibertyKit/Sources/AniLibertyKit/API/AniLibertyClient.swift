@@ -2,9 +2,9 @@ import Foundation
 
 /// Actor-based client for the public AniLiberty REST API.
 ///
-/// Only the endpoints needed by the first slice are implemented: the latest-releases
-/// feed and a single release with its episodes. URL building, headers and error mapping
-/// live here, so the app never touches `URLSession` directly.
+/// The implemented endpoints are the latest-releases feed, a single release with its
+/// episodes, the filtered catalogue and its reference data. URL building, headers and
+/// error mapping live here, so the app never touches `URLSession` directly.
 public actor AniLibertyClient {
     private let configuration: AniLibertyConfiguration
     private let transport: any HTTPTransport
@@ -45,8 +45,109 @@ public actor AniLibertyClient {
         try await fetch(path: "\(ServiceURL.apiPrefix)/anime/releases/\(idOrAlias)", as: Release.self)
     }
 
+    /// Fetches one page of the filtered catalogue.
+    ///
+    /// `POST /api/v1/anime/catalog/releases` takes the filter nested under `f`, which
+    /// `CatalogFilter` handles; the response is the `data`/`meta.pagination` envelope
+    /// carried by ``CatalogPage``.
+    ///
+    /// The service rejects page sizes outside `1...50` with HTTP 422, so `page` and
+    /// `limit` are clamped into `1...` and ``CatalogPage/maximumLimit`` respectively
+    /// instead of letting a bad slider value fail the screen.
+    ///
+    /// - Parameters:
+    ///   - page: One-based page number; values below 1 become 1.
+    ///   - limit: Page size; clamped into `1...CatalogPage.maximumLimit`.
+    ///   - filter: Filter to apply; ``CatalogFilter/empty`` lists everything.
+    /// - Returns: The decoded page with its pagination.
+    /// - Throws: `AniLibertyError` mapped from the failure that occurred.
+    public func catalog(
+        page: Int = 1,
+        limit: Int = CatalogPage.defaultLimit,
+        filter: CatalogFilter = .empty
+    ) async throws -> CatalogPage {
+        let safePage = max(1, page)
+        let safeLimit = min(max(1, limit), CatalogPage.maximumLimit)
+        let body: Data
+        do {
+            body = try filter.body(page: safePage, limit: safeLimit)
+        } catch {
+            throw AniLibertyError.decoding("Could not encode the catalogue filter: \(error)")
+        }
+        return try await fetch(
+            path: "\(ServiceURL.apiPrefix)/anime/catalog/releases",
+            method: "POST",
+            body: body,
+            as: CatalogPage.self
+        )
+    }
+
+    /// Fetches the genre catalogue.
+    ///
+    /// `GET /api/v1/anime/catalog/references/genres` returns `{ id, name }` rows; the
+    /// identifiers are what ``CatalogFilter/genreIDs`` expects.
+    ///
+    /// - Returns: Genres in the order the service sends them.
+    /// - Throws: `AniLibertyError` mapped from the failure that occurred.
+    public func referenceGenres() async throws -> [Genre] {
+        try await fetch(path: Self.referencePath("genres"), as: [Genre].self)
+    }
+
+    /// Fetches the release type catalogue (`TV`, `MOVIE`, …).
+    ///
+    /// - Returns: Type rows in the order the service sends them.
+    /// - Throws: `AniLibertyError` mapped from the failure that occurred.
+    public func referenceTypes() async throws -> [CatalogReference] {
+        try await fetch(path: Self.referencePath("types"), as: [CatalogReference].self)
+    }
+
+    /// Fetches the season catalogue (`winter`, `autumn`, …).
+    ///
+    /// - Returns: Season rows in the order the service sends them.
+    /// - Throws: `AniLibertyError` mapped from the failure that occurred.
+    public func referenceSeasons() async throws -> [CatalogReference] {
+        try await fetch(path: Self.referencePath("seasons"), as: [CatalogReference].self)
+    }
+
+    /// Fetches the sorting catalogue for the catalogue screen.
+    ///
+    /// - Returns: Sorting rows in the order the service sends them.
+    /// - Throws: `AniLibertyError` mapped from the failure that occurred.
+    public func referenceSorting() async throws -> [CatalogReference] {
+        try await fetch(path: Self.referencePath("sorting"), as: [CatalogReference].self)
+    }
+
+    /// Fetches the years that occur in the catalogue.
+    ///
+    /// The endpoint returns a bare array of integers rather than objects, so there is no
+    /// localised text to show.
+    ///
+    /// - Returns: Years in the order the service sends them.
+    /// - Throws: `AniLibertyError` mapped from the failure that occurred.
+    public func referenceYears() async throws -> [Int] {
+        try await fetch(path: Self.referencePath("years"), as: [Int].self)
+    }
+
+    private static func referencePath(_ name: String) -> String {
+        "\(ServiceURL.apiPrefix)/anime/catalog/references/\(name)"
+    }
+
     private func fetch<T: Decodable>(path: String, as _: T.Type) async throws -> T {
-        let request = try makeRequest(path: path)
+        try await fetch(path: path, method: "GET", body: nil, as: T.self)
+    }
+
+    private func fetch<T: Decodable>(
+        path: String,
+        method: String,
+        body: Data?,
+        as _: T.Type
+    ) async throws -> T {
+        var request = try makeRequest(path: path)
+        request.httpMethod = method
+        if let body {
+            request.httpBody = body
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        }
         let data = try await send(request)
         do {
             return try JSONDecoder.aniLiberty.decode(T.self, from: data)
@@ -60,7 +161,6 @@ public actor AniLibertyClient {
             throw AniLibertyError.invalidURL(path)
         }
         var request = URLRequest(url: url)
-        request.httpMethod = "GET"
         request.timeoutInterval = 30
         request.cachePolicy = .useProtocolCachePolicy
         request.setValue("application/json", forHTTPHeaderField: "Accept")

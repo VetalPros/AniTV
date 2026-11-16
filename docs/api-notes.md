@@ -40,6 +40,41 @@ The full OpenAPI document (71 paths) is at
 `https://anilibria.top/storage/api/docs/v1?aniliberty-api-v1-docs.json`; browsable docs at
 `https://anilibria.top/api/docs/v1`.
 
+## Catalogue, filters and reference data (verified 2026-11-16)
+
+`POST /anime/catalog/releases` takes `{"page": 1, "limit": 15, "f": {…}}` and answers
+`{"data": [Release…], "meta": {"pagination": {"total", "count", "per_page", "current_page",
+"total_pages", "links": {"next"}}}}`. `limit: 15` works; the maximum was not probed.
+
+**Every filter lives under `f`.** Top-level keys are accepted and silently ignored — a request with
+`"genres": [25]` at the top level came back with `total: 1946`, the unfiltered count, which is exactly
+the kind of silence that makes a UI look broken while the network is fine.
+
+| Filter | Shape | Verified result |
+| --- | --- | --- |
+| `f.search` | string | `{"f":{"search":"маска"}}` → `total: 6` |
+| `f.genres` | array of integer ids | `{"f":{"genres":[25]}}` → `total: 147` |
+| `f.years` | **object** `{from_year, to_year}`, not an array | `{"f":{"years":{"from_year":2010,"to_year":2012}}}` → `total: 83` |
+| `f.types` | array of enum values (`TV`, `MOVIE`, `ONA`, …) | with `f.sorting` below → `total: 149` |
+| `f.sorting` | enum (`FRESH_AT_DESC`, `RATING_DESC`, …) | see `f.types` |
+
+Also in the schema and unused by the app so far: `f.seasons` (`winter`…), `f.age_ratings`,
+`f.publish_statuses`, `f.production_statuses`, and top-level `include` / `exclude`.
+
+Reference data (all `GET`, 200, no auth):
+
+| Endpoint | Shape |
+| --- | --- |
+| `/anime/catalog/references/genres` | `[{"id": 15, "name": "Боевые искусства"}, …]` |
+| `/anime/catalog/references/types` | `[{"value": "TV", "description": "ТВ"}, …]` |
+| `/anime/catalog/references/seasons` | `[{"value": "winter", "description": "Зима"}, …]` |
+| `/anime/catalog/references/sorting` | `[{"value": "FRESH_AT_DESC", "label": "Обновлены недавно", "description": "…"}, …]` |
+| `/anime/catalog/references/years` | `[1995, 1996, …]` — bare integers, not objects |
+
+The full OpenAPI document used to check all of the above lives at
+`https://anilibria.top/storage/api/docs/v1?aniliberty-api-v1-docs.json` (71 paths); the browsable
+rendition is `https://anilibria.top/api/docs/v1`.
+
 ## Release DTO (verified keys)
 
 `id, type, year, name{main, english, alternative}, alias, season, shikimori, mal, rating,

@@ -1,0 +1,34 @@
+[
+  {
+    "value": "TV",
+    "description": "ТВ"
+  },
+  {
+    "value": "ONA",
+    "description": "ОNA"
+  },
+  {
+    "value": "WEB",
+    "description": "WEB"
+  },
+  {
+    "value": "OVA",
+    "description": "OVA"
+  },
+  {
+    "value": "OAD",
+    "description": "OAD"
+  },
+  {
+    "value": "MOVIE",
+    "description": "Фильм"
+  },
+  {
+    "value": "DORAMA",
+    "description": "Дорама"
+  },
+  {
+    "value": "SPECIAL",
+    "description": "Спешл"
+  }
+]

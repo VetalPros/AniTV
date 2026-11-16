@@ -1,0 +1,423 @@
+{
+  "data": [
+    {
+      "id": 10306,
+      "type": {
+        "value": "TV",
+        "description": "ТВ"
+      },
+      "year": 2026,
+      "name": {
+        "main": "Магический исследователь",
+        "english": "Magical★Explorer",
+        "alternative": null
+      },
+      "alias": "magicalexplorer",
+      "season": {
+        "value": "autumn",
+        "description": "Осень"
+      },
+      "shikimori": {
+        "id": 56733,
+        "url": "https://shikimori.io/animes/56733",
+        "votes": 452,
+        "rating": 7.5
+      },
+      "mal": {
+        "id": 56733,
+        "url": "https://myanimelist.net/anime/56733",
+        "votes": 4659,
+        "rating": 6.86
+      },
+      "rating": {
+        "average": 8,
+        "votes": 1,
+        "distribution": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "6": 0,
+          "7": 0,
+          "8": 1,
+          "9": 0,
+          "10": 0
+        }
+      },
+      "poster": {
+        "src": "/storage/releases/posters/10306/hSS3XAFh86HZWMS6zQylJWPfHkAXaQyE.jpg",
+        "preview": "/storage/releases/posters/10306/hSS3XAFh86HZWMS6zQylJWPfHkAXaQyE.jpg",
+        "thumbnail": "/storage/releases/posters/10306/FSrTwwYEf5TMV8dSi1Zz4A4NSoyKZNJT.jpg",
+        "optimized": {
+          "src": "/storage/releases/posters/10306/YXIrYWRGUdzKF2yuu8BaprgesdC3fh4q.webp",
+          "preview": "/storage/releases/posters/10306/YXIrYWRGUdzKF2yuu8BaprgesdC3fh4q.webp",
+          "thumbnail": "/storage/releases/posters/10306/QbBnqV0ijZmF00ZvY85JPOYAzD7L549N.webp"
+        }
+      },
+      "fresh_at": "2026-11-16T10:14:06+00:00",
+      "created_at": "2026-08-18T22:44:28+00:00",
+      "updated_at": "2026-11-16T09:50:57+00:00",
+      "is_ongoing": true,
+      "age_rating": {
+        "value": "R16_PLUS",
+        "label": "16+",
+        "is_adult": false,
+        "description": "Для людей, достигших возраста шестнадцати лет (16+)"
+      },
+      "publish_day": {
+        "value": 7,
+        "description": "Воскресенье"
+      },
+      "description": "Немногие игры пользуются таким почитанием похотливых ценителей горячего контента, как «Магический Исследователь».\r\nОднажды наш герой виртуальных любовных похождений просыпается в теле персонажа своей обожаемой игры! Единственное но - он стал не главным героем, а его несчастного лучшим другом, который введён в сюжет исключительно ради комического эффекта. Вооружившись беспрецедентными знаниями о «Магическом Исследователе» и неординарными способностями своего нового тела, наш герой клянётся превратить самого невезучего парня в обаятельного сердцееда.",
+      "notification": null,
+      "episodes_total": 13,
+      "external_player": null,
+      "is_in_production": true,
+      "is_blocked_by_geo": false,
+      "is_blocked_by_copyrights": false,
+      "is_comments_closed": false,
+      "comments_count": 17,
+      "added_in_users_favorites": 6868,
+      "average_duration_of_episode": 23,
+      "added_in_planned_collection": 341,
+      "added_in_watched_collection": 10,
+      "added_in_watching_collection": 824,
+      "added_in_postponed_collection": 23,
+      "added_in_abandoned_collection": 17,
+      "genres": [
+        {
+          "id": 23,
+          "name": "Этти",
+          "image": {
+            "preview": "/storage/anime/genres/images/23/sN8Pat7owH9QKofX4rOHDCt7S8UHie7k.jpg",
+            "thumbnail": "/storage/anime/genres/images/23/dryNWhLJnAcbGiFZ28wVje72nUBfSYi7.jpg",
+            "optimized": {
+              "preview": "/storage/anime/genres/images/23/58oLT8koX09KAKrhx1SBo8ZCNa3nlY79.webp",
+              "thumbnail": "/storage/anime/genres/images/23/FF93LIaHHqAdK6JIyDzdPQyf3Q4L7JOu.webp"
+            }
+          },
+          "total_releases": 119
+        },
+        {
+          "id": 1,
+          "name": "Комедия",
+          "image": {
+            "preview": "/storage/anime/genres/images/1/U1sFaXCMz3PE7nxORf5D8qhN0tX2reqW.jpg",
+            "thumbnail": "/storage/anime/genres/images/1/QBNpOye0tk9DVySvQN1wz9j3iZdZhvZp.jpg",
+            "optimized": {
+              "preview": "/storage/anime/genres/images/1/2jgEuWgDWkIK1ucumMsWv1EzGy5jOT5j.webp",
+              "thumbnail": "/storage/anime/genres/images/1/2HNoBbkhXvWQwzF4WyYZwc6bMdaeRy47.webp"
+            }
+          },
+          "total_releases": 698
+        },
+        {
+          "id": 27,
+          "name": "Приключения",
+          "image": {
+            "preview": "/storage/anime/genres/images/27/bcU7byqneZPf1E3qj3g94enAUtoRUr9A.jpg",
+            "thumbnail": "/storage/anime/genres/images/27/dkzAZJGJI45REJTjVMNAJXNi4wHo0AOS.jpg",
+            "optimized": {
+              "preview": "/storage/anime/genres/images/27/z4kgvrZz4JSSy0G1EtWBDSH1SA76Aex1.webp",
+              "thumbnail": "/storage/anime/genres/images/27/lEZNqdhonXq9BAejItNKgPTv1XLFbwdD.webp"
+            }
+          },
+          "total_releases": 470
+        },
+        {
+          "id": 32,
+          "name": "Гарем",
+          "image": {
+            "preview": "/storage/anime/genres/images/32/txpRS5m3SxYCsJK9YGopDQ9ubsvWau4z.jpg",
+            "thumbnail": "/storage/anime/genres/images/32/ESGoUBexdrRp0KHjpFdjf8b7y3t4FWTC.jpg",
+            "optimized": {
+              "preview": "/storage/anime/genres/images/32/Z3B1aHcKSdLP9FklEkR1eHhPXShWGtOm.webp",
+              "thumbnail": "/storage/anime/genres/images/32/3roJoFVcLwkoGHvtdoi77bkNTV4P4VHi.webp"
+            }
+          },
+          "total_releases": 11
+        }
+      ]
+    },
+    {
+      "id": 10294,
+      "type": {
+        "value": "TV",
+        "description": "ТВ"
+      },
+      "year": 2011,
+      "name": {
+        "main": "Хантер х Хантер",
+        "english": "Hunter x Hunter (2011)",
+        "alternative": null
+      },
+      "alias": "hunter-x-hunter",
+      "season": {
+        "value": "autumn",
+        "description": "Осень"
+      },
+      "shikimori": {
+        "id": 136,
+        "url": "https://shikimori.io/animes/136",
+        "votes": 15065,
+        "rating": 8.56
+      },
+      "mal": {
+        "id": 136,
+        "url": "https://myanimelist.net/anime/136",
+        "votes": 320060,
+        "rating": 8.44
+      },
+      "rating": {
+        "average": 10,
+        "votes": 1,
+        "distribution": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "6": 0,
+          "7": 0,
+          "8": 0,
+          "9": 0,
+          "10": 1
+        }
+      },
+      "poster": {
+        "src": "/storage/releases/posters/10294/DJH6l8g7gykL58F6ECUbHMxodbhu1Un3.jpg",
+        "preview": "/storage/releases/posters/10294/DJH6l8g7gykL58F6ECUbHMxodbhu1Un3.jpg",
+        "thumbnail": "/storage/releases/posters/10294/YVylWg94I18MMzKrGsNmMPbzobpzvFqi.jpg",
+        "optimized": {
+          "src": "/storage/releases/posters/10294/bY6T8034JrDTyNMjeGbeQuHsigXKwaDC.webp",
+          "preview": "/storage/releases/posters/10294/bY6T8034JrDTyNMjeGbeQuHsigXKwaDC.webp",
+          "thumbnail": "/storage/releases/posters/10294/nuf733b7LRlPlNd5eHGnBwgG06QcuhD7.webp"
+        }
+      },
+      "fresh_at": "2026-11-16T03:41:34+00:00",
+      "created_at": "2026-08-03T21:07:44+00:00",
+      "updated_at": "2026-11-16T10:48:42+00:00",
+      "is_ongoing": false,
+      "age_rating": {
+        "value": "R12_PLUS",
+        "label": "12+",
+        "is_adult": false,
+        "description": "Для детей, достигших возраста двенадцати лет (12+)"
+      },
+      "publish_day": {
+        "value": 7,
+        "description": "Воскресенье"
+      },
+      "description": "Охотник — это тот, кто путешествует по миру, выполняя различные опасные миссии: от поимки преступников до поиска сокровищ в неизведанных землях. Главный герой — мальчик по имени Гон. Его отец Джин был охотником, но исчез много лет назад. Гон считает, что если пойдёт по стопам отца и станет охотником, то рано или поздно вновь встретится с ним. Мальчик надеется, что, повстречав отца, наконец сможет задать ему один-единственный вопрос: почему он предпочёл жизнь охотника своему маленькому сынишке.\r\nКогда ему исполняется двенадцать, Гон, как в своё время и его отец, покидает родной остров с целью сдать официальный экзамен на охотника. Но экзамен очень сложен, и каждый год множество людей погибают, пытаясь получить это звание. Во время своего путешествия Гон знакомится с Курапикой, Леорио и Киллуа, вместе с которыми ступает на тернистый путь охотника.",
+      "notification": null,
+      "episodes_total": 148,
+      "external_player": null,
+      "is_in_production": true,
+      "is_blocked_by_geo": false,
+      "is_blocked_by_copyrights": false,
+      "is_comments_closed": false,
+      "comments_count": 0,
+      "added_in_users_favorites": 2307,
+      "average_duration_of_episode": 23,
+      "added_in_planned_collection": 162,
+      "added_in_watched_collection": 277,
+      "added_in_watching_collection": 130,
+      "added_in_postponed_collection": 19,
+      "added_in_abandoned_collection": 7,
+      "genres": [
+        {
+          "id": 4,
+          "name": "Сёнен",
+          "image": {
+            "preview": "/storage/anime/genres/images/4/0m2m6ZJvFDf4exm6fTohtHwo8PoEqzIX.jpg",
+            "thumbnail": "/storage/anime/genres/images/4/UD4NKYAngvBtHS2hkcPUNQ9iKBFcotVi.jpg",
+            "optimized": {
+              "preview": "/storage/anime/genres/images/4/f1t40ahbG7mzcmZfhxlVdkC0DtY2vOQ9.webp",
+              "thumbnail": "/storage/anime/genres/images/4/SVJm7UTSTS3flVrQttsOD1d3iUoRp00B.webp"
+            }
+          },
+          "total_releases": 336
+        },
+        {
+          "id": 29,
+          "name": "Фэнтези",
+          "image": {
+            "preview": "/storage/anime/genres/images/29/BqPfwYPC7STQ0lsv6LsdyDm594Tnz2N5.jpg",
+            "thumbnail": "/storage/anime/genres/images/29/bkKObn59vWFAd8wcAPINJnI8EZLZB8gH.jpg",
+            "optimized": {
+              "preview": "/storage/anime/genres/images/29/BayKuKbzHQkKMlfFyUTZAoExCjqkHDfh.webp",
+              "thumbnail": "/storage/anime/genres/images/29/yVUCPUfGguBeZ280YyS5UhawlR3F1fS0.webp"
+            }
+          },
+          "total_releases": 645
+        },
+        {
+          "id": 27,
+          "name": "Приключения",
+          "image": {
+            "preview": "/storage/anime/genres/images/27/bcU7byqneZPf1E3qj3g94enAUtoRUr9A.jpg",
+            "thumbnail": "/storage/anime/genres/images/27/dkzAZJGJI45REJTjVMNAJXNi4wHo0AOS.jpg",
+            "optimized": {
+              "preview": "/storage/anime/genres/images/27/z4kgvrZz4JSSy0G1EtWBDSH1SA76Aex1.webp",
+              "thumbnail": "/storage/anime/genres/images/27/lEZNqdhonXq9BAejItNKgPTv1XLFbwdD.webp"
+            }
+          },
+          "total_releases": 470
+        },
+        {
+          "id": 14,
+          "name": "Экшен",
+          "image": {
+            "preview": "/storage/anime/genres/images/14/HVxcEvm7oA6JQvnMKKgSdYJ90ab8Zoco.jpg",
+            "thumbnail": "/storage/anime/genres/images/14/7JeDltmth6vVUs1bG4OHq6ywRYVjbYoY.jpg",
+            "optimized": {
+              "preview": "/storage/anime/genres/images/14/FNZP4gLtDFe67Ynbthc08wRsTp5q94sx.webp",
+              "thumbnail": "/storage/anime/genres/images/14/gfzjNkJYPgeaIyQxXveaP5UblbQWadEF.webp"
+            }
+          },
+          "total_releases": 720
+        }
+      ]
+    },
+    {
+      "id": 10334,
+      "type": {
+        "value": "TV",
+        "description": "ТВ"
+      },
+      "year": 2026,
+      "name": {
+        "main": "Маска вермильона",
+        "english": "Shuiro no Kamen",
+        "alternative": null
+      },
+      "alias": "shuiro-no-kamen",
+      "season": {
+        "value": "autumn",
+        "description": "Осень"
+      },
+      "shikimori": {
+        "id": 61999,
+        "url": "https://shikimori.io/animes/61999",
+        "votes": 225,
+        "rating": 7.64
+      },
+      "mal": {
+        "id": 61999,
+        "url": "https://myanimelist.net/anime/61999",
+        "votes": 2772,
+        "rating": 6.91
+      },
+      "rating": {
+        "average": null,
+        "votes": 0,
+        "distribution": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "6": 0,
+          "7": 0,
+          "8": 0,
+          "9": 0,
+          "10": 0
+        }
+      },
+      "poster": {
+        "src": "/storage/releases/posters/10334/soIXfZapa1pPzsVyAr4s4U81248SU5nd.jpg",
+        "preview": "/storage/releases/posters/10334/soIXfZapa1pPzsVyAr4s4U81248SU5nd.jpg",
+        "thumbnail": "/storage/releases/posters/10334/rWpkf9FaxkcvS8D4ktR3YkYElYNfF0QG.jpg",
+        "optimized": {
+          "src": "/storage/releases/posters/10334/4kU5g4v5igD8i0QJn10jsrCWENofRhvF.webp",
+          "preview": "/storage/releases/posters/10334/4kU5g4v5igD8i0QJn10jsrCWENofRhvF.webp",
+          "thumbnail": "/storage/releases/posters/10334/xxPPp7mlaWseh8uWvLNEL02w2gZH24sy.webp"
+        }
+      },
+      "fresh_at": "2026-11-15T17:51:11+00:00",
+      "created_at": "2026-08-18T22:58:09+00:00",
+      "updated_at": "2026-11-15T17:40:27+00:00",
+      "is_ongoing": true,
+      "age_rating": {
+        "value": "R16_PLUS",
+        "label": "16+",
+        "is_adult": false,
+        "description": "Для людей, достигших возраста шестнадцати лет (16+)"
+      },
+      "publish_day": {
+        "value": 7,
+        "description": "Воскресенье"
+      },
+      "description": "В этом мире существуют маски, которые даруют необычные способности своим хозяевам. Маска паука, хамелеона или даже дракона!\r\nПелле д'Аррест — ученик известного мастера масок Гастона, и он как никто другой понимает, насколько они опасны. Однажды им завладела \"Маска Бога Войны\", что привело к гибели его учителя и всех учеников мастерской. Именно поэтому Пелле путешествует по миру в поисках творений своего мастера. Его цель: уничтожить все маски учителя ради искупления своих грехов и чтобы трагедия, которая случилась с ним, больше никогда не повторилась.",
+      "notification": null,
+      "episodes_total": null,
+      "external_player": null,
+      "is_in_production": true,
+      "is_blocked_by_geo": false,
+      "is_blocked_by_copyrights": false,
+      "is_comments_closed": false,
+      "comments_count": 5,
+      "added_in_users_favorites": 5470,
+      "average_duration_of_episode": null,
+      "added_in_planned_collection": 280,
+      "added_in_watched_collection": 5,
+      "added_in_watching_collection": 577,
+      "added_in_postponed_collection": 18,
+      "added_in_abandoned_collection": 11,
+      "genres": [
+        {
+          "id": 14,
+          "name": "Экшен",
+          "image": {
+            "preview": "/storage/anime/genres/images/14/HVxcEvm7oA6JQvnMKKgSdYJ90ab8Zoco.jpg",
+            "thumbnail": "/storage/anime/genres/images/14/7JeDltmth6vVUs1bG4OHq6ywRYVjbYoY.jpg",
+            "optimized": {
+              "preview": "/storage/anime/genres/images/14/FNZP4gLtDFe67Ynbthc08wRsTp5q94sx.webp",
+              "thumbnail": "/storage/anime/genres/images/14/gfzjNkJYPgeaIyQxXveaP5UblbQWadEF.webp"
+            }
+          },
+          "total_releases": 720
+        },
+        {
+          "id": 29,
+          "name": "Фэнтези",
+          "image": {
+            "preview": "/storage/anime/genres/images/29/BqPfwYPC7STQ0lsv6LsdyDm594Tnz2N5.jpg",
+            "thumbnail": "/storage/anime/genres/images/29/bkKObn59vWFAd8wcAPINJnI8EZLZB8gH.jpg",
+            "optimized": {
+              "preview": "/storage/anime/genres/images/29/BayKuKbzHQkKMlfFyUTZAoExCjqkHDfh.webp",
+              "thumbnail": "/storage/anime/genres/images/29/yVUCPUfGguBeZ280YyS5UhawlR3F1fS0.webp"
+            }
+          },
+          "total_releases": 645
+        },
+        {
+          "id": 5,
+          "name": "Сейнен",
+          "image": {
+            "preview": "/storage/anime/genres/images/5/ekFrF3Puccsi75ngq0fzd4fUbnXiGCnn.jpg",
+            "thumbnail": "/storage/anime/genres/images/5/CfIxntJmgBabUiBQChxB0WZHdSF5L87K.jpg",
+            "optimized": {
+              "preview": "/storage/anime/genres/images/5/sTleU4eW0CiqDIiiyRniPJIQlB8HZagG.webp",
+              "thumbnail": "/storage/anime/genres/images/5/RsbTRZ6lb0zhLCP033o9PEmsFRwVqLp5.webp"
+            }
+          },
+          "total_releases": 201
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "pagination": {
+      "total": 1946,
+      "count": 3,
+      "per_page": 3,
+      "current_page": 1,
+      "total_pages": 649,
+      "links": {
+        "next": "https://aniliberty.top/api/v1/anime/catalog/releases?limit=3&page=2"
+      }
+    }
+  }
+}

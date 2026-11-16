@@ -38,6 +38,22 @@ enum Fixtures {
     static func releaseDetail() throws -> Data {
         try data(named: "release_detail")
     }
+
+    /// One page of the unfiltered catalogue, three releases with their pagination.
+    static func catalogPage() throws -> Data {
+        try data(named: "catalog_page")
+    }
+
+    /// One page of the catalogue filtered by `f.search = "маска"`.
+    static func catalogSearch() throws -> Data {
+        try data(named: "catalog_search")
+    }
+
+    /// Reference payload of the catalogue endpoint, called `genres`, `types`, `seasons`,
+    /// `sorting` or `years`.
+    static func reference(_ name: String) throws -> Data {
+        try data(named: "reference_\(name)")
+    }
 }
 
 /// Transport double that records every request and answers with a fixed handler.
@@ -55,6 +71,10 @@ actor StubTransport: HTTPTransport {
         let accept: String?
         /// `User-Agent` header value.
         let userAgent: String?
+        /// `Content-Type` header value, set on requests that carry a body.
+        let contentType: String?
+        /// Raw body of the request, when it has one.
+        let body: Data?
         /// Per-request timeout in seconds.
         let timeout: TimeInterval
     }
@@ -106,6 +126,8 @@ actor StubTransport: HTTPTransport {
                 method: request.httpMethod,
                 accept: request.value(forHTTPHeaderField: "Accept"),
                 userAgent: request.value(forHTTPHeaderField: "User-Agent"),
+                contentType: request.value(forHTTPHeaderField: "Content-Type"),
+                body: request.httpBody,
                 timeout: request.timeoutInterval
             )
         )

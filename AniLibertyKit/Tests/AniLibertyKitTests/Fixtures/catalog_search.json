@@ -1,0 +1,270 @@
+{
+  "data": [
+    {
+      "id": 8643,
+      "type": {
+        "value": "ONA",
+        "description": "ОNA"
+      },
+      "year": 2018,
+      "name": {
+        "main": "Маска героя",
+        "english": "Hero Mask",
+        "alternative": null
+      },
+      "alias": "hero-mask",
+      "season": {
+        "value": "winter",
+        "description": "Зима"
+      },
+      "shikimori": {
+        "id": 38628,
+        "url": "https://shikimori.io/animes/38628",
+        "votes": 801,
+        "rating": 7.3
+      },
+      "mal": {
+        "id": 38628,
+        "url": "https://myanimelist.net/anime/38628",
+        "votes": 12821,
+        "rating": 6.28
+      },
+      "rating": {
+        "average": null,
+        "votes": 0,
+        "distribution": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "6": 0,
+          "7": 0,
+          "8": 0,
+          "9": 0,
+          "10": 0
+        }
+      },
+      "poster": {
+        "src": "/storage/releases/posters/8643/cd2AIr621bEsdosLv6FHt0nbTGyBgbUV.jpg",
+        "preview": "/storage/releases/posters/8643/cd2AIr621bEsdosLv6FHt0nbTGyBgbUV.jpg",
+        "thumbnail": "/storage/releases/posters/8643/sirGw08sMU96atcEZlg3cnTOzKdgGMzX.jpg",
+        "optimized": {
+          "src": "/storage/releases/posters/8643/K4q8nmjmaI5xz1XRRuO2KL9XXBHZEIgz.webp",
+          "preview": "/storage/releases/posters/8643/K4q8nmjmaI5xz1XRRuO2KL9XXBHZEIgz.webp",
+          "thumbnail": "/storage/releases/posters/8643/oVnsiX5fvlDAPEmbLNQz5BFymwSq727h.webp"
+        }
+      },
+      "fresh_at": "2020-05-24T21:02:01+00:00",
+      "created_at": "2020-05-24T21:02:01+00:00",
+      "updated_at": "2024-08-02T19:53:35+00:00",
+      "is_ongoing": false,
+      "age_rating": {
+        "value": "R16_PLUS",
+        "label": "16+",
+        "is_adult": false,
+        "description": "Для людей, достигших возраста шестнадцати лет (16+)"
+      },
+      "publish_day": {
+        "value": 1,
+        "description": "Понедельник"
+      },
+      "description": "Посреди улицы от сердечного приступа умирает женщина на глазах своей подруги. Подозревая, что это убийство, Сара вместе с полицией начинает расследование. На их пути встают различные бандитские группировки, а также обладатели масок, дающие своим владельцам нечеловеческие способности.",
+      "notification": null,
+      "episodes_total": 15,
+      "external_player": "",
+      "is_in_production": false,
+      "is_blocked_by_geo": false,
+      "is_blocked_by_copyrights": false,
+      "is_comments_closed": false,
+      "comments_count": 0,
+      "added_in_users_favorites": 3028,
+      "average_duration_of_episode": 24,
+      "added_in_planned_collection": 123,
+      "added_in_watched_collection": 41,
+      "added_in_watching_collection": 22,
+      "added_in_postponed_collection": 14,
+      "added_in_abandoned_collection": 14,
+      "genres": [
+        {
+          "id": 14,
+          "name": "Экшен",
+          "image": {
+            "preview": "/storage/anime/genres/images/14/HVxcEvm7oA6JQvnMKKgSdYJ90ab8Zoco.jpg",
+            "thumbnail": "/storage/anime/genres/images/14/7JeDltmth6vVUs1bG4OHq6ywRYVjbYoY.jpg",
+            "optimized": {
+              "preview": "/storage/anime/genres/images/14/FNZP4gLtDFe67Ynbthc08wRsTp5q94sx.webp",
+              "thumbnail": "/storage/anime/genres/images/14/gfzjNkJYPgeaIyQxXveaP5UblbQWadEF.webp"
+            }
+          },
+          "total_releases": 720
+        },
+        {
+          "id": 22,
+          "name": "Фантастика",
+          "image": {
+            "preview": "/storage/anime/genres/images/22/SkMfGTRw25vgROZYw2ckIFThCj6vieKr.jpg",
+            "thumbnail": "/storage/anime/genres/images/22/ITIPuxUQTOmgnVdrWsKsvpHILkKC8XKf.jpg",
+            "optimized": {
+              "preview": "/storage/anime/genres/images/22/eWMwlRJdiIp9AVbEBvc3uNoJtPoNZZtb.webp",
+              "thumbnail": "/storage/anime/genres/images/22/BsPOUSqL5Fmd8opLAAnnv8g9B86U3iyb.webp"
+            }
+          },
+          "total_releases": 274
+        },
+        {
+          "id": 25,
+          "name": "Детектив",
+          "image": {
+            "preview": "/storage/anime/genres/images/25/u5cIFp0H3u9VQ3rUyU0PL6fEPopcrKgE.jpg",
+            "thumbnail": "/storage/anime/genres/images/25/yIbErX5wthUGQNCa6cPRAq34qjfhIwcp.jpg",
+            "optimized": {
+              "preview": "/storage/anime/genres/images/25/oMj3CiolSKjUN2gOMOlNVTjiFRsJwyGO.webp",
+              "thumbnail": "/storage/anime/genres/images/25/lrThGhq9QD0QfhEJsJiSJI1chPKFRCx8.webp"
+            }
+          },
+          "total_releases": 147
+        }
+      ]
+    },
+    {
+      "id": 10334,
+      "type": {
+        "value": "TV",
+        "description": "ТВ"
+      },
+      "year": 2026,
+      "name": {
+        "main": "Маска вермильона",
+        "english": "Shuiro no Kamen",
+        "alternative": null
+      },
+      "alias": "shuiro-no-kamen",
+      "season": {
+        "value": "autumn",
+        "description": "Осень"
+      },
+      "shikimori": {
+        "id": 61999,
+        "url": "https://shikimori.io/animes/61999",
+        "votes": 225,
+        "rating": 7.64
+      },
+      "mal": {
+        "id": 61999,
+        "url": "https://myanimelist.net/anime/61999",
+        "votes": 2772,
+        "rating": 6.91
+      },
+      "rating": {
+        "average": null,
+        "votes": 0,
+        "distribution": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "6": 0,
+          "7": 0,
+          "8": 0,
+          "9": 0,
+          "10": 0
+        }
+      },
+      "poster": {
+        "src": "/storage/releases/posters/10334/soIXfZapa1pPzsVyAr4s4U81248SU5nd.jpg",
+        "preview": "/storage/releases/posters/10334/soIXfZapa1pPzsVyAr4s4U81248SU5nd.jpg",
+        "thumbnail": "/storage/releases/posters/10334/rWpkf9FaxkcvS8D4ktR3YkYElYNfF0QG.jpg",
+        "optimized": {
+          "src": "/storage/releases/posters/10334/4kU5g4v5igD8i0QJn10jsrCWENofRhvF.webp",
+          "preview": "/storage/releases/posters/10334/4kU5g4v5igD8i0QJn10jsrCWENofRhvF.webp",
+          "thumbnail": "/storage/releases/posters/10334/xxPPp7mlaWseh8uWvLNEL02w2gZH24sy.webp"
+        }
+      },
+      "fresh_at": "2026-11-15T17:51:11+00:00",
+      "created_at": "2026-08-18T22:58:09+00:00",
+      "updated_at": "2026-11-15T17:40:27+00:00",
+      "is_ongoing": true,
+      "age_rating": {
+        "value": "R16_PLUS",
+        "label": "16+",
+        "is_adult": false,
+        "description": "Для людей, достигших возраста шестнадцати лет (16+)"
+      },
+      "publish_day": {
+        "value": 7,
+        "description": "Воскресенье"
+      },
+      "description": "В этом мире существуют маски, которые даруют необычные способности своим хозяевам. Маска паука, хамелеона или даже дракона!\r\nПелле д'Аррест — ученик известного мастера масок Гастона, и он как никто другой понимает, насколько они опасны. Однажды им завладела \"Маска Бога Войны\", что привело к гибели его учителя и всех учеников мастерской. Именно поэтому Пелле путешествует по миру в поисках творений своего мастера. Его цель: уничтожить все маски учителя ради искупления своих грехов и чтобы трагедия, которая случилась с ним, больше никогда не повторилась.",
+      "notification": null,
+      "episodes_total": null,
+      "external_player": null,
+      "is_in_production": true,
+      "is_blocked_by_geo": false,
+      "is_blocked_by_copyrights": false,
+      "is_comments_closed": false,
+      "comments_count": 5,
+      "added_in_users_favorites": 5470,
+      "average_duration_of_episode": null,
+      "added_in_planned_collection": 280,
+      "added_in_watched_collection": 5,
+      "added_in_watching_collection": 577,
+      "added_in_postponed_collection": 18,
+      "added_in_abandoned_collection": 11,
+      "genres": [
+        {
+          "id": 14,
+          "name": "Экшен",
+          "image": {
+            "preview": "/storage/anime/genres/images/14/HVxcEvm7oA6JQvnMKKgSdYJ90ab8Zoco.jpg",
+            "thumbnail": "/storage/anime/genres/images/14/7JeDltmth6vVUs1bG4OHq6ywRYVjbYoY.jpg",
+            "optimized": {
+              "preview": "/storage/anime/genres/images/14/FNZP4gLtDFe67Ynbthc08wRsTp5q94sx.webp",
+              "thumbnail": "/storage/anime/genres/images/14/gfzjNkJYPgeaIyQxXveaP5UblbQWadEF.webp"
+            }
+          },
+          "total_releases": 720
+        },
+        {
+          "id": 29,
+          "name": "Фэнтези",
+          "image": {
+            "preview": "/storage/anime/genres/images/29/BqPfwYPC7STQ0lsv6LsdyDm594Tnz2N5.jpg",
+            "thumbnail": "/storage/anime/genres/images/29/bkKObn59vWFAd8wcAPINJnI8EZLZB8gH.jpg",
+            "optimized": {
+              "preview": "/storage/anime/genres/images/29/BayKuKbzHQkKMlfFyUTZAoExCjqkHDfh.webp",
+              "thumbnail": "/storage/anime/genres/images/29/yVUCPUfGguBeZ280YyS5UhawlR3F1fS0.webp"
+            }
+          },
+          "total_releases": 645
+        },
+        {
+          "id": 5,
+          "name": "Сейнен",
+          "image": {
+            "preview": "/storage/anime/genres/images/5/ekFrF3Puccsi75ngq0fzd4fUbnXiGCnn.jpg",
+            "thumbnail": "/storage/anime/genres/images/5/CfIxntJmgBabUiBQChxB0WZHdSF5L87K.jpg",
+            "optimized": {
+              "preview": "/storage/anime/genres/images/5/sTleU4eW0CiqDIiiyRniPJIQlB8HZagG.webp",
+              "thumbnail": "/storage/anime/genres/images/5/RsbTRZ6lb0zhLCP033o9PEmsFRwVqLp5.webp"
+            }
+          },
+          "total_releases": 201
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "pagination": {
+      "total": 6,
+      "count": 2,
+      "per_page": 2,
+      "current_page": 1,
+      "total_pages": 3,
+      "links": {
+        "next": "https://aniliberty.top/api/v1/anime/catalog/releases?limit=2&f%5Bsearch%5D=%D0%BC%D0%B0%D1%81%D0%BA%D0%B0&page=2"
+      }
+    }
+  }
+}
