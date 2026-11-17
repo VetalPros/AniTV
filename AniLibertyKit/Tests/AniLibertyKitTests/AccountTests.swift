@@ -249,6 +249,71 @@ struct AccountTests {
         #expect(query.contains("limit=50"))
     }
 
+    @Test("Favourite identifiers decode from a plain JSON array")
+    func favoriteIDs() async throws {
+        // Schema-shaped payload: nobody has captured a live authenticated response yet.
+        let transport = StubTransport.serving(Data("[9023,9024,9025]".utf8))
+        let client = AniLibertyClient(transport: transport, accountTransport: transport)
+
+        let identifiers = try await client.favoriteReleaseIDs(token: Self.token)
+
+        #expect(identifiers == [9023, 9024, 9025])
+        let request = try #require(await transport.recorded.first)
+        #expect(
+            request.url?.path(percentEncoded: false)
+                == "/api/v1/accounts/users/me/favorites/ids"
+        )
+        #expect(request.method == "GET")
+        #expect(request.authorization == "Bearer \(Self.token)")
+        #expect(request.body == nil)
+    }
+
+    @Test("Adding favourites posts an array of release identifiers")
+    func addFavorites() async throws {
+        let transport = StubTransport.serving(Data("[9023,9024,9025]".utf8))
+        let client = AniLibertyClient(transport: transport, accountTransport: transport)
+
+        let identifiers = try await client.addFavorites([9023, 9025], token: Self.token)
+
+        #expect(identifiers == [9023, 9024, 9025])
+        let request = try #require(await transport.recorded.first)
+        #expect(request.url?.path(percentEncoded: false) == "/api/v1/accounts/users/me/favorites")
+        #expect(request.method == "POST")
+        #expect(request.authorization == "Bearer \(Self.token)")
+        #expect(request.contentType == "application/json")
+
+        let body = try Self.jsonArray(#require(request.body))
+        #expect(body.count == 2)
+        #expect(body.compactMap { $0["release_id"] as? Int } == [9023, 9025])
+    }
+
+    @Test("Removing favourites sends a DELETE with the same body")
+    func removeFavorites() async throws {
+        let transport = StubTransport.serving(Data("[9021,9022]".utf8))
+        let client = AniLibertyClient(transport: transport, accountTransport: transport)
+
+        let remaining = try await client.removeFavorites([9023], token: Self.token)
+
+        #expect(remaining == [9021, 9022])
+        let request = try #require(await transport.recorded.first)
+        #expect(request.url?.path(percentEncoded: false) == "/api/v1/accounts/users/me/favorites")
+        #expect(request.method == "DELETE")
+        #expect(request.authorization == "Bearer \(Self.token)")
+
+        let body = try Self.jsonArray(#require(request.body))
+        #expect(body.compactMap { $0["release_id"] as? Int } == [9023])
+    }
+
+    @Test("An empty favourites mutation sends nothing")
+    func emptyFavoritesMutation() async throws {
+        let transport = StubTransport.serving(Data("[]".utf8))
+        let client = AniLibertyClient(transport: transport, accountTransport: transport)
+
+        #expect(try await client.addFavorites([], token: Self.token) == [])
+        #expect(try await client.removeFavorites([], token: Self.token) == [])
+        #expect(await transport.requestCount() == 0)
+    }
+
     // MARK: - Token store seam
 
     @Test("A fake token store round-trips without the Keychain")
@@ -274,5 +339,10 @@ struct AccountTests {
     private static func jsonObject(_ data: Data) throws -> [String: Any] {
         let object = try JSONSerialization.jsonObject(with: data)
         return try #require(object as? [String: Any])
+    }
+
+    private static func jsonArray(_ data: Data) throws -> [[String: Any]] {
+        let object = try JSONSerialization.jsonObject(with: data)
+        return try #require(object as? [[String: Any]])
     }
 }

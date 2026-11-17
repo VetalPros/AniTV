@@ -87,6 +87,35 @@ public struct CatalogFilter: Sendable, Equatable {
         payload.isEmpty
     }
 
+    /// Stable fingerprint of the filter, used as part of ``CatalogCache``'s key.
+    ///
+    /// Blank text is dropped and the identifier/value groups are sorted, so two filters
+    /// that produce the same request share one cache entry regardless of the order the UI
+    /// collected them in. An empty filter fingerprints as an empty string.
+    var fingerprint: String {
+        let payload = payload
+        var parts: [String] = []
+        if let search = payload.search {
+            parts.append("search=\(search)")
+        }
+        if let genres = payload.genres {
+            parts.append("genres=\(genres.sorted().map(String.init).joined(separator: ","))")
+        }
+        if let types = payload.types {
+            parts.append("types=\(types.sorted().joined(separator: ","))")
+        }
+        if let seasons = payload.seasons {
+            parts.append("seasons=\(seasons.sorted().joined(separator: ","))")
+        }
+        if let years = payload.years {
+            parts.append("years=\(years.from.map(String.init) ?? "")-\(years.to.map(String.init) ?? "")")
+        }
+        if let sorting = payload.sorting {
+            parts.append("sorting=\(sorting)")
+        }
+        return parts.joined(separator: "&")
+    }
+
     /// Encodes the request body the API expects.
     ///
     /// Only non-empty groups are written, and everything filter-shaped is nested under

@@ -175,6 +175,82 @@ public extension AniLibertyClient {
         }
         return try decode(CatalogPage.self, from: data)
     }
+
+    /// Fetches the identifiers of the releases in the user's favourites.
+    ///
+    /// `GET /api/v1/accounts/users/me/favorites/ids` returns a bare JSON array of release
+    /// identifiers (`[9023, 9024, 9025]`), which is far cheaper than paging the favourites
+    /// list — use it to mark hearts in the catalogue.
+    ///
+    /// - Parameter token: Session token.
+    /// - Returns: Release identifiers, in the order the service sends them.
+    /// - Throws: `AniLibertyError` mapped from the failure that occurred.
+    func favoriteReleaseIDs(token: String) async throws -> [Int] {
+        let request = try makeRequest(
+            path: "\(ServiceURL.apiPrefix)/accounts/users/me/favorites/ids",
+            method: "GET",
+            token: token
+        )
+        let (data, status) = try await perform(request, over: accountTransport)
+        guard (200 ..< 300).contains(status) else {
+            throw AniLibertyError.httpStatus(status)
+        }
+        return try decode([Int].self, from: data)
+    }
+
+    /// Adds releases to the user's favourites.
+    ///
+    /// `POST /api/v1/accounts/users/me/favorites` takes an array of `{"release_id": …}`
+    /// objects and answers with the identifiers now in favourites, so the screen can update
+    /// its hearts without a second call. An empty array sends nothing and answers `[]`.
+    ///
+    /// - Parameters:
+    ///   - releaseIDs: Release identifiers to add.
+    ///   - token: Session token.
+    /// - Returns: Release identifiers in favourites after the change.
+    /// - Throws: `AniLibertyError` mapped from the failure that occurred.
+    func addFavorites(_ releaseIDs: [Int], token: String) async throws -> [Int] {
+        try await updateFavorites(releaseIDs, token: token, method: "POST")
+    }
+
+    /// Removes releases from the user's favourites.
+    ///
+    /// `DELETE /api/v1/accounts/users/me/favorites` takes the same `{"release_id": …}`
+    /// array as the `POST` and answers with the identifiers that remain. A `DELETE` with a
+    /// body is unusual but perfectly valid, so the identifiers travel in the body instead
+    /// of an ever-growing query string.
+    ///
+    /// - Parameters:
+    ///   - releaseIDs: Release identifiers to remove.
+    ///   - token: Session token.
+    /// - Returns: Release identifiers in favourites after the removal.
+    /// - Throws: `AniLibertyError` mapped from the failure that occurred.
+    func removeFavorites(_ releaseIDs: [Int], token: String) async throws -> [Int] {
+        try await updateFavorites(releaseIDs, token: token, method: "DELETE")
+    }
+
+    /// Sends one favourites mutation and decodes the resulting identifier list.
+    private func updateFavorites(
+        _ releaseIDs: [Int],
+        token: String,
+        method: String
+    ) async throws -> [Int] {
+        guard !releaseIDs.isEmpty else {
+            return []
+        }
+        let body = try Self.encode(releaseIDs.map(FavoriteBody.init))
+        let request = try makeRequest(
+            path: "\(ServiceURL.apiPrefix)/accounts/users/me/favorites",
+            method: method,
+            body: body,
+            token: token
+        )
+        let (data, status) = try await perform(request, over: accountTransport)
+        guard (200 ..< 300).contains(status) else {
+            throw AniLibertyError.httpStatus(status)
+        }
+        return try decode([Int].self, from: data)
+    }
 }
 
 /// Body of `POST /accounts/otp/get`.
@@ -220,4 +296,13 @@ private struct PasswordLoginBody: Encodable {
 /// Response of both login endpoints.
 private struct TokenResponse: Decodable {
     let token: String
+}
+
+/// Body element of the favourites `POST` and `DELETE`: `{"release_id": …}`.
+private struct FavoriteBody: Encodable {
+    let releaseID: Int
+
+    private enum CodingKeys: String, CodingKey {
+        case releaseID = "release_id"
+    }
 }

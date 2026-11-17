@@ -18,20 +18,27 @@ public actor AniLibertyClient {
     /// Clean session used for every account call (handshake, profile, favourites); see
     /// ``URLSessionTransport/ephemeral()``.
     let accountTransport: any HTTPTransport
+    /// Query-keyed cache of decoded catalogue pages; the service sends no validators.
+    private let catalogCache: CatalogCache
 
     /// Creates a client.
     ///
     /// - Parameters:
     ///   - configuration: Base URL and `User-Agent`; the default value is production.
     ///   - transport: HTTP seam; the default value uses `URLSession` with caching on.
+    ///   - accountTransport: HTTP seam for account calls; the default value is a clean
+    ///     session without cookies or cache.
+    ///   - catalogCache: Cache consulted by ``catalog(page:limit:filter:refresh:)``.
     public init(
         configuration: AniLibertyConfiguration = .default,
         transport: any HTTPTransport = URLSessionTransport(),
-        accountTransport: any HTTPTransport = URLSessionTransport.ephemeral()
+        accountTransport: any HTTPTransport = URLSessionTransport.ephemeral(),
+        catalogCache: CatalogCache = CatalogCache()
     ) {
         self.configuration = configuration
         self.transport = transport
         self.accountTransport = accountTransport
+        self.catalogCache = catalogCache
     }
 
     /// Fetches the latest releases feed.
@@ -67,31 +74,45 @@ public actor AniLibertyClient {
     /// `limit` are clamped into `1...` and ``CatalogPage/maximumLimit`` respectively
     /// instead of letting a bad slider value fail the screen.
     ///
+    /// Pages are cached by request for ``CatalogCache/timeToLive`` seconds, because the
+    /// service sends no validators to make a conditional request worth it; see
+    /// ``CatalogCache``. Pass `refresh: true` to bypass the cache and replace its entry.
+    ///
     /// - Parameters:
     ///   - page: One-based page number; values below 1 become 1.
     ///   - limit: Page size; clamped into `1...CatalogPage.maximumLimit`.
     ///   - filter: Filter to apply; ``CatalogFilter/empty`` lists everything.
+    ///   - refresh: When `true`, ignore the cached page and fetch a fresh one.
     /// - Returns: The decoded page with its pagination.
     /// - Throws: `AniLibertyError` mapped from the failure that occurred.
     public func catalog(
         page: Int = 1,
         limit: Int = CatalogPage.defaultLimit,
-        filter: CatalogFilter = .empty
+        filter: CatalogFilter = .empty,
+        refresh: Bool = false
     ) async throws -> CatalogPage {
         let safePage = max(1, page)
         let safeLimit = min(max(1, limit), CatalogPage.maximumLimit)
+        let query = CatalogQuery(page: safePage, limit: safeLimit, filter: filter)
+
+        if !refresh, let cached = await catalogCache.page(for: query) {
+            return cached
+        }
+
         let body: Data
         do {
             body = try filter.body(page: safePage, limit: safeLimit)
         } catch {
             throw AniLibertyError.decoding("Could not encode the catalogue filter: \(error)")
         }
-        return try await fetch(
+        let fetched = try await fetch(
             path: "\(ServiceURL.apiPrefix)/anime/catalog/releases",
             method: "POST",
             body: body,
             as: CatalogPage.self
         )
+        await catalogCache.store(fetched, for: query)
+        return fetched
     }
 
     /// Fetches the genre catalogue.
