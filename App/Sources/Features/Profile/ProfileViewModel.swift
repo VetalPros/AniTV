@@ -50,6 +50,8 @@ final class ProfileViewModel {
     private(set) var isSigningIn = false
     /// Reason the last pairing attempt failed, shown next to the code without leaving the screen.
     private(set) var pairingError: AniLibertyError?
+    /// When the profile and the favourites were last brought up to date.
+    private(set) var updatedAt: Date?
 
     @ObservationIgnored private let client: AniLibertyClient
     @ObservationIgnored private let tokenStore: AuthTokenStoring
@@ -64,6 +66,11 @@ final class ProfileViewModel {
     @ObservationIgnored private var favoritesPage = 0
     @ObservationIgnored private var hasLoaded = false
     @ObservationIgnored private var pairingTask: Task<Void, Never>?
+    @ObservationIgnored private lazy var refreshLoop = RefreshLoop(
+        policy: AutoRefreshPolicy.make(kind: .favorites)
+    ) { [weak self] in
+        await self?.refreshSignedInContent()
+    }
 
     init(
         client: AniLibertyClient = AniLibertyClient(),
@@ -83,9 +90,61 @@ final class ProfileViewModel {
         await refresh()
     }
 
+    // MARK: Auto-refresh
+
+    /// Tells the loop whether the «Профиль» tab is on display and the app is in the foreground.
+    ///
+    /// Coming back to the tab re-reads the profile and the favourites at once — that is what makes a
+    /// release favourited on the website appear without restarting the app.
+    func setVisible(_ visible: Bool) async {
+        await refreshLoop.setVisible(visible)
+    }
+
+    /// Stops the timer, e.g. when the app goes to the background or the session ends.
+    func stopAutoRefresh() {
+        refreshLoop.stop()
+    }
+
+    /// Re-reads the profile and the first page of favourites without disturbing what is on screen.
+    ///
+    /// Failures keep the current grid: nobody asked for this refresh, so a hiccup must not turn a working
+    /// screen into an error. A dead token, on the other hand, is a state change and is surfaced.
+    private func refreshSignedInContent() async {
+        guard case .signedIn = state, let token, let currentProfile = profile else { return }
+        do {
+            let profile = try await client.profile(token: token)
+            guard !Task.isCancelled else { return }
+            self.profile = profile
+            if profile.id != currentProfile.id {
+                // A different account: the favourites have to start over.
+                favoritesPage = 0
+                hasMoreFavorites = false
+            }
+            let page = try await client.favorites(token: token, page: 1)
+            guard !Task.isCancelled else { return }
+            favorites = page.releases
+            favoritesPage = page.currentPage
+            hasMoreFavorites = page.hasNextPage
+            favoritesError = nil
+            updatedAt = .now
+            Self.logger.info("Refreshed profile with \(page.releases.count, privacy: .public) favourites")
+        } catch {
+            guard !Task.isCancelled else { return }
+            let mapped = AniLibertyError.mapped(error)
+            if Self.isUnauthorized(mapped) {
+                stopAutoRefresh()
+                state = .expired
+                return
+            }
+            Self.logger
+                .error("Profile refresh failed: \(String(describing: mapped), privacy: .public)")
+        }
+    }
+
     /// Re-reads the stored token and rebuilds the screen from it.
     func refresh() async {
         stopPairing()
+        stopAutoRefresh()
         state = .loading
         let stored = try? await tokenStore.load()
         guard let stored, !stored.isEmpty else {
@@ -105,6 +164,7 @@ final class ProfileViewModel {
             guard !Task.isCancelled else { return }
             self.profile = profile
             state = .signedIn
+            updatedAt = .now
             Self.logger.info(
                 "Profile loaded, avatar=\(profile.avatarURL != nil, privacy: .public), favourites pagination starts"
             )
@@ -117,6 +177,7 @@ final class ProfileViewModel {
                 // disappearing by itself. It now stays until the viewer asks to pair the TV again.
                 Self.logger
                     .error("Stored token was rejected: \(String(describing: mapped), privacy: .public)")
+                stopAutoRefresh()
                 state = .expired
                 return
             }
@@ -131,8 +192,10 @@ final class ProfileViewModel {
         await startPairing()
     }
 
-    /// Ends the session: the token leaves the Keychain and the screen returns to pairing.
+    /// Ends the session: the token leaves the Keychain, the refresh loop stops and the screen returns to
+    /// pairing.
     func signOut() async {
+        stopAutoRefresh()
         await forgetToken()
         profile = nil
         favorites = []

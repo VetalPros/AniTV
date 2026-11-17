@@ -32,6 +32,8 @@ struct SignedInProfileView: View {
             }
             identity
                 .padding(.horizontal, DesignTokens.screenInset)
+            freshness
+                .padding(.horizontal, DesignTokens.screenInset)
                 .padding(.bottom, 8)
         }
     }
@@ -58,6 +60,18 @@ struct SignedInProfileView: View {
             Spacer(minLength: 0)
         }
         .accessibilityElement(children: .combine)
+    }
+
+    /// Quiet "this list is live" line under the account block.
+    @ViewBuilder
+    private var freshness: some View {
+        if let updatedAt = model.updatedAt {
+            Text("common.updatedAt \(updatedAt.formatted(date: .omitted, time: .shortened))")
+                .font(DesignTokens.Typography.cardMeta)
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier("profile.updatedAt")
+                .accessibilityValue(Text(verbatim: updatedAt.formatted(date: .omitted, time: .standard)))
+        }
     }
 
     // MARK: Favourites

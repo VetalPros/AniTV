@@ -65,6 +65,7 @@ AniTV — клиент для просмотра аниме с AniLiberty на A
 | Избранное с карточки релиза (сердечко в hero) | ✅ | `App/Sources/Features/Detail/ReleaseHeroView.swift` |
 | Прогресс по каждой серии, полоска на карточке эпизода | ✅ | `AniLibertyKit/Sources/AniLibertyKit/Persistence/` |
 | Кэш страниц каталога по запросу (5 минут, без ETag — его у сервиса нет) | ✅ | `AniLibertyKit/Sources/AniLibertyKit/Cache/CatalogCache.swift` |
+| Автообновление: лента каждые 5 минут и при возврате на вкладку, избранное — при входе и каждые 3 минуты | ✅ | `App/Sources/Support/AutoRefreshPolicy.swift` |
 | Иконка приложения и статичный Top Shelf | ✅ | `App/Resources/Assets.xcassets/` |
 | Динамический Top Shelf: карусель свежих релизов (TV Services) | 💡 | `docs/PROJECT_MEMORY.md` |
 | Локализация ru/en (String Catalogs) | ✅ | `App/Resources/Localizable.xcstrings` |

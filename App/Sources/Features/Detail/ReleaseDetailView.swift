@@ -19,6 +19,7 @@ struct ReleaseDetailView: View {
     @State private var isPickerPresented = false
     /// Episode chosen in the picker; playback starts when the cover finishes dismissing.
     @State private var pendingEpisode: Episode?
+    @Environment(\.scenePhase) private var scenePhase
     @FocusState private var focusedControl: DetailHeroAction?
 
     /// Width the synopsis is actually laid out at, reported by the text itself. It feeds the
@@ -39,6 +40,15 @@ struct ReleaseDetailView: View {
             content
         }
         .task { await model.loadIfNeeded() }
+        // Back from the player or from another tab: the heart has to match the site again. Focus moves
+        // deliberately do not trigger this.
+        .onAppear {
+            Task { await model.loadFavoritesState() }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            guard phase == .active else { return }
+            Task { await model.loadFavoritesState() }
+        }
         .fullScreenCover(
             isPresented: $isPickerPresented,
             onDismiss: {

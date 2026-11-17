@@ -5,6 +5,7 @@ import SwiftUI
 struct LatestReleasesView: View {
     @State private var model = LatestReleasesViewModel()
     @State private var path: [ReleaseRoute] = []
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -17,6 +18,11 @@ struct LatestReleasesView: View {
             }
         }
         .task { await model.loadIfNeeded() }
+        .onAppear { Task { await model.setVisible(scenePhase == .active) } }
+        .onDisappear { Task { await model.setVisible(false) } }
+        .onChange(of: scenePhase) { _, phase in
+            Task { await model.setVisible(phase == .active) }
+        }
     }
 
     @ViewBuilder
@@ -44,7 +50,10 @@ struct LatestReleasesView: View {
     private func grid(_ releases: [Release]) -> some View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: DesignTokens.sectionSpacing) {
-                ScreenHeader(title: "screen.latest.title", subtitle: "screen.latest.subtitle")
+                VStack(alignment: .leading, spacing: 6) {
+                    ScreenHeader(title: "screen.latest.title", subtitle: "screen.latest.subtitle")
+                    freshness
+                }
                 ReleasePosterGrid(releases: releases) { release in
                     path.append(ReleaseRoute(release: release))
                 }
@@ -52,6 +61,19 @@ struct LatestReleasesView: View {
             .padding(.bottom, 64)
         }
         .scrollClipDisabled()
+    }
+
+    /// Quiet "the list is live" line: the time the grid was last brought up to date.
+    @ViewBuilder
+    private var freshness: some View {
+        if let updatedAt = model.updatedAt {
+            Text("common.updatedAt \(updatedAt.formatted(date: .omitted, time: .shortened))")
+                .font(DesignTokens.Typography.cardMeta)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, DesignTokens.screenInset)
+                .accessibilityIdentifier("latest.updatedAt")
+                .accessibilityValue(Text(verbatim: updatedAt.formatted(date: .omitted, time: .standard)))
+        }
     }
 
     private func failureLayout(@ViewBuilder body: () -> some View) -> some View {

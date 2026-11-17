@@ -154,6 +154,13 @@ Second pass (same day, after the user's own run on the simulator):
 - [x] Catalogue pages cached by request for five minutes (`CatalogCache`): paging back and forth no longer
       re-hits the service. The endpoint has no `ETag` (measured), so this is a client-side cache, not
       revalidation. The `refresh: true` path is wired to filters/search/retry but not asserted by a test.
+- [x] Auto-refresh: `AutoRefreshPolicy` + `RefreshLoop` (one timer for both screens). «Новинки» every
+      300 s and on returning to the tab after >60 s, favourites every 180 s plus an immediate re-read on
+      entering the tab, and the detail screen re-reads the favourite state on every appear. Hidden screens
+      and a backgrounded app run no timer at all. Proven by `AutoRefreshUITests`, which watches the
+      «Обновлено HH:mm» caption change on an untouched screen with the intervals shortened by
+      `-uiTestingRefreshInterval`; the production numbers themselves are not measured by any test.
+
 - [x] Test seam: `App/Sources/Support/AuthTokenStoreFactory.swift` — the launch argument
       `-uiTestingSignedOut` swaps in an `EmptyTokenStore` so the pairing and signed-out-heart tests are
       deterministic while the simulator's Keychain holds a real session. Production never passes the flag;

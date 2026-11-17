@@ -7,6 +7,7 @@ import SwiftUI
 struct ProfileView: View {
     @State private var model = ProfileViewModel()
     @State private var path: [ReleaseRoute] = []
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -19,6 +20,11 @@ struct ProfileView: View {
             }
         }
         .task { await model.loadIfNeeded() }
+        .onAppear { Task { await model.setVisible(scenePhase == .active) } }
+        .onDisappear { Task { await model.setVisible(false) } }
+        .onChange(of: scenePhase) { _, phase in
+            Task { await model.setVisible(phase == .active) }
+        }
     }
 
     @ViewBuilder

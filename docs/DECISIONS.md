@@ -513,3 +513,36 @@ pages, dropping the oldest insertion; `catalog(page:limit:filter:refresh:)` bypa
 when the viewer asks for a refresh or changes the filter. The cache is in memory only: a relaunch pays for
 the first page again, which is acceptable at this size and avoids inventing an eviction policy for a disk
 tier nobody asked for.
+
+---
+
+## 0024 — Screens keep themselves fresh, on a policy rather than on guesses (2026-11-17)
+
+The complaint was concrete: a release added to favourites on the website shows up there immediately, but
+the app kept the list it had loaded when the tab was first opened, and «Новинки» only ever reloaded on
+launch. Both screens now refresh themselves.
+
+**One policy, one timer.** `AutoRefreshPolicy` owns the numbers and the launch-argument overrides;
+`RefreshLoop` is the only implementation of "when do we reload". Screens call `setVisible` from
+`onAppear`/`onDisappear`/`scenePhase` and nothing else — there is no second timer to drift.
+
+**The numbers.** «Новинки» reloads every 300 s: a feed of fresh episodes does not change faster, and one
+request per five minutes per TV is invisible for the service while the grid still feels live. Favourites
+reload every 180 s, but the interval is the *secondary* trigger there — coming back to the tab after more
+than 60 s away reloads immediately, which is exactly the "added it on the site, went back to the TV" case.
+A shorter staleness window would refetch on every quick look at «Каталог».
+
+**Polite by construction.** Nothing runs while a screen is hidden or the app is in the background: the loop
+is *cancelled*, not paused, so a TV left on a shelf makes no requests. A background reload never enters the
+loading state, and when the payload is unchanged the model keeps the same array, so focus and scroll are not
+disturbed (a tvOS grid that rebuilds under the remote is worse than stale data).
+
+**Testability.** A five-minute interval cannot be observed in a UI test, so the two intervals are injectable
+with `-uiTestingRefreshInterval` and the staleness window with `-uiTestingStaleAfter`, read through the same
+factory pattern as `-uiTestingSignedOut`. Production never passes them. `AutoRefreshUITests` then proves a
+real self-refresh in about ten seconds by watching the «Обновлено HH:mm» caption change with the screen
+untouched — a caption that exists because the viewer also deserves to see the list is live.
+
+**Not asserted:** the production intervals themselves (only their values in `AutoRefreshPolicy`), the
+absence of requests on a hidden tab (there is no request counter in the app), and the "content really
+changed → show it" branch, because the live feed does not change within a test run.
