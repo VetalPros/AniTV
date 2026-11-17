@@ -106,7 +106,7 @@ public extension Episode {
 ```swift
 public struct AniLibertyConfiguration: Sendable, Equatable {
     public var baseURL: URL          // https://aniliberty.top
-    public var userAgent: String     // "AniTV/0.1 (+https://github.com/anitv/anitv)"
+    public var userAgent: String     // "AniTV/0.1 (+https://github.com/VetalPros/AniTV)"
     public static let `default`: AniLibertyConfiguration
     public init(baseURL: URL, userAgent: String)
 }

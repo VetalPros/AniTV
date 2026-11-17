@@ -240,6 +240,19 @@ simulator plus network. Budget: roughly half a day for the spike, then the carou
 the app; if the system turns out to refresh the Top Shelf too rarely to be worth it, keep the static
 artwork and drop this idea.
 
+## Publishing (2026-11-17)
+
+The repository is published at <https://github.com/VetalPros/AniTV> (owner's account, public, MIT).
+`docs/PROJECT_MEMORY.md` and `AGENTS.md` are committed on purpose: the project is open by design and
+`AGENTS.md` §2.2 forbids secrets, so both stay readable. Before the first push the tree was scanned for
+personal data (the account holder's nickname and address appear in no file and in no commit) and for
+tokens (none). The Kit's `User-Agent` now carries the real repository URL, which is what the politeness
+rule in `AGENTS.md` §2.5 asks for — it used to be a placeholder.
+
+**Still to do before this is a real product:** the app icon is AniLibria's mark (see
+`docs/THIRD_PARTY_ASSETS.md` and ADR 0017) and has to be replaced by an original one; the bundle id
+(`tv.anitv.client`) and the product name are placeholders chosen before the repository existed.
+
 ## Open questions for the user
 
 - Final **product name** and **bundle identifier** — deliberately deferred; the working name is

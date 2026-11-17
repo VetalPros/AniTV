@@ -16,7 +16,7 @@ public struct AniLibertyConfiguration: Sendable, Equatable {
     /// Production configuration: the official site root and the repository user agent.
     public static let `default` = AniLibertyConfiguration(
         baseURL: ServiceURL.base,
-        userAgent: "AniTV/0.1 (+https://github.com/anitv/anitv)"
+        userAgent: "AniTV/0.1 (+https://github.com/VetalPros/AniTV)"
     )
 
     /// Creates a configuration with an explicit site root and user agent.
