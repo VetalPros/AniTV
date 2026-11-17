@@ -15,6 +15,12 @@ struct PlayerViewController: UIViewControllerRepresentable {
     let qualities: [StreamQuality]
     let selectedQuality: StreamQuality
     let onSelectQuality: (StreamQuality) -> Void
+    /// Skip hint to show, `nil` when it has to stay out of the way.
+    let skip: SkipTimecode?
+    let onSkip: () -> Void
+    let onDismissSkip: () -> Void
+    /// A Select press that the player itself consumed: the transport bar was toggled.
+    let onPlayerSelect: () -> Void
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
@@ -25,6 +31,8 @@ struct PlayerViewController: UIViewControllerRepresentable {
         controller.player = player
         controller.showsPlaybackControls = true
         controller.view.backgroundColor = .black
+        controller.onPlayerSelect = onPlayerSelect
+        context.coordinator.installOverlay(on: controller, from: self)
         context.coordinator.updateMenu(on: controller, from: self)
         return controller
     }
@@ -33,11 +41,60 @@ struct PlayerViewController: UIViewControllerRepresentable {
         if controller.player !== player {
             controller.player = player
         }
+        controller.onPlayerSelect = onPlayerSelect
+        context.coordinator.updateOverlay(on: controller, from: self)
         context.coordinator.updateMenu(on: controller, from: self)
     }
 
     @MainActor
     final class Coordinator {
+        /// Hosts the skip hint inside the player's content overlay.
+        private var hosting: UIHostingController<SkipHintView>?
+        /// Bottom/trailing inset of the hint, so it clears the scrubber even when both are visible.
+        private static let overlayInset: CGFloat = 120
+
+        func installOverlay(on controller: QualityPlayerViewController, from representable: PlayerViewController) {
+            guard let overlay = controller.contentOverlayView else { return }
+            let hosting = UIHostingController(rootView: Self.hint(from: representable))
+            hosting.view.backgroundColor = .clear
+            hosting.view.translatesAutoresizingMaskIntoConstraints = false
+            controller.addChild(hosting)
+            overlay.addSubview(hosting.view)
+            NSLayoutConstraint.activate([
+                hosting.view.trailingAnchor.constraint(
+                    equalTo: overlay.trailingAnchor,
+                    constant: -Self.overlayInset
+                ),
+                hosting.view.bottomAnchor.constraint(
+                    equalTo: overlay.bottomAnchor,
+                    constant: -Self.overlayInset
+                ),
+                hosting.view.leadingAnchor.constraint(
+                    greaterThanOrEqualTo: overlay.leadingAnchor,
+                    constant: Self.overlayInset
+                ),
+            ])
+            hosting.didMove(toParent: controller)
+            controller.overlayHostView = hosting.view
+            self.hosting = hosting
+            updateOverlay(on: controller, from: representable)
+        }
+
+        func updateOverlay(on _: QualityPlayerViewController, from representable: PlayerViewController) {
+            hosting?.rootView = Self.hint(from: representable)
+            // Hidden rather than removed: the hosting view keeps its place in the focus order, and an
+            // invisible hint must not be focusable or draw over the transport bar.
+            hosting?.view.isHidden = representable.skip == nil
+        }
+
+        private static func hint(from representable: PlayerViewController) -> SkipHintView {
+            SkipHintView(
+                skip: representable.skip,
+                onSkip: representable.onSkip,
+                onDismiss: representable.onDismissSkip
+            )
+        }
+
         func updateMenu(on controller: QualityPlayerViewController, from representable: PlayerViewController) {
             controller.menuProvider = { Self.payload(from: representable) }
             controller.applyMenuItems()
@@ -103,6 +160,12 @@ final class QualityPlayerViewController: AVPlayerViewController {
 
     var menuProvider: (() -> (menu: UIMenu, signature: String))?
 
+    /// A Select press that reached the player instead of the custom overlay: the transport bar toggled.
+    var onPlayerSelect: (() -> Void)?
+
+    /// The hosted skip hint, used to tell "our controls have focus" from "the transport bar has focus".
+    weak var overlayHostView: UIView?
+
     private var appliedSignature: String?
 
     private var remainingTicks = 0
@@ -129,6 +192,25 @@ final class QualityPlayerViewController: AVPlayerViewController {
         super.viewDidDisappear(animated)
         refreshTimer?.invalidate()
         refreshTimer = nil
+    }
+
+    /// AVKit has no "transport bar is open" callback, so the toggle is observed where it happens: a Select
+    /// press that reaches this controller and was *not* meant for the custom overlay flips the system
+    /// playback controls. Presses consumed by the overlay's buttons never come this far.
+    override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        if presses.contains(where: { $0.type == .select }), !isFocusInsideOverlay() {
+            onPlayerSelect?()
+        }
+        super.pressesBegan(presses, with: event)
+    }
+
+    private func isFocusInsideOverlay() -> Bool {
+        guard let overlayHostView,
+              let focused = UIFocusSystem.focusSystem(for: self)?.focusedItem as? UIView
+        else {
+            return false
+        }
+        return focused.isDescendant(of: overlayHostView)
     }
 
     func applyMenuItems() {

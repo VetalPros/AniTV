@@ -20,11 +20,14 @@ struct PlayerScreen: View {
                 player: model.player,
                 qualities: model.sources.map(\.quality),
                 selectedQuality: model.selectedQuality,
-                onSelectQuality: model.selectQuality
+                onSelectQuality: model.selectQuality,
+                skip: model.visibleSkip,
+                onSkip: model.skipActiveSegment,
+                onDismissSkip: model.dismissSkipHint,
+                onPlayerSelect: { model.setPlaybackControlsOpen(!model.isPlaybackControlsOpen) }
             )
             .ignoresSafeArea()
 
-            skipOverlay
             failureOverlay
         }
         .onAppear { model.start() }
@@ -34,31 +37,6 @@ struct PlayerScreen: View {
         .accessibilityIdentifier("player.screen")
         // Announced by VoiceOver and asserted by the UI tests: the stream the player is running.
         .accessibilityValue(Text(verbatim: "\(model.selectedQuality.rawValue)p"))
-    }
-
-    @ViewBuilder
-    private var skipOverlay: some View {
-        if let skip = model.activeSkip {
-            VStack {
-                Spacer(minLength: 0)
-                HStack {
-                    Spacer(minLength: 0)
-                    Button(skipTitle(for: skip)) {
-                        model.skipActiveSegment()
-                    }
-                    .buttonStyle(.glassProminent)
-                    .padding(.trailing, 72)
-                    .padding(.bottom, 140)
-                }
-            }
-        }
-    }
-
-    private func skipTitle(for skip: SkipTimecode) -> LocalizedStringKey {
-        switch skip.kind {
-        case .opening: "player.skip.opening"
-        case .ending: "player.skip.ending"
-        }
     }
 
     @ViewBuilder

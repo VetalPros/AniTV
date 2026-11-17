@@ -33,6 +33,24 @@ final class PlayerModel {
     /// The skip segment the playhead currently sits inside, or `nil` when no button should exist.
     private(set) var activeSkip: SkipTimecode?
 
+    /// Segment the viewer already waved away with «Смотреть». It stays hidden for that segment only, so
+    /// the next opening or ending of the same episode shows the hint again.
+    private(set) var dismissedSkipKey: String?
+
+    /// Whether the system playback controls are (believed to be) on screen.
+    ///
+    /// There is no public "transport bar is open" callback; see ``setPlaybackControlsOpen(_:)`` for what
+    /// drives this.
+    private(set) var isPlaybackControlsOpen = false
+
+    /// The hint to show right now, or `nil` when it has to stay out of the way.
+    var visibleSkip: SkipTimecode? {
+        guard let activeSkip, !isPlaybackControlsOpen, Self.key(for: activeSkip) != dismissedSkipKey else {
+            return nil
+        }
+        return activeSkip
+    }
+
     /// Localised player failure (technical cause kept separate from UI copy). `nil` while healthy.
     private(set) var playbackError: String?
 
@@ -93,7 +111,7 @@ final class PlayerModel {
 
     func start() {
         addPlayheadObserver()
-        if let startAt = request.startAt, startAt > 0 {
+        if let startAt = startPosition, startAt > 0 {
             player.seek(
                 to: CMTime(seconds: startAt, preferredTimescale: 600),
                 toleranceBefore: .zero,
@@ -118,6 +136,23 @@ final class PlayerModel {
         statusObservation?.invalidate()
         statusObservation = nil
         Self.logger.info("Playback stopped")
+    }
+
+    /// Position the player should start at: the UI-test override when present, otherwise the request's.
+    ///
+    /// The opening/ending overrides resolve against this episode's own timecodes, so a test can watch a
+    /// segment that starts twenty minutes into the episode without scrubbing there.
+    private var startPosition: TimeInterval? {
+        if let seconds = PlayerTestOverrides.startAt() {
+            return seconds
+        }
+        if PlayerTestOverrides.startsAtOpening() {
+            return timecodes.first { $0.kind == .opening }.map { $0.start + 2 } ?? request.startAt
+        }
+        if PlayerTestOverrides.startsAtEnding() {
+            return timecodes.first { $0.kind == .ending }.map { $0.start + 2 } ?? request.startAt
+        }
+        return request.startAt
     }
 
     // MARK: Progress
@@ -159,7 +194,10 @@ final class PlayerModel {
 
     // MARK: Skip intro / outro
 
-    /// Jumps to the end of the active segment and hides the button until the next segment.
+    /// Jumps past the active segment and keeps playing.
+    ///
+    /// Skipping an ending therefore lands on the last second of the episode: choosing what plays next is
+    /// the detail screen's job, not the player's.
     func skipActiveSegment() {
         guard let activeSkip else { return }
         player.seek(
@@ -168,7 +206,28 @@ final class PlayerModel {
             toleranceAfter: .zero
         )
         self.activeSkip = nil
+        player.play()
         Self.logger.info("Skipped \(String(describing: activeSkip.kind), privacy: .public) segment")
+    }
+
+    /// Hides the hint for the current segment without touching the playhead.
+    func dismissSkipHint() {
+        guard let activeSkip else { return }
+        dismissedSkipKey = Self.key(for: activeSkip)
+        Self.logger.info("Skip hint dismissed for \(String(describing: activeSkip.kind), privacy: .public)")
+    }
+
+    /// Records whether the system playback controls are on screen.
+    ///
+    /// AVKit exposes no callback for the transport bar, so the app derives it from the presses the player
+    /// itself consumes: Select toggles that bar, and a press that reaches the player is by definition one
+    /// our overlay did not swallow. The hint is hidden while the flag is set.
+    ///
+    /// - Parameter open: `true` when the bar is believed to be visible.
+    func setPlaybackControlsOpen(_ open: Bool) {
+        guard isPlaybackControlsOpen != open else { return }
+        isPlaybackControlsOpen = open
+        Self.logger.info("Playback controls \(open ? "opened" : "closed", privacy: .public)")
     }
 
     private func addPlayheadObserver() {
@@ -187,7 +246,20 @@ final class PlayerModel {
     }
 
     private func updateSkip(for playhead: Double) {
-        activeSkip = TimecodeResolver.activeSkip(for: timecodes, playhead: playhead)
+        let skip = TimecodeResolver.activeSkip(for: timecodes, playhead: playhead)
+        if let skip, let dismissedSkipKey, Self.key(for: skip) != dismissedSkipKey {
+            // A different segment: the viewer's earlier "не сейчас" does not carry over.
+            self.dismissedSkipKey = nil
+        }
+        activeSkip = skip
+    }
+
+    /// Stable identity of a segment, used to remember that its hint was dismissed.
+    private static func key(for skip: SkipTimecode) -> String {
+        switch skip.kind {
+        case .opening: "opening-\(skip.start)-\(skip.end)"
+        case .ending: "ending-\(skip.start)-\(skip.end)"
+        }
     }
 
     // MARK: Failure handling

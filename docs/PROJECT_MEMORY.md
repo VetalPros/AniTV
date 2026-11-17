@@ -194,7 +194,8 @@ the simulator — so both reported defects are closed against a real account, no
    never run with a real token (doing it mutates the owner's favourites, so it needs their go-ahead). Same
    for the `views/history` "continue watching" row, which is not built yet.
 2. Replace the borrowed app icon with an original mark before publishing anywhere — see
-   `docs/THIRD_PARTY_ASSETS.md`; the current one is AniLibria's brand and comes from a GPL-3.0 repo.
+   `docs/THIRD_PARTY_ASSETS.md`; the current one is AniLiberty's mark, used with their written permission
+   (ADR 0025) — so this is no longer a blocker for publishing, only a provenance note.
 3. Capture real profile / favourites fixtures: the Kit's are synthesised from the OpenAPI schema. The Kit's
    favourites ids/add/remove also assume the documented shapes (a `204` without a body would need the
    decode relaxed).
@@ -270,9 +271,9 @@ personal data (the account holder's nickname and address appear in no file and i
 tokens (none). The Kit's `User-Agent` now carries the real repository URL, which is what the politeness
 rule in `AGENTS.md` §2.5 asks for — it used to be a placeholder.
 
-**Still to do before this is a real product:** the app icon is AniLibria's mark (see
-`docs/THIRD_PARTY_ASSETS.md` and ADR 0017) and has to be replaced by an original one; the bundle id
-(`tv.anitv.client`) and the product name are placeholders chosen before the repository existed.
+**Settled by the service team (ADR 0025):** the icon may stay (their «AL» monogram, permission given in
+writing), and the name «AniTV» is allowed. The bundle id `tv.anitv.client` is still a development choice,
+not a commitment.
 
 ## Open questions for the user
 

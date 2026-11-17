@@ -10,7 +10,9 @@ Repository root: this directory. Session working directory MUST be inside it.
 
 ## 1. What this project is
 
-A **native Apple TV (tvOS) client for AniLiberty / Anilibria** — a Russian anime streaming service.
+A **native Apple TV (tvOS) client for AniLiberty** — a Russian anime streaming service.
+(The service used to be called AniLibria; that name now belongs to unrelated people and must not be used
+for it anywhere in this project.)
 Later milestones add iOS and macOS targets that share the same core.
 
 Traits that define the project:
@@ -24,7 +26,7 @@ Traits that define the project:
 - **Distribution: TestFlight only** (and ad-hoc/simulator during development). The App Store is out
   of scope. Signing uses a **free** Apple Developer account — see constraints in §2.
 - **Unofficial.** The project name, bundle identifier and branding must never claim to be official
-  and must not use the "AniLiberty"/"Anilibria"/"Libria" trademarks as product identity.
+  and must not use the "AniLiberty"/"Libria" trademarks as product identity.
 
 Read `docs/PROJECT_MEMORY.md` for current state and `docs/DECISIONS.md` for the decision log.
 

@@ -301,6 +301,10 @@ system element), so the UI test addresses it by its localized title and walks th
 
 ## 0017 — The app icon is the upstream AniLibria mark (2026-11-13)
 
+> **Corrected 2026-11-17 by ADR 0025.** The mark is *AniLiberty's*; «AniLibria» is a different brand that
+> belongs to unrelated people. The use is now permitted in writing, so the "risk we knowingly accept"
+> framing below is history, kept as written at the time.
+
 **Context.** The build had no icon at all: `Assets.xcassets` contained only `AccentColor`, so actool
 warned that no `App Icon & Top Shelf Image` collection existed and the app appeared on the tvOS home
 screen as a white placeholder. The user asked for the icon of the official Android TV app, pointing at
@@ -570,3 +574,36 @@ itself answers with the resulting identifiers, so the app knows the truth, but t
 a separate call; if that call lags, the screen will keep showing the old order until the next refresh. The
 log now records both numbers (the count the toggle reports and the count the list returns) so one
 reproduction answers it.
+
+---
+
+## 0025 — The service team answered, and the answer settles the branding questions (2026-11-17)
+
+We wrote to the AniLiberty team before publishing and they replied in detail. Recorded here because each
+point removes a constraint this project had been designing around.
+
+**The icon is allowed.** «Иконка нас устраивает, если это иконка именно AniLiberty (буквы AL в кольце)…
+Мы не против, если вы её будете использовать». Ours is exactly that monogram, so the borrowed-mark risk
+that ADR 0017 flagged is closed by permission rather than by replacement. The two conditions attached are
+already satisfied: the icon must be their mark, and the project must not monetise access to their
+releases — AniTV is free, without subscriptions or ads. The GPL-3.0 provenance of the source artwork stays
+noted in `docs/THIRD_PARTY_ASSETS.md`: we ship a trademark used with permission, not a GPL derivative.
+
+**The name is ours to choose.** «Можете использовать любое своё название, если оно не пересекается с
+официальными названиями и не пытается под них маскироваться». «AniTV» and `tv.anitv.client` stay.
+
+**The `User-Agent` policy was the right call.** «По User-Agent требования уже выполнены, мы действительно
+обращаем внимание на этот идентификатор», and there are no strict request limits — they prefer to talk to
+a source that loads them before blocking it. Caching and the refresh intervals of ADR 0024 are therefore
+politeness, not compliance.
+
+**Streaming restrictions, and the exemption we rely on.** They have banned using their CDN to play their
+content on other resources, and an unapproved use of their HLS streams leads to a CDN ban and then an API
+block — but: «т.к. приложения на AppleTV — дефицитный товар, то в Вашем случае мы не будем ничего
+ограничивать». This is a permission for *this* client, not a general licence, and it depends on the app
+staying what it is: a player of the streams the API hands it, nothing re-published, nothing monetised.
+
+**One request we owe them.** «AniLibria больше не наш бренд и принадлежит другим людям, никак с нами не
+связанными» — every mention of AniLibria that refers to *this service* has to say AniLiberty. The rename
+was applied to `AGENTS.md`, `README.md`, this log and `docs/THIRD_PARTY_ASSETS.md`; web addresses and the
+`anilibria/anilibria-app` repository keep their names, because a URL is not a brand statement.

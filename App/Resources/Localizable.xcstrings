@@ -885,19 +885,36 @@
         }
       }
     },
+    "player.skip.dismiss": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Смотреть"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Watch"
+          }
+        }
+      }
+    },
     "player.skip.ending": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Skip outro"
+            "value": "Skip ending"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Пропустить концовку"
+            "value": "Пропустить эндинг"
           }
         }
       }
@@ -914,7 +931,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Пропустить заставку"
+            "value": "Пропустить опенинг"
           }
         }
       }
