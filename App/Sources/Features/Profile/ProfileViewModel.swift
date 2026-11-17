@@ -246,8 +246,14 @@ final class ProfileViewModel {
             pairingError = nil
             Self.logger.info("Pairing accepted, profile is loading")
             isSigningIn = true
-            await loadProfile(with: token)
-            isSigningIn = false
+            // Load the profile from a fresh task: the polling task that got here is cancelled a few lines
+            // above, and a cancelled task cannot start the URLSession child that the request needs — the
+            // call then never returns and the screen keeps the pairing panel (observed in the app, not in
+            // tests, which is why this is spelled out).
+            Task { [weak self] in
+                await self?.loadProfile(with: token)
+                self?.isSigningIn = false
+            }
             return true
         } catch {
             guard !Task.isCancelled else { return false }

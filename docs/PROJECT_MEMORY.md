@@ -127,12 +127,13 @@ Second pass (same day, after the user's own run on the simulator):
       box: the home screen aspect-fills it and cuts the sides (the first version lost the mark's left
       edge). Verified on the simulator; the capture procedure is "leave the app with Menu, then take a
       screen-wide screenshot from a UI test".
-- [x] «Профиль» tab (ADR 0021): pairing by one-time code (`otp/get` + polling `otp/login`), token in the
-      Keychain only, signed-in profile with avatar/display name, favourites grid with paging and
-      «Выйти». `ProfileUITests` proves the screen shows a live six-digit code from the service, the
-      countdown ticks and «Обновить код» produces a different code. **Unverified:** everything behind
-      the token — profile, favourites, logout and the dead-token branch — because no account exists to
-      accept a code with; the README marks the tab 🚧 for that reason.
+- [x] «Профиль» tab works end to end against a real account (ADR 0021, ADR 0022): pairing code → confirmed
+      on the site → token in the Keychain → profile loaded (display name, login, avatar) → favourites page
+      loaded and rendered → «Выйти» deletes the token and the screen returns to pairing with a fresh code.
+      Four separate defects were fixed on the way, all found from logs: the account calls needed a clean
+      session, every refusal while polling means "keep waiting", re-issued codes had to be polled as a set,
+      and the profile request had to leave the cancelled polling task. `ProfileUITests` covers the pairing
+      screen; the signed-in path was verified by hand on the simulator and has no automated test yet.
 - [x] «Каталог» tab with search and filters (ADR 0020): `CatalogView`/`CatalogViewModel` over the Kit's
       catalogue client, single-choice chips for genre/type/year/sorting behind modal pickers, a result
       counter, «Показать ещё» paging and reset. `CatalogUITests` proves the tab loads 1946 releases, a

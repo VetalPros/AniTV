@@ -112,11 +112,26 @@ public extension AniLibertyClient {
             method: "GET",
             token: token
         )
-        Self.accountLogger.info("profile: requesting")
         let started = Date()
-        let result = try await withTimeout(seconds: 20) { [self] in
-            try await perform(request, over: accountTransport)
+        // Try the clean session first; if it does not answer in time, ask again over the shared one and
+        // log which of the two worked. The app has been observed waiting forever on this call while the
+        // same request from a test runner answers in 300 ms, so the fallback is also the diagnosis.
+        var result: (data: Data, status: Int)?
+        do {
+            result = try await withTimeout(seconds: 12) { [self] in
+                try await perform(request, over: accountTransport)
+            }
+
+        } catch {
+            Self.accountLogger
+                .error(
+                    "profile: clean session failed after \(Date().timeIntervalSince(started), privacy: .public)s: \(String(describing: error), privacy: .public)"
+                )
+            result = try await withTimeout(seconds: 12) { [self] in
+                try await perform(request)
+            }
         }
+        guard let result else { throw AniLibertyError.network("The profile request produced nothing.") }
         Self.accountLogger.info(
             "profile: status \(result.status, privacy: .public), \(result.data.count, privacy: .public) bytes in \(Date().timeIntervalSince(started), privacy: .public)s"
         )

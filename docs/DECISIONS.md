@@ -450,3 +450,32 @@ secure. What the tab cannot prove by itself is everything behind the token: the 
 favourites grid, «Выйти» and the dead-token branch have never run against the live service, because
 this project has no account to accept a code with. They stay marked 🚧 in the README until someone
 with an account completes the pairing once.
+
+---
+
+## 0022 — Pairing works, and the fixes were outside the API (2026-11-17)
+
+ADR 0021 described the pairing design; making it actually work took four separate defects, each one found
+from a log rather than a guess. They are recorded because the same shapes will bite again.
+
+1. **The handshake needs a clean session.** `otp/login` answered 403 "This action is unauthorized."
+   from the app's shared `URLSession`, while curl — and a macOS test process — got the documented answer
+   (500 while pending, 200 with a token once accepted). The pairing and account calls now use
+   `URLSessionTransport.ephemeral()`, and the initializer that installs `URLCache.shared` was taught not
+   to reinstate it for that session.
+2. **Any refusal while polling means "keep waiting".** The endpoint documents 401 for "OTP not bound to a
+   user" but answers 403; a 500 is what curl gets. Both map to `otpNotAccepted`, and only 422 (the code
+   itself is rejected) stays a real error.
+3. **Codes can be re-issued under a new device id.** «Обновить код» rotates the device id because the
+   service returns the same code for the same id; rotating orphans whatever was already being typed. The
+   screen now remembers every code it asked for, drops expired ones and polls the whole set.
+4. **The profile request hung because it ran in a cancelled task.** After the token arrived, the polling
+   task cancelled itself and then awaited the profile call from inside; the `URLSession` child it needs
+   never started, so the call never returned — no timeout, no error, and the screen kept the pairing
+   panel. Loading the profile from a fresh task fixed it, and the call is now also wrapped in a
+   watchdog with a shared-session fallback.
+
+**Verified end to end with a real account** on the simulator: pairing → token in the Keychain → profile
+200 (472 bytes) → favourites page 1 → the UI shows the display name, the login and the favourites grid →
+«Выйти» deletes the token and returns to a fresh pairing code. No screenshot of that state is committed:
+it carries the account holder's name and address.

@@ -61,7 +61,7 @@ AniTV — клиент для просмотра аниме с AniLiberty на A
 | Пропуск опенинга/эндинга по таймкодам | 🚧 | `App/Sources/Features/Player/` |
 | Избранное на стороне сервера | 📋 | `AniLibertyKit/Sources/AniLibertyKit/API/` |
 | Каталог: поиск, фильтры (жанр, тип, год, сортировка), страницы | ✅ | `App/Sources/Features/Catalog/`, `AniLibertyKit/Sources/AniLibertyKit/Models/Catalog*.swift` |
-| Профиль: привязка телевизора по коду, аватар, избранное, выход | 🚧 | `App/Sources/Features/Profile/` |
+| Профиль: привязка телевизора по коду, аватар, избранное, выход | ✅ | `App/Sources/Features/Profile/` |
 | Иконка приложения и статичный Top Shelf | ✅ | `App/Resources/Assets.xcassets/` |
 | Динамический Top Shelf: карусель свежих релизов (TV Services) | 💡 | `docs/PROJECT_MEMORY.md` |
 | Локализация ru/en (String Catalogs) | ✅ | `App/Resources/Localizable.xcstrings` |
