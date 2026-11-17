@@ -143,6 +143,10 @@ Second pass (same day, after the user's own run on the simulator):
       This is what made a restart look like "the account disappeared".
 - [x] Avatars render: a user picture carries `preview`, not `src` (unlike a release poster), and the
       model read only `src`. Covered by a Kit test with a schema-shaped payload.
+
+**Confirmed by the account owner (2026-11-17)** on the simulator: the avatar set on the site is now shown
+next to the display name, the favourites poster renders, and the profile is still there after restarting
+the simulator — so both reported defects are closed against a real account, not only in tests.
 - [x] «Каталог» tab with search and filters (ADR 0020): `CatalogView`/`CatalogViewModel` over the Kit's
       catalogue client, single-choice chips for genre/type/year/sorting behind modal pickers, a result
       counter, «Показать ещё» paging and reset. `CatalogUITests` proves the tab loads 1946 releases, a
