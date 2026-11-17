@@ -67,7 +67,7 @@ final class ProfileViewModel {
 
     init(
         client: AniLibertyClient = AniLibertyClient(),
-        tokenStore: AuthTokenStoring = KeychainTokenStore(),
+        tokenStore: AuthTokenStoring = AuthTokenStoreFactory.make(),
         deviceID: String = DeviceIdentity.current()
     ) {
         self.client = client

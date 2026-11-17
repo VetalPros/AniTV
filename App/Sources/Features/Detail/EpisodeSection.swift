@@ -6,6 +6,8 @@ import SwiftUI
 struct EpisodeSection: View {
     let episodes: [Episode]
     let playableQuality: (Episode) -> StreamQuality?
+    var progressFraction: (UUID) -> Double? = { _ in nil }
+    var currentEpisodeID: UUID?
     let onSelect: (Episode) -> Void
 
     var body: some View {
@@ -22,6 +24,8 @@ struct EpisodeSection: View {
                     episodes: episodes,
                     identifier: "detail.episodeCard",
                     playableQuality: playableQuality,
+                    progressFraction: progressFraction,
+                    currentEpisodeID: currentEpisodeID,
                     onSelect: onSelect
                 )
             }

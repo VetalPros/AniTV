@@ -479,3 +479,37 @@ from a log rather than a guess. They are recorded because the same shapes will b
 200 (472 bytes) → favourites page 1 → the UI shows the display name, the login and the favourites grid →
 «Выйти» deletes the token and returns to a fresh pairing code. No screenshot of that state is committed:
 it carries the account holder's name and address.
+
+---
+
+## 0023 — Per-episode progress, favourites from the detail screen, and a catalogue cache (2026-11-17)
+
+Three features asked for together; the decisions that are not obvious:
+
+**Progress is stored per episode, in one key per release.** `PlaybackProgress` always carried
+`episodeID`, but the store kept a single record per release, so watching episode 5 overwrote episode 3 and
+«Продолжить» could only ever offer one position for the whole title. The key
+`tv.anitv.playbackProgress.<alias>` now holds a JSON array of records. `progress(forReleaseAlias:)` returns
+the most recent one by `updatedAt` (ties go to the further position, the more informative point), and
+`progress(forReleaseAlias:episodeID:)` returns one episode. The first `save` after the update rewrites a
+legacy single-object payload into the array shape; nothing is lost, and a test writes the old payload by
+hand to keep that promise honest. Downgrading is not supported: an older build reads the array as "no
+data", which is recorded on the store's documentation.
+
+**Favourites use the documented mutation endpoints.** `GET /accounts/users/me/favorites/ids` answers a
+plain array of integers; `POST` and `DELETE /accounts/users/me/favorites` take `[{"release_id": 9023}]`
+and answer with the resulting list of identifiers, so the UI can settle the heart without a second request.
+The `DELETE` carries a body, which `URLSession` supports but which has to be set on the request explicitly.
+These go through the same clean account session as the profile: the shared session is answered with 403 by
+this service (ADR 0022). The shape comes from the OpenAPI document — no authenticated call has been
+captured yet, and the tests say so.
+
+**The catalogue is cached by query, not by HTTP validator.** Measured on 2026-11-17:
+`POST /anime/catalog/releases` replies `cache-control: no-cache, private` and carries **no** `etag`, and a
+request that sends `If-None-Match` still gets `200` with the whole body. A conditional request therefore
+saves nothing, so the kit keeps its own actor, `CatalogCache`, keyed by page + limit + a fingerprint of the
+filter (value order does not matter). Entries live five minutes and the cache holds a bounded number of
+pages, dropping the oldest insertion; `catalog(page:limit:filter:refresh:)` bypasses and rewrites the entry
+when the viewer asks for a refresh or changes the filter. The cache is in memory only: a relaunch pays for
+the first page again, which is acceptable at this size and avoids inventing an eviction policy for a disk
+tier nobody asked for.

@@ -24,17 +24,37 @@ final class ReleaseDetailViewModel {
     /// «Смотреть» from the beginning.
     private(set) var resumeProgress: PlaybackProgress?
 
+    /// Whether this TV has a session. The screen only needs the answer, never the token itself.
+    private(set) var isPaired = false
+    /// Whether the release is in the signed-in viewer's favourites.
+    private(set) var isFavorite = false
+    /// One-line feedback under the action row: a hint when signed out, or a failure.
+    private(set) var favoriteMessage: FavoriteMessage?
+    /// Progress of the episodes that were watched, keyed by episode id.
+    private(set) var episodeProgress: [UUID: PlaybackProgress] = [:]
+
+    /// Feedback the screen shows under the hero actions.
+    enum FavoriteMessage: Equatable {
+        case signedOut
+        case failed(AniLibertyError)
+    }
+
     @ObservationIgnored private let client: AniLibertyClient
     @ObservationIgnored private let progressStore: PlaybackProgressStoring
+    /// Session store; the token it returns is used locally and never kept on this type.
+    @ObservationIgnored private let tokenStore: AuthTokenStoring
+    @ObservationIgnored private var favoriteIDs: Set<Int> = []
 
     init(
         route: ReleaseRoute,
         client: AniLibertyClient = AniLibertyClient(),
-        progressStore: PlaybackProgressStoring = PlaybackProgressStore()
+        progressStore: PlaybackProgressStoring = PlaybackProgressStore(),
+        tokenStore: AuthTokenStoring = AuthTokenStoreFactory.make()
     ) {
         self.route = route
         self.client = client
         self.progressStore = progressStore
+        self.tokenStore = tokenStore
     }
 
     // MARK: Derived presentation
@@ -110,13 +130,128 @@ final class ReleaseDetailViewModel {
         return playbackRequest(for: episode, startAt: resumeProgress.position)
     }
 
-    /// Asks the store again — used when the player closes, so the screen reflects the position that was
-    /// just saved instead of the one it was opened with.
+    /// Asks the store again — used when the player closes, so the screen reflects the positions that
+    /// were just saved instead of the ones it was opened with.
     func refreshResumeProgress() async {
+        await loadProgress()
+    }
+
+    /// Progress of one episode, used by the cards and the picker.
+    ///
+    /// - Parameter episodeID: Episode to look up.
+    /// - Returns: The stored record, or `nil` when that episode was never played.
+    func progress(for episodeID: UUID) -> PlaybackProgress? {
+        episodeProgress[episodeID]
+    }
+
+    /// Fraction of the episode that was watched, `nil` when nothing is stored or the duration is unknown.
+    ///
+    /// - Parameter episodeID: Episode to look up.
+    /// - Returns: A value in `0...1`.
+    func watchedFraction(for episodeID: UUID) -> Double? {
+        guard let progress = episodeProgress[episodeID],
+              let duration = progress.duration,
+              duration > 0
+        else {
+            return nil
+        }
+        return min(max(progress.position / duration, 0), 1)
+    }
+
+    // MARK: Favourites
+
+    /// Reads the signed-in state and the favourites of this release.
+    ///
+    /// The answer is cached for the lifetime of the screen (one release, one push) so focus moves and
+    /// scrolling never ask the service again; it is refreshed after a toggle and when the player closes.
+    func loadFavoritesState() async {
+        guard let token = try? await tokenStore.load(), !token.isEmpty else {
+            isPaired = false
+            isFavorite = false
+            favoriteIDs = []
+            return
+        }
+        isPaired = true
+        do {
+            let ids = try await client.favoriteReleaseIDs(token: token)
+            guard !Task.isCancelled else { return }
+            favoriteIDs = Set(ids)
+            isFavorite = favoriteIDs.contains(route.id)
+        } catch {
+            guard !Task.isCancelled else { return }
+            let mapped = AniLibertyError.mapped(error)
+            if Self.isUnauthorized(mapped) {
+                // A dead token means "not paired" for this screen; forgetting it belongs to the profile tab.
+                isPaired = false
+                isFavorite = false
+                return
+            }
+            Self.logger.error("Favourites state failed: \(String(describing: mapped), privacy: .public)")
+            favoriteMessage = .failed(mapped)
+        }
+    }
+
+    /// Flips the favourite state optimistically and rolls back when the call fails.
+    ///
+    /// Signed out, nothing is sent: the screen explains how to pair this TV instead.
+    func toggleFavorite() async {
+        favoriteMessage = nil
+        guard let token = try? await tokenStore.load(), !token.isEmpty else {
+            isPaired = false
+            favoriteMessage = .signedOut
+            return
+        }
+        isPaired = true
+        let wasFavorite = isFavorite
+        isFavorite.toggle()
+        do {
+            let ids = isFavorite
+                ? try await client.addFavorites([route.id], token: token)
+                : try await client.removeFavorites([route.id], token: token)
+            guard !Task.isCancelled else { return }
+            favoriteIDs = Set(ids)
+            isFavorite = favoriteIDs.contains(route.id)
+            Self.logger.info("Favourite toggled for release \(self.route.id, privacy: .public)")
+        } catch {
+            guard !Task.isCancelled else { return }
+            isFavorite = wasFavorite
+            let mapped = AniLibertyError.mapped(error)
+            if Self.isUnauthorized(mapped) {
+                isPaired = false
+                favoriteMessage = .signedOut
+                return
+            }
+            favoriteMessage = .failed(mapped)
+            Self.logger.error("Favourite toggle failed: \(String(describing: mapped), privacy: .public)")
+        }
+    }
+
+    /// Clears the feedback line, so it disappears as soon as the viewer acts again.
+    func clearFavoriteMessage() {
+        favoriteMessage = nil
+    }
+
+    private func loadProgress() async {
         let alias = route.alias
-        let progress = await progressStore.resumableProgress(forReleaseAlias: alias)
+        let resumable = await progressStore.resumableProgress(forReleaseAlias: alias)
         guard !Task.isCancelled else { return }
-        resumeProgress = progress
+        resumeProgress = resumable
+
+        var perEpisode: [UUID: PlaybackProgress] = [:]
+        for episode in episodes {
+            if let progress = await progressStore.progress(forReleaseAlias: alias, episodeID: episode.id) {
+                perEpisode[episode.id] = progress
+            }
+        }
+        guard !Task.isCancelled else { return }
+        episodeProgress = perEpisode
+    }
+
+    private static func isUnauthorized(_ error: AniLibertyError) -> Bool {
+        if case let .httpStatus(status) = error {
+            return status == 401 || status == 403
+        }
+        return false
     }
 
     /// Plain text for the synopsis: the API ships `\r\n` pairs that SwiftUI would otherwise honour.
@@ -161,7 +296,8 @@ final class ReleaseDetailViewModel {
             let release = try await client.release(idOrAlias: route.alias)
             guard !Task.isCancelled else { return }
             state = .loaded(release)
-            await refreshResumeProgress()
+            await loadProgress()
+            await loadFavoritesState()
             Self.logger
                 .info(
                     "Loaded release \(release.alias, privacy: .public) with \(release.episodes.count, privacy: .public) episodes"

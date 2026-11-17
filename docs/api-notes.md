@@ -154,3 +154,38 @@ Geo/copyright flags matter: a blocked release can still be listed, so the UI mus
   one place for `User-Agent`, one place for error mapping.
 - Cache reference data (genres, years, types) for the session; posters through a disk+memory image
   cache actor.
+
+## Favourites (2026-11-17)
+
+Authenticated, all with `Authorization: Bearer <sessionToken>`.
+
+| Call | Behaviour |
+| --- | --- |
+| `GET /accounts/users/me/favorites/ids` | plain JSON array of integers, e.g. `[9023, 9024, 9025]` |
+| `POST /accounts/users/me/favorites` body `[{"release_id": 9023}]` | add; answers with the resulting list of ids |
+| `DELETE /accounts/users/me/favorites` body `[{"release_id": 9023}]` | remove; answers with the remaining ids |
+
+The `DELETE` carries a body, which is legal but has to be set explicitly on the request. Shapes are taken
+from the OpenAPI document — no authenticated call has been recorded yet (no account in the toolchain), so
+the fixtures and the tests say so. If the service ever answers `204` without a body, the decode in the kit
+has to allow that.
+
+## Catalogue caching (2026-11-17, measured)
+
+`POST /anime/catalog/releases` answers `cache-control: no-cache, private` and sends **no** `etag` header.
+A request with `If-None-Match` is not honoured: the service still answers `200` with the whole body, so a
+conditional request saves nothing. Message-level caching has to be done by the client keyed by the request
+(page + limit + filter), which is what `CatalogCache` does.
+
+## Pairing codes are not always six digits (2026-11-17)
+
+`otp/get` returns `code` as a **string**, and leading zeros are dropped: the app's own log recorded
+`Pairing code requested: 766` and a five-digit `47588`. Anything that asserts "exactly six digits" is
+wrong; the code is numeric, one to six characters.
+
+## Playback progress storage (2026-11-17)
+
+Not an API fact but a format that outlives builds: `tv.anitv.playbackProgress.<alias>` used to hold one
+JSON object and now holds an array of per-episode records. Reads accept both shapes; the first save after
+the upgrade rewrites the key in the array shape. An older build reading the new shape treats it as "no
+data" — a downgrade loses history, which is documented on the store.

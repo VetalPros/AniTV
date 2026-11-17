@@ -166,20 +166,25 @@ final class CatalogViewModel {
     func loadIfNeeded() async {
         guard case .idle = state else { return }
         await loadReferenceIfNeeded()
-        await load(resetPaging: true)
+        // The first page may come from the Kit's cache: opening the tab is not a reason to bypass it.
+        await load(resetPaging: true, refresh: false)
     }
 
-    /// Reloads from page 1 with the current filter. Cancels whatever was in flight.
+    /// Reloads from page 1 with the current filter, bypassing the cached page. Cancels whatever was in
+    /// flight.
+    ///
+    /// This is the path taken by filter changes, the search field and the retry button — everything the
+    /// viewer does on purpose. Paging, by contrast, reads through the cache.
     func reload() {
         loadTask?.cancel()
-        loadTask = Task { await load(resetPaging: true) }
+        loadTask = Task { await load(resetPaging: true, refresh: true) }
     }
 
     func loadNextPage() async {
         guard hasNextPage, !isPaging else { return }
         isPaging = true
         defer { isPaging = false }
-        await load(resetPaging: false)
+        await load(resetPaging: false, refresh: false)
     }
 
     private func scheduleSearch() {
@@ -213,13 +218,18 @@ final class CatalogViewModel {
         }
     }
 
-    private func load(resetPaging: Bool) async {
+    private func load(resetPaging: Bool, refresh: Bool) async {
         if resetPaging {
             state = .loading
         }
         let page = resetPaging ? 1 : currentPage + 1
         do {
-            let result = try await client.catalog(page: page, limit: Self.pageSize, filter: filter)
+            let result = try await client.catalog(
+                page: page,
+                limit: Self.pageSize,
+                filter: filter,
+                refresh: refresh
+            )
             guard !Task.isCancelled else { return }
             if resetPaging {
                 releases = result.releases

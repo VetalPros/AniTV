@@ -69,6 +69,14 @@ not been released yet, so everything below is still subject to change.
   session is no longer dropped silently — the screen says the session expired and offers «Привязать
   заново». The Keychain item was verified to survive a relaunch and a simulator reboot; the entitlements
   now declare a keychain access group.
+- Per-episode progress: the store keeps one record per episode of a release (migrating the old
+  single-record payload on read), episode cards show a thin progress bar and mark the episode «Продолжить»
+  would open.
+- Favourites from the release detail screen: a heart in the hero block reads the account's favourite ids,
+  toggles them optimistically and rolls back with a message on failure; without a paired TV it explains
+  where to pair instead of calling the API.
+- Catalogue pages are cached by query (page + limit + filter) for five minutes: paging back and forth no
+  longer re-hits the service. The endpoint sends no `ETag`, so there is nothing to revalidate — measured.
 - «Профиль» works end to end against a real account: pairing code → confirmed on the site → profile
   (display name, login, avatar) → favourites page → «Выйти» back to a fresh pairing code. Four defects
   on the way were fixed from logs: account calls need a clean session, every refusal while polling means

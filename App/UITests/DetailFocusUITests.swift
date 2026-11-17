@@ -103,7 +103,12 @@ final class DetailFocusUITests: XCTestCase {
     }
 
     /// The hero's action can be either «Смотреть» or, when the release has saved progress, «Продолжить».
-    private let heroActionIdentifiers: Set<String> = ["detail.playButton", "detail.resumeButton"]
+    /// Every control the hero block offers. Up from the synopsis must land on one of them: with three
+    /// actions in the row the engine picks the favourite heart when «Смотреть» and «Продолжить» are the
+    /// only candidates to its left, and that is still "the hero action", not a broken chain.
+    private let heroActionIdentifiers: Set<String> = [
+        "detail.playButton", "detail.resumeButton", "detail.favoriteButton",
+    ]
 
     // MARK: Synopsis truncation rule
 

@@ -14,6 +14,10 @@ struct EpisodeGrid: View {
     /// Focus owner when the enclosing screen decides which card starts focused, as the picker does.
     var focus: FocusState<UUID?>.Binding?
     let playableQuality: (Episode) -> StreamQuality?
+    /// Watched fraction of an episode, `nil` when it was never played.
+    var progressFraction: (UUID) -> Double? = { _ in nil }
+    /// Episode «Продолжить» would open, when there is one.
+    var currentEpisodeID: UUID?
     let onSelect: (Episode) -> Void
 
     private static let columns = 3
@@ -30,6 +34,8 @@ struct EpisodeGrid: View {
                             episode: episode,
                             playableQuality: playableQuality(episode),
                             identifier: identifier,
+                            progressFraction: progressFraction(episode.id),
+                            isCurrent: episode.id == currentEpisodeID,
                             focus: focus
                         ) {
                             onSelect(episode)

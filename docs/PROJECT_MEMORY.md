@@ -144,6 +144,21 @@ Second pass (same day, after the user's own run on the simulator):
 - [x] Avatars render: a user picture carries `preview`, not `src` (unlike a release poster), and the
       model read only `src`. Covered by a Kit test with a schema-shaped payload.
 
+- [x] Per-episode playback progress: one record per episode in a per-release key, migrating the legacy
+      single-object payload on read; the detail screen shows a bar on watched episodes and marks the one
+      «Продолжить» would open.
+- [x] Favourites from the release detail screen: heart in the hero block, favourite ids read once per
+      release, optimistic toggle with rollback; without a paired TV it explains where to pair. Tested for
+      the signed-out path only — the real add/remove on a live account was not exercised (it would mutate
+      the owner's favourites).
+- [x] Catalogue pages cached by request for five minutes (`CatalogCache`): paging back and forth no longer
+      re-hits the service. The endpoint has no `ETag` (measured), so this is a client-side cache, not
+      revalidation. The `refresh: true` path is wired to filters/search/retry but not asserted by a test.
+- [x] Test seam: `App/Sources/Support/AuthTokenStoreFactory.swift` — the launch argument
+      `-uiTestingSignedOut` swaps in an `EmptyTokenStore` so the pairing and signed-out-heart tests are
+      deterministic while the simulator's Keychain holds a real session. Production never passes the flag;
+      the Keychain stays the only token store.
+
 **Confirmed by the account owner (2026-11-17)** on the simulator: the avatar set on the site is now shown
 next to the display name, the favourites poster renders, and the profile is still there after restarting
 the simulator — so both reported defects are closed against a real account, not only in tests.
@@ -168,19 +183,20 @@ the simulator — so both reported defects are closed against a real account, no
 
 ## Next steps (ordered)
 
-1. Complete the pairing once with a real account and record what the profile and favourites actually
-   return — the Kit's profile/favourites fixtures are synthesised from the OpenAPI schema, and the
-   signed-in UI has never run. This is the only way those 🚧 marks become ✅.
+1. Exercise the favourite toggle against a live account: the add/remove calls and the rollback path have
+   never run with a real token (doing it mutates the owner's favourites, so it needs their go-ahead). Same
+   for the `views/history` "continue watching" row, which is not built yet.
 2. Replace the borrowed app icon with an original mark before publishing anywhere — see
    `docs/THIRD_PARTY_ASSETS.md`; the current one is AniLibria's brand and comes from a GPL-3.0 repo.
-3. Cache/conditional-request pass on the API client (ETag / `If-None-Match`), per the politeness rule.
-4. Per-episode progress (the store keeps one record per release today, ADR 0018).
-5. Favourites from the detail screen (`POST /accounts/users/me/favorites`), and `views/history` for a
-   "continue watching" row — both need a token, so both wait for step 1.
-6. Watch the advisory `ui-tests` CI job on a real GitHub runner; only then consider making it required
+3. Capture real profile / favourites fixtures: the Kit's are synthesised from the OpenAPI schema. The Kit's
+   favourites ids/add/remove also assume the documented shapes (a `204` without a body would need the
+   decode relaxed).
+4. Watch the advisory `ui-tests` CI job on a real GitHub runner; only then consider making it required
    (ADR 0013). Also pin `xcode-select` if the `macos-26` image starts shipping a different default Xcode.
-7. Decide the final product name / bundle identifier **before** the repository goes public (renaming the
+5. Decide the final product name / bundle identifier **before** the repository goes public (renaming the
    directory means re-registering the DSH workspace).
+6. Nice-to-haves nobody has asked for yet: a disk tier for the catalogue cache (it is memory-only now) and
+   a "continue watching" row on «Новинки» from `views/history`.
 
 ## Deferred ideas (agreed, deliberately not scheduled)
 

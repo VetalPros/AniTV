@@ -12,6 +12,10 @@ struct EpisodeCard: View {
     let playableQuality: StreamQuality?
     /// Accessibility identifier; the detail grid and the picker publish different ones.
     var identifier = "detail.episodeCard"
+    /// Watched fraction of this episode in `0...1`, or `nil` when it was never played.
+    var progressFraction: Double?
+    /// Whether this is the episode «Продолжить» would open.
+    var isCurrent = false
     /// Focus owner when a parent screen decides where focus starts.
     var focus: FocusState<UUID?>.Binding?
 
@@ -60,7 +64,14 @@ struct EpisodeCard: View {
             }
             .aspectRatio(Self.aspectRatio, contentMode: .fit)
             .frame(maxWidth: .infinity)
+            .overlay(alignment: .bottom) { progressBar }
             .overlay(alignment: .bottomTrailing) { durationPill }
+            .overlay {
+                // The episode «Продолжить» would open is marked, so the grid keeps telling the viewer
+                // where they actually are without a per-release position lie.
+                RoundedRectangle(cornerRadius: DesignTokens.cardCornerRadius, style: .continuous)
+                    .strokeBorder(Palette.accent.opacity(isCurrent ? 0.95 : 0), lineWidth: 3)
+            }
             .clipShape(RoundedRectangle(cornerRadius: DesignTokens.cardCornerRadius, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: DesignTokens.cardCornerRadius, style: .continuous)
@@ -74,6 +85,7 @@ struct EpisodeCard: View {
         .opacity(isPlayable ? 1 : 0.5)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(verbatim: accessibilityLabel))
+        .accessibilityValue(Text(verbatim: accessibilityValue))
         .accessibilityIdentifier(identifier)
     }
 
@@ -98,6 +110,28 @@ struct EpisodeCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    /// Thin watched-progress bar pinned to the bottom edge of the artwork.
+    @ViewBuilder
+    private var progressBar: some View {
+        if let progressFraction {
+            GeometryReader { proxy in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(Color.white.opacity(0.25))
+                    Capsule()
+                        .fill(Palette.accent)
+                        .frame(width: max(6, proxy.size.width * progressFraction))
+                }
+            }
+            .frame(height: 6)
+            .padding(.horizontal, 12)
+            .padding(.bottom, 10)
+            .frame(maxHeight: .infinity, alignment: .bottom)
+            // The card is one accessibility element, so the bar's state travels in its value.
+            .accessibilityHidden(true)
+        }
+    }
+
     @ViewBuilder
     private var durationPill: some View {
         if let duration = episode.localizedDuration {
@@ -116,5 +150,11 @@ struct EpisodeCard: View {
     private var accessibilityLabel: String {
         let base = "\(episode.displayTitle), \(episode.ordinal)"
         return isPlayable ? base : "\(base), \(String(localized: "episode.unavailable"))"
+    }
+
+    /// Watched percentage as the element's value, empty when the episode has no stored position.
+    private var accessibilityValue: String {
+        guard let progressFraction else { return "" }
+        return "\(Int((progressFraction * 100).rounded()))%"
     }
 }

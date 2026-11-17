@@ -19,7 +19,7 @@ struct ReleaseDetailView: View {
     @State private var isPickerPresented = false
     /// Episode chosen in the picker; playback starts when the cover finishes dismissing.
     @State private var pendingEpisode: Episode?
-    @FocusState private var focusedControl: FocusedControl?
+    @FocusState private var focusedControl: DetailHeroAction?
 
     /// Width the synopsis is actually laid out at, reported by the text itself. It feeds the
     /// truncation measurement, so the toggle only exists when there is something to reveal.
@@ -29,12 +29,6 @@ struct ReleaseDetailView: View {
     /// the hero finally appears the focus engine has already dropped focus, and on tvOS a Menu
     /// press with nothing focused is handled by the system, which backgrounds the app instead of
     /// popping back to the feed. The screen therefore claims focus itself as soon as it can.
-    private enum FocusedControl: Hashable {
-        case resume
-        case play
-        case synopsisToggle
-    }
-
     init(route: ReleaseRoute) {
         _model = State(initialValue: ReleaseDetailViewModel(route: route))
     }
@@ -68,7 +62,10 @@ struct ReleaseDetailView: View {
         .fullScreenCover(
             item: $playbackTarget,
             onDismiss: {
-                Task { await model.refreshResumeProgress() }
+                Task {
+                    await model.refreshResumeProgress()
+                    await model.loadFavoritesState()
+                }
             },
             content: { request in
                 PlayerScreen(request: request)
@@ -102,7 +99,14 @@ struct ReleaseDetailView: View {
     private func loaded(_ release: Release) -> some View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: 48) {
-                hero(release)
+                ReleaseHeroView(
+                    release: release,
+                    model: model,
+                    focus: $focusedControl,
+                    onResume: { playbackTarget = model.resumeRequest },
+                    onPlay: { isPickerPresented = true },
+                    onFavorite: { Task { await model.toggleFavorite() } }
+                )
                 if !model.genres.isEmpty {
                     genresRow
                 }
@@ -110,6 +114,8 @@ struct ReleaseDetailView: View {
                 EpisodeSection(
                     episodes: release.episodes,
                     playableQuality: playbackQuality(for:),
+                    progressFraction: model.watchedFraction(for:),
+                    currentEpisodeID: model.resumeProgress?.episodeID,
                     onSelect: play
                 )
             }
@@ -130,7 +136,7 @@ struct ReleaseDetailView: View {
     /// there is nothing playable but something to expand. Focus must land somewhere — with an empty
     /// focus environment Menu backgrounds the app instead of popping the screen (ADR 0012), so
     /// `.play` is the fallback even when it is disabled.
-    private var defaultControl: FocusedControl {
+    private var defaultControl: DetailHeroAction {
         if model.resumeRequest != nil {
             return .resume
         }
@@ -166,141 +172,6 @@ struct ReleaseDetailView: View {
             try? await Task.sleep(for: .milliseconds(400))
             focusedControl = control
         }
-    }
-
-    // MARK: Hero
-
-    private func hero(_ release: Release) -> some View {
-        HStack(alignment: .top, spacing: 52) {
-            RemoteImage(url: model.posterURL)
-                // `RemoteImage` fills whatever frame it is given, so both dimensions have to come
-                // from the 2:3 poster ratio — a width-only frame leaves the height unbounded and
-                // slices the artwork.
-                .frame(
-                    width: DesignTokens.heroPosterWidth,
-                    height: DesignTokens.heroPosterWidth / DesignTokens.posterAspectRatio
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                .shadow(color: .black.opacity(0.6), radius: 30, y: 16)
-
-            VStack(alignment: .leading, spacing: 20) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(verbatim: release.title)
-                        .font(DesignTokens.Typography.detailTitle)
-                        .foregroundStyle(.white)
-                    if let originalTitle = release.originalTitle {
-                        Text(verbatim: originalTitle)
-                            .font(DesignTokens.Typography.detailOriginalTitle)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                metadataRow(release)
-                blockingNotice(release)
-                actionRow(release)
-            }
-            .frame(maxWidth: 1000, alignment: .leading)
-        }
-        // Sections make the vertical chain predictable: the engine moves between blocks, so Down
-        // from the hero lands on the synopsis control instead of jumping over it into the grid.
-        .focusSection()
-    }
-
-    private func metadataRow(_ release: Release) -> some View {
-        HStack(spacing: 10) {
-            if let year = release.year {
-                GlassBadge(title: LocalizedStringKey(String(year)), systemImage: "calendar")
-            }
-            if let type = release.type?.description {
-                GlassBadge(title: LocalizedStringKey(type))
-            }
-            if let ageRating = release.ageRating {
-                GlassBadge(title: LocalizedStringKey(ageRating))
-            }
-            if let rating = release.averageRating {
-                RatingPill(rating: rating)
-            }
-            if let total = release.episodesTotal {
-                GlassBadge(title: "detail.episodesTotal \(total)", systemImage: "rectangle.stack")
-            }
-            if release.isOngoing == true {
-                GlassBadge(title: "badge.ongoing", tint: Palette.accent.opacity(0.9))
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func blockingNotice(_ release: Release) -> some View {
-        if release.isBlockedByGeo {
-            noticeRow(
-                systemImage: "globe",
-                text: "detail.blocked.geo",
-                tint: Palette.accent
-            )
-        } else if release.isBlockedByCopyrights {
-            noticeRow(
-                systemImage: "lock",
-                text: "detail.blocked.copyrights",
-                tint: Palette.accent
-            )
-        }
-    }
-
-    private func noticeRow(systemImage: String, text: LocalizedStringKey, tint: Color) -> some View {
-        HStack(spacing: 10) {
-            Image(systemName: systemImage)
-                .foregroundStyle(tint)
-            Text(text)
-                .font(DesignTokens.Typography.callout)
-                .foregroundStyle(.secondary)
-        }
-        .accessibilityElement(children: .combine)
-    }
-
-    /// Primary and secondary actions share one row: «Продолжить» on the left when the release has a
-    /// position worth resuming, «Смотреть» on the right.
-    ///
-    /// Default focus stays on «Смотреть», not on «Продолжить»: the screen is a fresh start by default,
-    /// resuming is one Left press away, and two reviewed UI-test classes assert that `detail.playButton`
-    /// holds focus when the screen opens (ADR 0012 relies on that focus existing at all).
-    private func actionRow(_ release: Release) -> some View {
-        HStack(spacing: 16) {
-            if model.resumeRequest != nil {
-                resumeButton
-            }
-            playButton(release)
-        }
-    }
-
-    private var resumeButton: some View {
-        Button {
-            playbackTarget = model.resumeRequest
-        } label: {
-            Label("detail.resume", systemImage: "play.circle")
-                .font(.system(size: 22, weight: .medium))
-                .padding(.horizontal, 10)
-                .padding(.vertical, 4)
-        }
-        .buttonStyle(.glass)
-        .focused($focusedControl, equals: .resume)
-        .accessibilityIdentifier("detail.resumeButton")
-    }
-
-    private func playButton(_: Release) -> some View {
-        Button {
-            isPickerPresented = true
-        } label: {
-            Label("detail.watch", systemImage: "play.fill")
-                .font(.system(size: 22, weight: .semibold))
-                .padding(.horizontal, 10)
-                .padding(.vertical, 4)
-        }
-        .buttonStyle(.glassProminent)
-        .disabled(!model.isPlayable)
-        .opacity(model.isPlayable ? 1 : 0.5)
-        .accessibilityHint(Text(model.playableEpisode?.displayTitle ?? ""))
-        .focused($focusedControl, equals: .play)
-        .accessibilityIdentifier("detail.playButton")
     }
 
     // MARK: Genres

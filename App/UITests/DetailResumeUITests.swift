@@ -79,6 +79,18 @@ final class DetailResumeUITests: XCTestCase {
         )
         attach(app, named: "detail-resume")
 
+        assertOneEpisodeShowsProgress(in: app)
+        // Scroll the grid into view so the screenshot actually shows the bar, then come back to the hero.
+        XCUIRemote.shared.press(.down)
+        Thread.sleep(forTimeInterval: settleTimeout)
+        XCUIRemote.shared.press(.down)
+        Thread.sleep(forTimeInterval: settleTimeout)
+        attach(app, named: "detail-episode-progress")
+        for _ in 0 ..< focusAttempts where !isFocused(identifier: "detail.resumeButton", in: app) {
+            XCUIRemote.shared.press(.up)
+            Thread.sleep(forTimeInterval: settleTimeout)
+        }
+
         // «Смотреть» keeps default focus, so the resume action is one press to the left.
         XCTAssertTrue(focus(resumeButton, in: app, pressing: .left), "«Продолжить» cannot be focused with the remote")
         XCUIRemote.shared.press(.select)
@@ -102,6 +114,24 @@ final class DetailResumeUITests: XCTestCase {
                 "Playback restarted at 00:\(resumed) instead of continuing from the saved position"
             )
         }
+    }
+
+    /// Per-episode progress: exactly one episode card carries a watched fraction, exposed through the
+    /// card's accessibility value because a card is a single accessibility element.
+    @MainActor
+    private func assertOneEpisodeShowsProgress(in app: XCUIApplication) {
+        let cards = app.descendants(matching: .any).matching(identifier: "detail.episodeCard")
+        let watched = cards.allElementsBoundByIndex.filter { ($0.value as? String)?.hasSuffix("%") == true }
+        XCTAssertGreaterThan(
+            watched.count,
+            0,
+            "No episode card shows a watched-progress bar after \(Int(watchedSeconds))s of playback"
+        )
+        XCTAssertLessThan(
+            watched.count,
+            cards.count,
+            "Every episode card claims progress, so the bar does not reflect a single watched episode"
+        )
     }
 
     // MARK: Steps
