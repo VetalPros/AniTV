@@ -113,8 +113,14 @@ public extension AniLibertyClient {
             token: token
         )
         Self.accountLogger.info("profile: requesting")
-        let (data, status) = try await perform(request, over: accountTransport)
-        Self.accountLogger.info("profile: status \(status, privacy: .public), \(data.count, privacy: .public) bytes")
+        let started = Date()
+        let result = try await withTimeout(seconds: 20) { [self] in
+            try await perform(request, over: accountTransport)
+        }
+        Self.accountLogger.info(
+            "profile: status \(result.status, privacy: .public), \(result.data.count, privacy: .public) bytes in \(Date().timeIntervalSince(started), privacy: .public)s"
+        )
+        let (data, status) = (result.data, result.status)
         guard (200 ..< 300).contains(status) else {
             throw AniLibertyError.httpStatus(status)
         }

@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 /// Actor-based client for the public AniLiberty REST API.
 ///
@@ -11,6 +12,7 @@ import Foundation
 /// `Authorization: Bearer`. The client keeps no auth state of its own, so signing out is
 /// simply forgetting the token in the ``AuthTokenStoring`` store.
 public actor AniLibertyClient {
+    static let logger = Logger(subsystem: "tv.anitv.client", category: "Transport")
     private let configuration: AniLibertyConfiguration
     private let transport: any HTTPTransport
     /// Clean session used for every account call (handshake, profile, favourites); see
@@ -216,11 +218,19 @@ public actor AniLibertyClient {
         }
         let data: Data
         let response: URLResponse
+        let sent = request.url?.path ?? "-"
+        Self.logger.debug("transport: sending \(sent, privacy: .public)")
         do {
             (data, response) = try await (transport ?? self.transport).data(for: request)
         } catch {
+            Self.logger
+                .debug("transport: failed \(sent, privacy: .public): \(error.localizedDescription, privacy: .public)")
             throw AniLibertyError.transportFailure(error)
         }
+        Self.logger
+            .debug(
+                "transport: received \(sent, privacy: .public) status \((response as? HTTPURLResponse)?.statusCode ?? -1, privacy: .public)"
+            )
         guard let http = response as? HTTPURLResponse else {
             throw AniLibertyError.network("The server returned a non-HTTP response.")
         }
@@ -238,5 +248,28 @@ public actor AniLibertyClient {
 
     private static func describe(_ error: any Error) -> String {
         String(describing: error)
+    }
+}
+
+/// Runs `operation` and gives up after `seconds`.
+///
+/// The tvOS simulator occasionally leaves a request in flight forever — no response, no error, and the
+/// per-request timeout does not fire (observed on the profile call: the log recorded the request being
+/// sent and then nothing). A watchdog turns that into a visible failure instead of a screen that waits.
+func withTimeout<T: Sendable>(
+    seconds: Double,
+    operation: @escaping @Sendable () async throws -> T
+) async throws -> T {
+    try await withThrowingTaskGroup(of: T.self) { group in
+        group.addTask { try await operation() }
+        group.addTask {
+            try await Task.sleep(for: .seconds(seconds))
+            throw AniLibertyError.network("The request did not finish within \(Int(seconds)) seconds.")
+        }
+        guard let first = try await group.next() else {
+            throw AniLibertyError.network("The request produced no result.")
+        }
+        group.cancelAll()
+        return first
     }
 }
