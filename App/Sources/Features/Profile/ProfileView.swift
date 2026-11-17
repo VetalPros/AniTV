@@ -34,6 +34,35 @@ struct ProfileView: View {
             }
         case let .failed(error):
             failure(error)
+        case .expired:
+            expired
+        }
+    }
+
+    /// The stored token no longer opens the account. Nothing is deleted until the viewer says so, so a
+    /// network hiccup on the service side cannot sign the TV out on its own.
+    private var expired: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ScreenHeader(title: "screen.profile.title", subtitle: "screen.profile.subtitle")
+            VStack(alignment: .leading, spacing: 22) {
+                Text("profile.expired.message")
+                    .font(DesignTokens.Typography.body)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: 900, alignment: .leading)
+                Button {
+                    Task { await model.reconnect() }
+                } label: {
+                    Label("profile.expired.reconnect", systemImage: "arrow.triangle.2.circlepath")
+                        .font(.system(size: 22, weight: .semibold))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                }
+                .buttonStyle(.glassProminent)
+                .accessibilityIdentifier("profile.reconnect")
+            }
+            .padding(.horizontal, DesignTokens.screenInset)
+            .padding(.top, 40)
+            Spacer(minLength: 0)
         }
     }
 

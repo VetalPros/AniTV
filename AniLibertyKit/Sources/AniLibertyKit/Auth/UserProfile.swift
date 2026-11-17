@@ -123,7 +123,11 @@ public struct UserProfile: Sendable, Equatable, Decodable {
         email = try? container.decodeIfPresent(String.self, forKey: .email)
         nickname = try? container.decodeIfPresent(String.self, forKey: .nickname)
         let picture = try? container.decode(Picture.self, forKey: .avatar)
-        avatarURL = ServiceURL.absoluteURL(from: picture?.optimized?.src ?? picture?.src)
+        // A user picture is the same shape as a release poster but the service fills `preview` for it, not
+        // `src` — reading only `src` left the avatar empty for every account that set one.
+        avatarURL = ServiceURL.absoluteURL(
+            from: picture?.optimized?.src ?? picture?.optimized?.preview ?? picture?.src ?? picture?.preview
+        )
         avatarThumbnailURL = ServiceURL.absoluteURL(
             from: picture?.optimized?.thumbnail ?? picture?.thumbnail
         )

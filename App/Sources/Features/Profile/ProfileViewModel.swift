@@ -16,6 +16,9 @@ final class ProfileViewModel {
         case loading
         case pairing
         case signedIn
+        /// The stored token was rejected by the service: keep it out of the way, but do not lose the
+        /// account silently — the viewer decides when to pair the TV again.
+        case expired
         case failed(AniLibertyError)
     }
 
@@ -102,21 +105,30 @@ final class ProfileViewModel {
             guard !Task.isCancelled else { return }
             self.profile = profile
             state = .signedIn
-            Self.logger.info("Profile loaded, favourites pagination starts")
+            Self.logger.info(
+                "Profile loaded, avatar=\(profile.avatarURL != nil, privacy: .public), favourites pagination starts"
+            )
             await loadFavorites(reset: true)
         } catch {
             guard !Task.isCancelled else { return }
             let mapped = AniLibertyError.mapped(error)
             if Self.isUnauthorized(mapped) {
-                // A dead token is not an error screen: forget it and pair this TV again.
-                Self.logger.info("Stored token was rejected, falling back to pairing")
-                await forgetToken()
-                await startPairing()
+                // A rejected token used to be forgotten on the spot, which looked like the account
+                // disappearing by itself. It now stays until the viewer asks to pair the TV again.
+                Self.logger
+                    .error("Stored token was rejected: \(String(describing: mapped), privacy: .public)")
+                state = .expired
                 return
             }
             Self.logger.error("Profile request failed: \(String(describing: mapped), privacy: .public)")
             state = .failed(mapped)
         }
+    }
+
+    /// Forgets a rejected token and asks the service for a fresh pairing code.
+    func reconnect() async {
+        await forgetToken()
+        await startPairing()
     }
 
     /// Ends the session: the token leaves the Keychain and the screen returns to pairing.
@@ -239,7 +251,13 @@ final class ProfileViewModel {
         do {
             let token = try await client.loginWithOTP(code: code, deviceID: deviceID)
             guard !Task.isCancelled else { return false }
-            try? await tokenStore.save(token)
+            do {
+                try await tokenStore.save(token)
+            } catch {
+                // The token cannot be stored: the session will not survive a relaunch, and saying so is
+                // better than a silent "signed in until you restart".
+                Self.logger.error("Token could not be saved: \(String(describing: error), privacy: .public)")
+            }
             self.token = token
             stopPairing()
             challenge = nil

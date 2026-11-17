@@ -50,6 +50,33 @@ struct AccountTests {
         #expect(body["device_id"] as? String == Self.deviceID)
     }
 
+    @Test("An avatar without src still resolves, because the service fills preview")
+    func avatarWithoutSource() throws {
+        // Shaped after `commons.v1.models.components.image` in the OpenAPI document: a user picture is
+        // described with preview and thumbnail only, unlike a release poster which carries src.
+        let payload = Data(#"""
+        {
+            "id": 42,
+            "login": "viewer",
+            "nickname": "Viewer",
+            "avatar": {
+                "preview": "/storage/users/avatars/42/avatar-preview.jpg",
+                "thumbnail": "/storage/users/avatars/42/avatar-thumbnail.jpg",
+                "optimized": {
+                    "preview": "/storage/users/avatars/42/avatar-optimized.webp",
+                    "thumbnail": "/storage/users/avatars/42/avatar-thumbnail-optimized.webp"
+                }
+            }
+        }
+        """#.utf8)
+
+        let profile = try JSONDecoder.aniLiberty.decode(UserProfile.self, from: payload)
+
+        #expect(profile.avatarURL?.absoluteString.hasSuffix("avatar-optimized.webp") == true)
+        #expect(profile.avatarURL?.host == "aniliberty.top")
+        #expect(profile.avatarThumbnailURL?.absoluteString.hasSuffix("avatar-thumbnail-optimized.webp") == true)
+    }
+
     @Test("A pending pairing maps to the dedicated otpNotAccepted case")
     func otpPendingMapping() async throws {
         let transport = try StubTransport.serving(Fixtures.otpLoginPending(), status: 500)

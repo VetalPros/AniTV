@@ -134,6 +134,15 @@ Second pass (same day, after the user's own run on the simulator):
       session, every refusal while polling means "keep waiting", re-issued codes had to be polled as a set,
       and the profile request had to leave the cancelled polling task. `ProfileUITests` covers the pairing
       screen; the signed-in path was verified by hand on the simulator and has no automated test yet.
+- [x] Keychain persistence checked on the simulator: a `kSecClassGenericPassword` item written by
+      `KeychainTokenStore()` is still there after terminating and relaunching the app and after
+      `simctl shutdown` + `boot` (`KEYPROBE present=true`). `xcodebuild test` reinstalls the app and the
+      fresh install starts without the item, so the UI-test runs are not evidence either way.
+- [x] The app no longer deletes a rejected token on the spot: a 403 from `/profile` shows
+      «Сессия истекла → Привязать заново» and keeps the item until the viewer asks for a new pairing.
+      This is what made a restart look like "the account disappeared".
+- [x] Avatars render: a user picture carries `preview`, not `src` (unlike a release poster), and the
+      model read only `src`. Covered by a Kit test with a schema-shaped payload.
 - [x] «Каталог» tab with search and filters (ADR 0020): `CatalogView`/`CatalogViewModel` over the Kit's
       catalogue client, single-choice chips for genre/type/year/sorting behind modal pickers, a result
       counter, «Показать ещё» paging and reset. `CatalogUITests` proves the tab loads 1946 releases, a

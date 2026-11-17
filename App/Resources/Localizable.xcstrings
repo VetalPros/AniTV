@@ -851,6 +851,40 @@
         }
       }
     },
+    "profile.expired.message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The service no longer accepts the session on this TV. Pair it again to keep watching with your account."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сервис больше не принимает сессию на этом телевизоре. Привяжите его заново, чтобы смотреть с аккаунтом."
+          }
+        }
+      }
+    },
+    "profile.expired.reconnect": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pair again"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Привязать заново"
+          }
+        }
+      }
+    },
     "profile.failed.title": {
       "extractionState": "manual",
       "localizations": {
