@@ -40,6 +40,7 @@ final class LatestReleasesViewModel {
 
     /// Tells the loop whether the tab is on display and the app is in the foreground.
     func setVisible(_ visible: Bool) async {
+        Self.logger.info("TEMP latest visible=\(visible, privacy: .public)")
         await refreshLoop.setVisible(visible)
     }
 

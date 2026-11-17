@@ -69,6 +69,9 @@ not been released yet, so everything below is still subject to change.
   session is no longer dropped silently — the screen says the session expired and offers «Привязать
   заново». The Keychain item was verified to survive a relaunch and a simulator reboot; the entitlements
   now declare a keychain access group.
+- Fixed: a title favourited in the app stayed invisible in «Профиль». The favourites list now re-reads
+  on every tab entry, a confirmed toggle notifies the profile immediately, and a screen that reloads
+  itself no longer leaves its refresh timer dead.
 - Content refreshes itself: «Новинки» reloads every five minutes and when the tab comes back after a
   pause, «Профиль» re-reads the profile and favourites on every entry and every three minutes, and the
   detail screen re-reads the favourite state when it appears — a title added on the website shows up

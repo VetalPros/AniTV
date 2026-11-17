@@ -31,9 +31,13 @@ struct AutoRefreshPolicy: Sendable {
     /// site and coming back, which the visibility rule already covers; the timer only keeps a screen
     /// left open in front of somebody current.
     static let favoritesInterval: Duration = .seconds(180)
-    /// A minute away is enough for the content behind a tab switch to have moved on; shorter and a quick
+    /// A minute away is enough for the feed behind a tab switch to have moved on; shorter and a quick
     /// look at «Каталог» would refetch for nothing.
     static let defaultStaleAfter: TimeInterval = 60
+    /// The favourites change from outside this screen — the website, the heart on a release card — and a
+    /// viewer who comes back wants to see them. Entering the tab re-reads the list; the three-second floor
+    /// only stops a bounce between tabs from firing two requests within a second.
+    static let favoritesStaleAfter: TimeInterval = 3
 
     /// Policy for a screen.
     ///
@@ -45,7 +49,8 @@ struct AutoRefreshPolicy: Sendable {
         let production = kind == .latest ? latestInterval : favoritesInterval
         let interval = seconds(for: intervalArgument, in: arguments)
             .map { Duration.seconds($0) } ?? production
-        let staleAfter = seconds(for: staleAfterArgument, in: arguments) ?? defaultStaleAfter
+        let productionStaleAfter = kind == .latest ? defaultStaleAfter : favoritesStaleAfter
+        let staleAfter = seconds(for: staleAfterArgument, in: arguments) ?? productionStaleAfter
         return AutoRefreshPolicy(interval: interval, staleAfter: staleAfter)
     }
 

@@ -97,7 +97,20 @@ final class ProfileViewModel {
     /// Coming back to the tab re-reads the profile and the favourites at once — that is what makes a
     /// release favourited on the website appear without restarting the app.
     func setVisible(_ visible: Bool) async {
+        Self.logger
+            .info(
+                "TEMP profile visible=\(visible, privacy: .public) running=\(self.refreshLoop.isRunning, privacy: .public)"
+            )
         await refreshLoop.setVisible(visible)
+    }
+
+    /// Re-reads the favourites now, because something outside this screen changed them.
+    ///
+    /// Called when the release screen confirms a favourite toggle: the viewer expects to see it in the
+    /// list the moment they come back, not after the next tick of the timer.
+    func favoritesDidChangeElsewhere() async {
+        guard refreshLoop.isVisible else { return }
+        await refreshSignedInContent()
     }
 
     /// Stops the timer, e.g. when the app goes to the background or the session ends.
@@ -144,8 +157,8 @@ final class ProfileViewModel {
     /// Re-reads the stored token and rebuilds the screen from it.
     func refresh() async {
         stopPairing()
-        stopAutoRefresh()
         state = .loading
+        defer { refreshLoop.restartIfVisible() }
         let stored = try? await tokenStore.load()
         guard let stored, !stored.isEmpty else {
             token = nil

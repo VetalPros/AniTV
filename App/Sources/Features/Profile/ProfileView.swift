@@ -22,6 +22,9 @@ struct ProfileView: View {
         .task { await model.loadIfNeeded() }
         .onAppear { Task { await model.setVisible(scenePhase == .active) } }
         .onDisappear { Task { await model.setVisible(false) } }
+        .onReceive(NotificationCenter.default.publisher(for: .anitvFavoritesChanged)) { _ in
+            Task { await model.favoritesDidChangeElsewhere() }
+        }
         .onChange(of: scenePhase) { _, phase in
             Task { await model.setVisible(phase == .active) }
         }

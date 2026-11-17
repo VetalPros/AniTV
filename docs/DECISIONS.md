@@ -546,3 +546,27 @@ untouched — a caption that exists because the viewer also deserves to see the 
 **Not asserted:** the production intervals themselves (only their values in `AutoRefreshPolicy`), the
 absence of requests on a hidden tab (there is no request counter in the app), and the "content really
 changed → show it" branch, because the live feed does not change within a test run.
+
+### Follow-up (same day) — why the first attempt did not show it
+
+The first version refreshed favourites on a timer and when a tab came back after more than a minute. The
+owner still saw a stale list after favouriting a title **from the app itself**, because the profile is
+usually reached seconds later, well inside that window, and the initial load cancelled the timer at the
+same moment it started it (`refresh()` called `stopAutoRefresh()`).
+
+Three changes, each with its own reason:
+
+- The favourites screen now re-reads on **every** entry, with a three-second floor only to stop a tab
+  bounce from firing twice. It is one cheap authenticated request, and the viewer's mental model is
+  "I come back, I see it".
+- A confirmed toggle in the release screen posts `.anitvFavoritesChanged`; a visible profile re-reads
+  immediately instead of waiting for the next tick. The two screens are separate view models in separate
+  tabs, so there is no shared state to mutate — a notification is the smallest honest link.
+- A screen that reloads itself re-arms the loop (`restartIfVisible()`); cancelling it is reserved for
+  teardown. The earlier build left the timer dead after the first load.
+
+Still unverified: whether the service's list endpoint reflects a `POST /favorites` immediately. The POST
+itself answers with the resulting identifiers, so the app knows the truth, but the list is read back with
+a separate call; if that call lags, the screen will keep showing the old order until the next refresh. The
+log now records both numbers (the count the toggle reports and the count the list returns) so one
+reproduction answers it.

@@ -211,7 +211,10 @@ final class ReleaseDetailViewModel {
             guard !Task.isCancelled else { return }
             favoriteIDs = Set(ids)
             isFavorite = favoriteIDs.contains(route.id)
-            Self.logger.info("Favourite toggled for release \(self.route.id, privacy: .public)")
+            Self.logger.info(
+                "Favourite toggled for release \(self.route.id, privacy: .public); service reports \(ids.count, privacy: .public) favourites"
+            )
+            NotificationCenter.default.post(name: .anitvFavoritesChanged, object: nil)
         } catch {
             guard !Task.isCancelled else { return }
             isFavorite = wasFavorite

@@ -14,6 +14,7 @@ final class RefreshLoop {
 
     @ObservationIgnored private var task: Task<Void, Never>?
     @ObservationIgnored private var hiddenAt: Date?
+    @ObservationIgnored private var isVisibleInternal = false
 
     /// Creates a loop.
     ///
@@ -35,14 +36,21 @@ final class RefreshLoop {
         task != nil
     }
 
+    /// Whether the screen is on display and the app is in the foreground.
+    var isVisible: Bool {
+        isVisibleInternal
+    }
+
     /// Brings the loop in line with the screen's visibility.
     ///
     /// - Parameter visible: `true` when the screen is on display and the app is in the foreground.
     func setVisible(_ visible: Bool) async {
         guard visible else {
+            isVisibleInternal = false
             stop()
             return
         }
+        isVisibleInternal = true
         guard task == nil else { return }
 
         let away = hiddenAt.map { Date().timeIntervalSince($0) } ?? .infinity
@@ -54,11 +62,27 @@ final class RefreshLoop {
         start()
     }
 
-    /// Cancels the timer without touching the visible flag; used on teardown.
+    /// Cancels the timer; the screen stays "visible" in the loop's bookkeeping only when it still is.
+    ///
+    /// A screen that reloads itself in the foreground (the first load, a retry) must call
+    /// ``restartIfVisible()`` afterwards: cancelling here is for teardown, and the timer does not come
+    /// back on its own.
     func stop() {
         task?.cancel()
         task = nil
         hiddenAt = .now
+        isVisibleInternal = false
+    }
+
+    /// Re-arms the timer after the screen reloaded its content outside the loop.
+    ///
+    /// Without this the loop stayed dead after the initial load — the favourites screen then only ever
+    /// refreshed when the tab was re-entered after more than the staleness window, which is exactly the
+    /// "I favourited it in the app and the list did not change" report.
+    func restartIfVisible() {
+        guard isVisibleInternal else { return }
+        hiddenAt = nil
+        start()
     }
 
     private func start() {
