@@ -32,6 +32,11 @@ public struct URLSessionTransport: HTTPTransport {
         session = URLSession(configuration: sessionConfiguration)
     }
 
+    /// Session built as given: no cache is reinstated, so ``ephemeral()`` really is clean.
+    private init(clean sessionConfiguration: URLSessionConfiguration) {
+        session = URLSession(configuration: sessionConfiguration)
+    }
+
     /// Performs the request through the underlying `URLSession`.
     public func data(for request: URLRequest) async throws -> (Data, URLResponse) {
         try await session.data(for: request)
@@ -48,6 +53,6 @@ public struct URLSessionTransport: HTTPTransport {
         configuration.urlCache = nil
         configuration.httpCookieStorage = nil
         configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
-        return URLSessionTransport(configuration: configuration)
+        return URLSessionTransport(clean: configuration)
     }
 }
