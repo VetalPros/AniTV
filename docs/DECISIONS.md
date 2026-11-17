@@ -299,7 +299,7 @@ system element), so the UI test addresses it by its localized title and walks th
 
 ---
 
-## 0017 — The app icon is the upstream AniLibria mark (2026-11-13)
+## 0017 — The app icon is the upstream service's mark (2026-11-13)
 
 > **Corrected 2026-11-17 by ADR 0025.** The mark is *AniLiberty's*; «AniLibria» is a different brand that
 > belongs to unrelated people. The use is now permitted in writing, so the "risk we knowingly accept"
@@ -311,7 +311,7 @@ screen as a white placeholder. The user asked for the icon of the official Andro
 <https://github.com/anilibria/anilibria-app>.
 
 Two facts about that source: the repository is **GPL-3.0** while this one is MIT, and the artwork is
-AniLibria's brand mark — the very thing `AGENTS.md` §1 forbids using as product identity.
+the service's brand mark — the very thing `AGENTS.md` §1 forbids using as product identity.
 
 **Decision.** Take it anyway, at the owner's explicit request, and record the trade-off instead of
 hiding it: the monogram was extracted from `ic_launcher-playstore.png`, re-composed into tvOS layers
