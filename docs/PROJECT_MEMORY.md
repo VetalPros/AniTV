@@ -254,6 +254,13 @@ actual problem — parallel jobs competed for a single slot), and `workflow_disp
 capacity cancellation is re-run with one click instead of an empty commit. The advisory job keeps
 `continue-on-error`, so an upstream API outage still cannot block a merge.
 
+**The run after that fix is green end to end** (<https://github.com/VetalPros/AniTV/actions/runs/44110020328>):
+`Build, test, format, lint` — XcodeGen generation, tvOS Simulator build, 82 Kit tests, `swiftformat --lint`
+and `swiftlint --strict` all succeeded in ~2 minutes, and the advisory `UI tests` job ran the 17 XCUITest
+tests on a booted tvOS simulator successfully in ~13 minutes. That closes the two "never seen on a real
+runner" caveats the workflow had carried since it was written. The UI job stays advisory until it has a
+track record (the comment in `ci.yml` asks for ten consecutive green runs).
+
 ## Publishing (2026-11-17)
 
 The repository is published at <https://github.com/VetalPros/AniTV> (owner's account, public, MIT).
