@@ -46,7 +46,16 @@ struct PairingView: View {
 
     @ViewBuilder
     private var status: some View {
-        if let challenge = model.challenge, challenge.isExpired(at: .now) {
+        if model.isSigningIn {
+            HStack(spacing: 10) {
+                ProgressView()
+                    .controlSize(.small)
+                Text("profile.pairing.signingIn")
+                    .font(DesignTokens.Typography.body)
+                    .foregroundStyle(.white)
+                    .accessibilityIdentifier("profile.pairingSigningIn")
+            }
+        } else if let challenge = model.challenge, challenge.isExpired(at: .now) {
             Text("profile.pairing.expired")
                 .font(DesignTokens.Typography.body)
                 .foregroundStyle(Palette.accent)

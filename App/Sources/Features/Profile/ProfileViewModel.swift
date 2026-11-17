@@ -29,7 +29,7 @@ final class ProfileViewModel {
     private static let logger = Logger(subsystem: "tv.anitv.client", category: "Profile")
 
     /// How often the pairing code is polled while it is alive.
-    private static let pollInterval: Duration = .seconds(3)
+    private static let pollInterval: Duration = .seconds(5)
     /// Granularity of the countdown.
     private static let tickInterval: Duration = .milliseconds(500)
 
@@ -43,6 +43,8 @@ final class ProfileViewModel {
     private(set) var hasMoreFavorites = false
     /// Seconds left on the pairing code, refreshed by the countdown ticker.
     private(set) var secondsRemaining = 0
+    /// True between "the code was accepted" and "the profile is on screen".
+    private(set) var isSigningIn = false
     /// Reason the last pairing attempt failed, shown next to the code without leaving the screen.
     private(set) var pairingError: AniLibertyError?
 
@@ -243,7 +245,9 @@ final class ProfileViewModel {
             challenge = nil
             pairingError = nil
             Self.logger.info("Pairing accepted, profile is loading")
+            isSigningIn = true
             await loadProfile(with: token)
+            isSigningIn = false
             return true
         } catch {
             guard !Task.isCancelled else { return false }

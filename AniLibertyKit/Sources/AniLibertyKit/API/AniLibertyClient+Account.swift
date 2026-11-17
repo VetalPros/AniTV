@@ -24,7 +24,7 @@ public extension AniLibertyClient {
             method: "POST",
             body: body
         )
-        let (data, status) = try await perform(request, over: pairingTransport)
+        let (data, status) = try await perform(request, over: accountTransport)
         guard (200 ..< 300).contains(status) else {
             throw AniLibertyError.httpStatus(status)
         }
@@ -59,7 +59,7 @@ public extension AniLibertyClient {
         Self.accountLogger.debug(
             "otp/login body: \(request.httpBody.flatMap { String(data: $0, encoding: .utf8) } ?? "<none>", privacy: .public)"
         )
-        let (data, status) = try await perform(request, over: pairingTransport)
+        let (data, status) = try await perform(request, over: accountTransport)
         if (200 ..< 300).contains(status) {
             return try decode(TokenResponse.self, from: data).token
         }
@@ -107,12 +107,16 @@ public extension AniLibertyClient {
     /// - Returns: The profile of the token's owner.
     /// - Throws: `AniLibertyError` mapped from the failure that occurred.
     func profile(token: String) async throws -> UserProfile {
-        try await fetch(
+        let request = try makeRequest(
             path: "\(ServiceURL.apiPrefix)/accounts/users/me/profile",
             method: "GET",
-            token: token,
-            as: UserProfile.self
+            token: token
         )
+        let (data, status) = try await perform(request, over: accountTransport)
+        guard (200 ..< 300).contains(status) else {
+            throw AniLibertyError.httpStatus(status)
+        }
+        return try decode(UserProfile.self, from: data)
     }
 
     /// Fetches one page of the authenticated user's favourite releases.
@@ -133,16 +137,20 @@ public extension AniLibertyClient {
     ) async throws -> CatalogPage {
         let safePage = max(1, page)
         let safeLimit = min(max(1, limit), CatalogPage.maximumLimit)
-        return try await fetch(
+        let request = try makeRequest(
             path: "\(ServiceURL.apiPrefix)/accounts/users/me/favorites/releases",
             method: "GET",
             query: [
                 URLQueryItem(name: "page", value: String(safePage)),
                 URLQueryItem(name: "limit", value: String(safeLimit)),
             ],
-            token: token,
-            as: CatalogPage.self
+            token: token
         )
+        let (data, status) = try await perform(request, over: accountTransport)
+        guard (200 ..< 300).contains(status) else {
+            throw AniLibertyError.httpStatus(status)
+        }
+        return try decode(CatalogPage.self, from: data)
     }
 }
 

@@ -1038,6 +1038,23 @@
         }
       }
     },
+    "profile.pairing.signingIn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signing in…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Входим в аккаунт…"
+          }
+        }
+      }
+    },
     "profile.pairing.waiting": {
       "extractionState": "manual",
       "localizations": {

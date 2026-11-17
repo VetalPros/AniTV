@@ -13,8 +13,9 @@ import Foundation
 public actor AniLibertyClient {
     private let configuration: AniLibertyConfiguration
     private let transport: any HTTPTransport
-    /// Clean session used only for the one-time-code handshake; see ``URLSessionTransport/ephemeral()``.
-    let pairingTransport: any HTTPTransport
+    /// Clean session used for every account call (handshake, profile, favourites); see
+    /// ``URLSessionTransport/ephemeral()``.
+    let accountTransport: any HTTPTransport
 
     /// Creates a client.
     ///
@@ -24,11 +25,11 @@ public actor AniLibertyClient {
     public init(
         configuration: AniLibertyConfiguration = .default,
         transport: any HTTPTransport = URLSessionTransport(),
-        pairingTransport: any HTTPTransport = URLSessionTransport.ephemeral()
+        accountTransport: any HTTPTransport = URLSessionTransport.ephemeral()
     ) {
         self.configuration = configuration
         self.transport = transport
-        self.pairingTransport = pairingTransport
+        self.accountTransport = accountTransport
     }
 
     /// Fetches the latest releases feed.
