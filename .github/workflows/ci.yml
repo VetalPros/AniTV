@@ -25,6 +25,10 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # A manual trigger exists because GitHub occasionally drops a queued macOS job for capacity
+  # reasons ("The job was not acquired by Runner of type hosted"), which has nothing to do with the
+  # change under review; re-running the workflow is then one click instead of an empty commit.
+  workflow_dispatch:
 
 # Public repository: the workflow only reads the tree.
 permissions:
@@ -153,14 +157,19 @@ jobs:
     # or the simulator lookup failing) — i.e. a problem with the environment, not with the change
     # under review. Even the simulator warm-up is non-blocking for the same reason.
     #
-    # It runs in parallel with `build-test-lint` instead of `needs:`-ing it: runner minutes are free
-    # for a public repository, and skipping the UI run whenever the build job fails would hide
-    # exactly the regressions this job exists to catch.
+    # It runs *after* `build-test-lint` rather than in parallel. The first real run on this
+    # repository showed why: both jobs ask for `macos-26`, the account gets one macOS slot at a
+    # time, and the second job sat in the queue until GitHub dropped it with "The job was not
+    # acquired by Runner of type hosted even after multiple attempts" — a capacity cancellation that
+    # turned the run red while the UI suite itself passed. Sequencing keeps a single macOS job
+    # waiting at any moment, and the UI suite still runs whenever the build is green, which is the
+    # only case where its result means anything.
     #
     # Promote it to a required check by deleting `continue-on-error: true` once the suite has a
     # track record on this runner (for example ten consecutive green runs, with no upstream API
     # outage in between). If it turns out to be flaky only because the simulator boots slowly,
     # move it to a `schedule:` trigger and keep the pull-request pipeline fast instead.
+    needs: build-test-lint
     runs-on: macos-26
     timeout-minutes: 60
 

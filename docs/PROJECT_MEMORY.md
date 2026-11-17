@@ -240,6 +240,20 @@ simulator plus network. Budget: roughly half a day for the spike, then the carou
 the app; if the system turns out to refresh the Top Shelf too rarely to be worth it, keep the static
 artwork and drop this idea.
 
+## CI on the real runner (2026-11-17)
+
+The first run on GitHub did two useful things at once. The **advisory UI suite passed on a GitHub-hosted
+`macos-26` runner** — 17 XCUITest tests driving a tvOS simulator, which is the item that had been
+"untested on a real runner" since the workflow was written. The required check never ran: the job was
+still queued when GitHub dropped it with
+*"The job was not acquired by Runner of type hosted even after multiple attempts"* plus a capacity notice,
+so the run turned red without a single line of our build having executed.
+
+Two changes followed: the UI job now `needs: build-test-lint` (one macOS job queued at a time was the
+actual problem — parallel jobs competed for a single slot), and `workflow_dispatch` was added so a
+capacity cancellation is re-run with one click instead of an empty commit. The advisory job keeps
+`continue-on-error`, so an upstream API outage still cannot block a merge.
+
 ## Publishing (2026-11-17)
 
 The repository is published at <https://github.com/VetalPros/AniTV> (owner's account, public, MIT).
