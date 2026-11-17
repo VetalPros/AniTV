@@ -13,6 +13,8 @@ import Foundation
 public actor AniLibertyClient {
     private let configuration: AniLibertyConfiguration
     private let transport: any HTTPTransport
+    /// Clean session used only for the one-time-code handshake; see ``URLSessionTransport/ephemeral()``.
+    let pairingTransport: any HTTPTransport
 
     /// Creates a client.
     ///
@@ -21,10 +23,12 @@ public actor AniLibertyClient {
     ///   - transport: HTTP seam; the default value uses `URLSession` with caching on.
     public init(
         configuration: AniLibertyConfiguration = .default,
-        transport: any HTTPTransport = URLSessionTransport()
+        transport: any HTTPTransport = URLSessionTransport(),
+        pairingTransport: any HTTPTransport = URLSessionTransport.ephemeral()
     ) {
         self.configuration = configuration
         self.transport = transport
+        self.pairingTransport = pairingTransport
     }
 
     /// Fetches the latest releases feed.
@@ -202,14 +206,17 @@ public actor AniLibertyClient {
     }
 
     /// Performs a request and returns the payload with its status, without judging it.
-    func perform(_ request: URLRequest) async throws -> (data: Data, status: Int) {
+    func perform(
+        _ request: URLRequest,
+        over transport: (any HTTPTransport)? = nil
+    ) async throws -> (data: Data, status: Int) {
         if Task.isCancelled {
             throw AniLibertyError.cancelled
         }
         let data: Data
         let response: URLResponse
         do {
-            (data, response) = try await transport.data(for: request)
+            (data, response) = try await (transport ?? self.transport).data(for: request)
         } catch {
             throw AniLibertyError.transportFailure(error)
         }

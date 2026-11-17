@@ -33,7 +33,7 @@ struct AccountTests {
     @Test("The OTP request is an anonymous POST carrying the device id")
     func otpRequest() async throws {
         let transport = try StubTransport.serving(Fixtures.otpGet())
-        let client = AniLibertyClient(transport: transport)
+        let client = AniLibertyClient(transport: transport, pairingTransport: transport)
 
         let challenge = try await client.requestOTP(deviceID: Self.deviceID)
 
@@ -53,7 +53,7 @@ struct AccountTests {
     @Test("A pending pairing maps to the dedicated otpNotAccepted case")
     func otpPendingMapping() async throws {
         let transport = try StubTransport.serving(Fixtures.otpLoginPending(), status: 500)
-        let client = AniLibertyClient(transport: transport)
+        let client = AniLibertyClient(transport: transport, pairingTransport: transport)
 
         await #expect(throws: AniLibertyError.otpNotAccepted) {
             _ = try await client.loginWithOTP(code: "489544", deviceID: Self.deviceID)
@@ -68,7 +68,7 @@ struct AccountTests {
     @Test("The OTP login sends the numeric code the schema expects")
     func otpLoginBody() async throws {
         let transport = StubTransport.serving(Data(#"{"token":"issued-token"}"#.utf8))
-        let client = AniLibertyClient(transport: transport)
+        let client = AniLibertyClient(transport: transport, pairingTransport: transport)
 
         let token = try await client.loginWithOTP(code: "048954", deviceID: Self.deviceID)
         #expect(token == "issued-token")
@@ -87,7 +87,7 @@ struct AccountTests {
     @Test("An expired code surfaces the HTTP status instead of a token")
     func otpExpiredCode() async throws {
         let transport = StubTransport.serving(Data(#"{"message":"Unauthenticated."}"#.utf8), status: 422)
-        let client = AniLibertyClient(transport: transport)
+        let client = AniLibertyClient(transport: transport, pairingTransport: transport)
 
         await #expect(throws: AniLibertyError.httpStatus(422)) {
             _ = try await client.loginWithOTP(code: "000000", deviceID: Self.deviceID)
@@ -99,7 +99,7 @@ struct AccountTests {
     @Test("Password login posts the credentials and returns the token")
     func passwordLogin() async throws {
         let transport = StubTransport.serving(Data(#"{"token":"password-token"}"#.utf8))
-        let client = AniLibertyClient(transport: transport)
+        let client = AniLibertyClient(transport: transport, pairingTransport: transport)
 
         let token = try await client.login(login: "animeshnik_488", password: "hunter2")
 
@@ -118,7 +118,7 @@ struct AccountTests {
     func profileRequest() async throws {
         // SYNTHESIZED fixture: see Fixtures/README.md — no account exists to record one.
         let transport = try StubTransport.serving(Fixtures.userProfile())
-        let client = AniLibertyClient(transport: transport)
+        let client = AniLibertyClient(transport: transport, pairingTransport: transport)
 
         let profile = try await client.profile(token: Self.token)
 
@@ -169,7 +169,7 @@ struct AccountTests {
             Data(#"{"message":"This action is unauthorized."}"#.utf8),
             status: 403
         )
-        let client = AniLibertyClient(transport: transport)
+        let client = AniLibertyClient(transport: transport, pairingTransport: transport)
 
         do {
             _ = try await client.profile(token: Self.token)
@@ -186,7 +186,7 @@ struct AccountTests {
     func favoritesDecoding() async throws {
         // SYNTHESIZED fixture: see Fixtures/README.md — no account exists to record one.
         let transport = try StubTransport.serving(Fixtures.favoritesReleases())
-        let client = AniLibertyClient(transport: transport)
+        let client = AniLibertyClient(transport: transport, pairingTransport: transport)
 
         let page = try await client.favorites(token: Self.token, page: 2, limit: 10)
 
@@ -212,7 +212,7 @@ struct AccountTests {
     @Test("Favourites paging is clamped like the catalogue's")
     func favoritesClamping() async throws {
         let transport = try StubTransport.serving(Fixtures.favoritesReleases())
-        let client = AniLibertyClient(transport: transport)
+        let client = AniLibertyClient(transport: transport, pairingTransport: transport)
 
         _ = try await client.favorites(token: Self.token, page: 0, limit: 500)
 

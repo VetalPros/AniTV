@@ -19,12 +19,16 @@ public extension AniLibertyClient {
     /// - Throws: `AniLibertyError` mapped from the failure that occurred.
     func requestOTP(deviceID: String) async throws -> OTPChallenge {
         let body = try Self.encode(OTPRequestBody(deviceID: deviceID))
-        return try await fetch(
+        let request = try makeRequest(
             path: "\(ServiceURL.apiPrefix)/accounts/otp/get",
             method: "POST",
-            body: body,
-            as: OTPChallenge.self
+            body: body
         )
+        let (data, status) = try await perform(request, over: pairingTransport)
+        guard (200 ..< 300).contains(status) else {
+            throw AniLibertyError.httpStatus(status)
+        }
+        return try decode(OTPChallenge.self, from: data)
     }
 
     /// Polls the pairing endpoint until the user has confirmed the code.
@@ -52,7 +56,10 @@ public extension AniLibertyClient {
             body: body
         )
 
-        let (data, status) = try await perform(request)
+        Self.accountLogger.debug(
+            "otp/login body: \(request.httpBody.flatMap { String(data: $0, encoding: .utf8) } ?? "<none>", privacy: .public)"
+        )
+        let (data, status) = try await perform(request, over: pairingTransport)
         if (200 ..< 300).contains(status) {
             return try decode(TokenResponse.self, from: data).token
         }

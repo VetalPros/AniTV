@@ -36,4 +36,18 @@ public struct URLSessionTransport: HTTPTransport {
     public func data(for request: URLRequest) async throws -> (Data, URLResponse) {
         try await session.data(for: request)
     }
+
+    /// A transport with no cache and no cookies, for the pairing handshake.
+    ///
+    /// The live service answers `otp/login` from the app's shared session with
+    /// 403 `{"message": "This action is unauthorized."}` while the same request from a session that has
+    /// no accumulated cache or cookies gets the documented answer. A one-time-code exchange has nothing
+    /// to cache, so it gets a clean session instead of inheriting the app's.
+    public static func ephemeral() -> URLSessionTransport {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.urlCache = nil
+        configuration.httpCookieStorage = nil
+        configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
+        return URLSessionTransport(configuration: configuration)
+    }
 }
