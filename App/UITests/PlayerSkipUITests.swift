@@ -98,27 +98,46 @@ final class PlayerSkipUITests: XCTestCase {
     /// There is no public "transport bar is open" callback, so the app combines the two signals it can read:
     /// focus leaving the hint, and any press the player itself handled. Both hide the hint, and it returns on
     /// its own a few seconds later while the playhead is still inside the segment.
+    /// The hint stays while the player controls are open — and stays clear of them.
+    ///
+    /// An earlier build hid the hint as soon as focus left it, which meant the hint vanished exactly while the
+    /// viewer was pressing Right to reach «Смотреть». The owner asked for the opposite: keep the hint, move it
+    /// above the transport bar. This asserts both halves — it is still there with the bar open, and its frame
+    /// does not intersect the bar's own time label.
     @MainActor
-    func testHintHidesWhileTheViewerIsInThePlayerControls() throws {
+    func testHintStaysClearOfThePlayerControls() throws {
         continueAfterFailure = false
         let args = [UITestLaunchArguments.startAtOpening, UITestLaunchArguments.pickEpisodeWithOpening]
         let app = launchAtSegment(args)
         try requireHint(in: app, kind: .opening, launchArguments: args)
-        XCTAssertTrue(focusSkipButton(in: app), "The skip hint cannot be reached with the remote")
-
-        XCUIRemote.shared.press(.down)
-        XCTAssertTrue(
-            waitForDisappearance(of: element(identifier: "player.skipButton", in: app), timeout: 6),
-            "The hint stayed on screen while the viewer was in the player controls"
-        )
-        attach(app, named: "player-hint-hidden-in-controls")
 
         let hint = element(identifier: "player.skipButton", in: app)
-        XCTAssertTrue(
-            hint.waitForExistence(timeout: hintTimeout),
-            "The hint did not come back after the viewer left the player controls"
+        XCTAssertTrue(focusSkipButton(in: app), "The skip hint cannot be reached with the remote")
+
+        // Leave the hint for the player's own controls and open the bar with Select.
+        XCUIRemote.shared.press(.down)
+        Thread.sleep(forTimeInterval: 1)
+        var barOpen = false
+        for _ in 0 ..< 3 where !barOpen {
+            XCUIRemote.shared.press(.select)
+            Thread.sleep(forTimeInterval: 2)
+            barOpen = app.descendants(matching: .any)["AXElapsedTime"].firstMatch.exists
+        }
+        XCTAssertTrue(barOpen, "The player controls never opened")
+
+        XCTAssertTrue(hint.exists, "The hint disappeared while the player controls were open")
+        let elapsed = app.descendants(matching: .any)["AXElapsedTime"].firstMatch
+        XCTAssertTrue(elapsed.exists, "The bar shows no time label to compare against")
+        XCTAssertFalse(
+            hint.frame.intersects(elapsed.frame),
+            "The hint overlaps the transport bar: hint \(hint.frame), bar time \(elapsed.frame)"
         )
-        attach(app, named: "player-hint-back")
+        XCTAssertLessThanOrEqual(
+            hint.frame.maxY,
+            elapsed.frame.minY + 1,
+            "The hint sits too low: hint bottom \(hint.frame.maxY), bar top \(elapsed.frame.minY)"
+        )
+        attach(app, named: "player-hint-above-controls")
     }
 
     // MARK: Ending

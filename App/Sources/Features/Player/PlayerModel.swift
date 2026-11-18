@@ -37,22 +37,6 @@ final class PlayerModel {
     /// the next opening or ending of the same episode shows the hint again.
     private(set) var dismissedSkipKey: String?
 
-    /// Whether the hint is currently suppressed because the viewer is using the player's own controls.
-    ///
-    /// There is no public "transport bar is open" callback; see ``setPlaybackControlsOpen(_:)`` for what
-    /// drives this.
-    private(set) var isPlaybackControlsOpen = false
-
-    /// Restores the hint a few seconds after the viewer poked the player UI.
-    @ObservationIgnored private var hintRestoreTask: Task<Void, Never>?
-
-    /// How long the hint stays hidden after the viewer interacts with the player.
-    ///
-    /// The transport bar has no public visibility callback, and focus alone does not tell when it closes, so
-    /// the hint comes back by itself a few seconds after the last press. Short enough to be useful while the
-    /// opening is still on screen, long enough not to sit under the bar the viewer just opened.
-    static let hintSuppression: Duration = .seconds(4)
-
     /// What the hint offers for a segment.
     ///
     /// The ending case depends on what is left after the marker: some episodes have post-credit inserts,
@@ -111,7 +95,7 @@ final class PlayerModel {
 
     /// The hint to show right now, or `nil` when it has to stay out of the way.
     var visibleSkip: SkipTimecode? {
-        guard let activeSkip, !isPlaybackControlsOpen, Self.key(for: activeSkip) != dismissedSkipKey else {
+        guard let activeSkip, Self.key(for: activeSkip) != dismissedSkipKey else {
             return nil
         }
         return activeSkip
@@ -283,43 +267,13 @@ final class PlayerModel {
         Self.logger.info("Skip hint dismissed for \(String(describing: activeSkip.kind), privacy: .public)")
     }
 
-    /// Hides the hint after a press the hint did not handle (rule "interaction hides the hint").
-    ///
-    /// Called for every press the player itself consumed, which is exactly when the transport bar is being
-    /// used. The hint returns on its own after ``hintSuppression``.
-    func playerInteraction() {
-        setPlaybackControlsOpen(true)
-    }
-
-    /// Records whether the viewer has moved into the system playback controls.
-    ///
-    /// AVKit exposes no "transport bar is open" callback. The only honest signal the app can read is the
-    /// focus engine: the hint lives in the player's own overlay, so while focus is inside the system
-    /// controls the viewer is interacting with them and the hint has to be out of the way. It comes back as
-    /// soon as focus returns to it. The hint also sits *below* the system UI in the view hierarchy now, so
-    /// even a bar that opens without moving focus can no longer be drawn over.
-    ///
-    /// - Parameter open: `true` while focus is outside the skip overlay.
-    func setPlaybackControlsOpen(_ open: Bool) {
-        guard open else {
-            hintRestoreTask?.cancel()
-            hintRestoreTask = nil
-            guard isPlaybackControlsOpen else { return }
-            isPlaybackControlsOpen = false
-            Self.logger.info("Hint restored after player interaction")
-            return
-        }
-        // Re-arming on every focus callback would keep postponing the restore for ever, so the timer is
-        // started once per suppression.
-        guard !isPlaybackControlsOpen else { return }
-        isPlaybackControlsOpen = true
-        Self.logger.info("Hint suppressed: viewer is in the player controls")
-        hintRestoreTask = Task { [weak self] in
-            try? await Task.sleep(for: Self.hintSuppression)
-            guard !Task.isCancelled else { return }
-            self?.setPlaybackControlsOpen(false)
-        }
-    }
+    // The hint is never hidden by focus or by presses.
+    //
+    // An earlier build hid it while the viewer was in the system controls, using focus as the signal. It
+    // looked reasonable and behaved terribly: the moment the viewer pressed Right to reach «Смотреть», focus
+    // left the overlay for a frame, the hint disappeared and the button they were aiming at vanished. A
+    // control that hides while you reach for it is worse than one that overlaps. The hint now stays for as
+    // long as the playhead is inside the segment, and the layout keeps it clear of the transport bar.
 
     private func addPlayheadObserver() {
         guard timeObserver == nil else { return }

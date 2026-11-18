@@ -646,3 +646,21 @@ picker.
 **Still not proven by a test:** that «Следующая серия» actually starts the next episode — the UI test needs a
 release whose current episode has a short ending, and the feed's first release does not always have one
 (`XCTSkip` with that reason). The label and the decision are covered by the unit tests.
+
+### Follow-up to 0026 (same day) — the hint is never hidden, it is moved instead
+
+Hiding the hint while the viewer was in the player controls was the one part of 0026 that did not survive
+contact with a real remote. Focus is the only signal available, and focus is exactly what moves when the
+viewer presses Right to reach «Смотреть»: the hint disappeared for a frame and the button they were aiming at
+went with it. A control that vanishes as you reach for it is worse than one that overlaps something.
+
+So the rule is reversed deliberately: **the hint stays for as long as the playhead is inside the segment**,
+whatever focus does, and the layout keeps it clear of the transport bar — it sits 300 pt above the bottom
+edge, above the scrubber, the elapsed time and the quality chips. `PlayerSkipUITests` now asserts the
+opposite of what it asserted yesterday: with the bar open the hint is still there, and its frame does not
+intersect the bar's own time label.
+
+The other lesson from the same round: **Left/Right between the two buttons was not reliable** from layout
+alone — a Right press sometimes left the hint for the player's controls. Two one-point-wide `UIFocusGuide`s,
+one on each side of the gap between the buttons, pin the direction; two consecutive full-suite runs passed
+after that, where before it failed roughly one run in three.

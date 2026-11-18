@@ -9,6 +9,13 @@ import UIKit
 /// them the way the remote expects.
 final class SkipHintOverlayView: UIView {
     private let stack = UIStackView()
+    /// Guides that make Left/Right between the two buttons deterministic.
+    ///
+    /// Layout-based traversal inside a `contentOverlayView` is not reliable: the player's own controls sit in
+    /// the same neighbourhood, so a Right press from the first button sometimes left the hint entirely and the
+    /// focus test failed one run in three. A `UIFocusGuide` pins the direction to the button the viewer means.
+    private let rightGuide = UIFocusGuide()
+    private let leftGuide = UIFocusGuide()
     let skipButton = UIButton(type: .system)
     let dismissButton = UIButton(type: .system)
 
@@ -70,6 +77,21 @@ final class SkipHintOverlayView: UIView {
             stack.leadingAnchor.constraint(equalTo: leadingAnchor),
             stack.trailingAnchor.constraint(equalTo: trailingAnchor),
         ])
+
+        addLayoutGuide(rightGuide)
+        addLayoutGuide(leftGuide)
+        NSLayoutConstraint.activate([
+            rightGuide.leadingAnchor.constraint(equalTo: skipButton.trailingAnchor, constant: 1),
+            rightGuide.widthAnchor.constraint(equalToConstant: 1),
+            rightGuide.topAnchor.constraint(equalTo: topAnchor),
+            rightGuide.bottomAnchor.constraint(equalTo: bottomAnchor),
+            leftGuide.trailingAnchor.constraint(equalTo: dismissButton.leadingAnchor, constant: -1),
+            leftGuide.widthAnchor.constraint(equalToConstant: 1),
+            leftGuide.topAnchor.constraint(equalTo: topAnchor),
+            leftGuide.bottomAnchor.constraint(equalTo: bottomAnchor),
+        ])
+        rightGuide.preferredFocusEnvironments = [dismissButton]
+        leftGuide.preferredFocusEnvironments = [skipButton]
     }
 
     @objc private func skipTapped() {

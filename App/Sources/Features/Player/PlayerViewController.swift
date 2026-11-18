@@ -20,10 +20,8 @@ struct PlayerViewController: UIViewControllerRepresentable {
     let onSkip: () -> Void
     let onNextEpisode: () -> Void
     let onDismissSkip: () -> Void
-    /// Focus left the hint (the viewer is in the player's own controls) or came back.
-    let onPlaybackControlsChange: (Bool) -> Void
-    /// A press the player itself handled while the hint was not focused.
-    let onPlayerInteraction: () -> Void
+    // Focus left the hint (the viewer is in the player's own controls) or came back.
+    // A press the player itself handled while the hint was not focused.
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
@@ -34,8 +32,6 @@ struct PlayerViewController: UIViewControllerRepresentable {
         controller.player = player
         controller.showsPlaybackControls = true
         controller.view.backgroundColor = .black
-        controller.onPlaybackControlsChange = onPlaybackControlsChange
-        controller.onPlayerInteraction = onPlayerInteraction
         context.coordinator.installOverlay(on: controller, from: self)
         context.coordinator.updateMenu(on: controller, from: self)
         return controller
@@ -45,8 +41,6 @@ struct PlayerViewController: UIViewControllerRepresentable {
         if controller.player !== player {
             controller.player = player
         }
-        controller.onPlaybackControlsChange = onPlaybackControlsChange
-        controller.onPlayerInteraction = onPlayerInteraction
         context.coordinator.updateOverlay(on: controller, from: self)
         context.coordinator.updateMenu(on: controller, from: self)
     }
@@ -55,8 +49,15 @@ struct PlayerViewController: UIViewControllerRepresentable {
     final class Coordinator {
         /// The skip hint, built in UIKit inside the player's content overlay.
         private var overlay: SkipHintOverlayView?
-        /// Bottom/trailing inset of the hint, so it clears the scrubber even when both are visible.
+        /// Trailing inset of the hint.
         private static let overlayInset: CGFloat = 120
+        /// How far the hint sits above the bottom edge.
+        ///
+        /// The transport bar is drawn over the bottom ~200 pt of the screen (scrubber, elapsed time, the
+        /// quality and audio chips), so the hint lives above that band instead of hiding whenever the bar is
+        /// open: there is no public callback for the bar, and hiding on focus made the control disappear while
+        /// the viewer was moving to it.
+        private static let overlayBottomInset: CGFloat = 300
 
         func installOverlay(on controller: QualityPlayerViewController, from representable: PlayerViewController) {
             guard let contentOverlay = controller.contentOverlayView else { return }
@@ -72,7 +73,7 @@ struct PlayerViewController: UIViewControllerRepresentable {
                 ),
                 overlay.bottomAnchor.constraint(
                     equalTo: contentOverlay.bottomAnchor,
-                    constant: -Self.overlayInset
+                    constant: -Self.overlayBottomInset
                 ),
                 overlay.leadingAnchor.constraint(
                     greaterThanOrEqualTo: contentOverlay.leadingAnchor,
@@ -188,14 +189,10 @@ final class QualityPlayerViewController: AVPlayerViewController {
 
     var menuProvider: (() -> (menu: UIMenu, signature: String))?
 
-    /// Called when focus enters or leaves the custom overlay.
-    var onPlaybackControlsChange: ((Bool) -> Void)?
+    // Called when focus enters or leaves the custom overlay.
 
     /// The skip hint, used to tell "our controls have focus" from "the player's own controls have it".
     weak var overlayView: SkipHintOverlayView?
-
-    /// A press the player handled itself while the hint was not focused.
-    var onPlayerInteraction: (() -> Void)?
 
     /// Whether the hint is currently shown.
     var overlayIsVisible = false
@@ -206,33 +203,15 @@ final class QualityPlayerViewController: AVPlayerViewController {
     /// it is released, otherwise focus could never leave and the transport bar would never open.
     private var overlayFocusGranted = false
 
-    /// Whether focus currently sits inside the custom overlay.
-    private var overlayHasFocus = false
-
     override func didUpdateFocus(in context: UIFocusUpdateContext, with coordinator: UIFocusAnimationCoordinator) {
         super.didUpdateFocus(in: context, with: coordinator)
-        // The focus engine is the only honest signal about where the viewer is: there is no public callback
-        // for "the transport bar is open", but while focus is inside the system controls the hint has to be
-        // out of the way, and it comes back as soon as focus returns to it.
-        updateOverlayFocus(isInside: isFocusInsideOverlay)
-    }
-
-    private func updateOverlayFocus(isInside: Bool) {
-        if isInside {
+        // Focus only marks that the hint has had its turn; it no longer hides anything. Hiding on focus lost
+        // the hint at the worst moment — while the viewer was pressing Right to reach «Смотреть» — and a
+        // control that vanishes as you reach for it is worse than one that overlaps.
+        let focused = UIFocusSystem.focusSystem(for: self)?.focusedItem as? UIView
+        if let overlayView, let focused, focused.isDescendant(of: overlayView) {
             overlayFocusGranted = true
         }
-        guard overlayHasFocus != isInside else { return }
-        overlayHasFocus = isInside
-        onPlaybackControlsChange?(!isInside)
-    }
-
-    private var isFocusInsideOverlay: Bool {
-        guard let overlayView,
-              let focused = UIFocusSystem.focusSystem(for: self)?.focusedItem as? UIView
-        else {
-            return false
-        }
-        return focused.isDescendant(of: overlayView)
     }
 
     /// Preferred focus: the hint, until it has had its turn.
@@ -256,14 +235,6 @@ final class QualityPlayerViewController: AVPlayerViewController {
     /// Lets the next appearance of the hint ask for focus again.
     func resetOverlayFocusGrant() {
         overlayFocusGranted = false
-    }
-
-    /// Presses that reach the controller are the ones the hint did not consume: the viewer is in the player.
-    override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-        if !presses.isEmpty, !isFocusInsideOverlay {
-            onPlayerInteraction?()
-        }
-        super.pressesBegan(presses, with: event)
     }
 
     private var appliedSignature: String?

@@ -28,9 +28,7 @@ struct PlayerScreen: View {
                 skipAction: model.visibleSkipAction,
                 onSkip: model.skipActiveSegment,
                 onNextEpisode: onNextEpisode,
-                onDismissSkip: model.dismissSkipHint,
-                onPlaybackControlsChange: model.setPlaybackControlsOpen,
-                onPlayerInteraction: model.playerInteraction
+                onDismissSkip: model.dismissSkipHint
             )
             .ignoresSafeArea()
 

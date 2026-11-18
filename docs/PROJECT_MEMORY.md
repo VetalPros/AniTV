@@ -156,7 +156,9 @@ Second pass (same day, after the user's own run on the simulator):
       revalidation. The `refresh: true` path is wired to filters/search/retry but not asserted by a test.
 - [x] Player skip hint: custom control inside `AVPlayerViewController.contentOverlayView` (SwiftUI overlays
       above the player never receive focus), two buttons — «Пропустить опенинг»/«Пропустить эндинг» and
-      «Смотреть», hint hidden while the viewer is in the player controls, and `EndingOfferResolver` in the kit
+      «Смотреть», hint never hidden by focus (it sits 300 pt up, clear of the transport bar; hiding it on focus
+      made the button vanish while the viewer reached for it), focus guides between the two buttons, and
+      `EndingOfferResolver` in the kit
       decides between skipping an ending and offering the next episode (15 s tail threshold, five unit tests).
       `PlayerSkipUITests` covers focus, skipping, dismissing and hiding; the actual next-episode switch is a
       content-dependent `XCTSkip` (see ADR 0026).
