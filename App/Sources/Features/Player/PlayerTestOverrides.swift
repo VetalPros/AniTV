@@ -10,6 +10,10 @@ enum PlayerTestOverrides {
     static let startAtArgument = "-uiTestingStartAt"
     /// Launch argument that starts playback two seconds into the episode's opening.
     static let startAtOpeningArgument = "-uiTestingStartAtOpening"
+    /// Launch argument that makes the episode picker start on an episode with an opening.
+    static let pickEpisodeWithOpeningArgument = "-uiTestingPickEpisodeWithOpening"
+    /// Launch argument that makes the picker start on an episode whose ending runs into the end of the file.
+    static let pickEpisodeWithShortEndingArgument = "-uiTestingPickEpisodeWithShortEnding"
     /// Launch argument that starts playback two seconds into the episode's ending.
     static let startAtEndingArgument = "-uiTestingStartAtEnding"
 
@@ -34,6 +38,22 @@ enum PlayerTestOverrides {
     /// - Returns: `true` when the opening argument is present.
     static func startsAtOpening(arguments: [String] = ProcessInfo.processInfo.arguments) -> Bool {
         arguments.contains(startAtOpeningArgument)
+    }
+
+    /// Whether the picker should prefer an episode that has an opening.
+    ///
+    /// - Parameter arguments: Process arguments; injectable for tests.
+    /// - Returns: `true` when the argument is present.
+    static func picksEpisodeWithOpening(arguments: [String] = ProcessInfo.processInfo.arguments) -> Bool {
+        arguments.contains(pickEpisodeWithOpeningArgument)
+    }
+
+    /// Whether the picker should prefer an episode whose ending runs into the end of the file.
+    ///
+    /// - Parameter arguments: Process arguments; injectable for tests.
+    /// - Returns: `true` when the argument is present.
+    static func picksEpisodeWithShortEnding(arguments: [String] = ProcessInfo.processInfo.arguments) -> Bool {
+        arguments.contains(pickEpisodeWithShortEndingArgument)
     }
 
     /// Whether playback should start inside the ending.

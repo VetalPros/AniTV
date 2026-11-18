@@ -60,7 +60,7 @@ struct ReleaseDetailView: View {
             content: {
                 EpisodePickerScreen(
                     episodes: model.episodes,
-                    initialFocusEpisodeID: model.resumeProgress?.episodeID ?? model.playableEpisode?.id,
+                    initialFocusEpisodeID: model.pickerInitialEpisodeID,
                     playableQuality: playbackQuality(for:),
                     onSelect: { episode in
                         pendingEpisode = episode
@@ -76,9 +76,16 @@ struct ReleaseDetailView: View {
                     await model.refreshResumeProgress()
                     await model.loadFavoritesState()
                 }
+                // The player asked for the next episode: the cover is gone, start it right away.
+                if let episode = pendingEpisode {
+                    pendingEpisode = nil
+                    playbackTarget = model.playbackRequest(for: episode)
+                }
             },
             content: { request in
-                PlayerScreen(request: request)
+                PlayerScreen(request: request) {
+                    startNextEpisode(from: request)
+                }
             }
         )
     }
@@ -254,5 +261,12 @@ struct ReleaseDetailView: View {
 
     private func play(_ episode: Episode) {
         playbackTarget = model.playbackRequest(for: episode)
+    }
+
+    /// The player asked for the next episode: the cover closes first, then playback starts again — the same
+    /// path the episode picker uses, so navigation stays in one place.
+    private func startNextEpisode(from request: PlaybackRequest) {
+        pendingEpisode = request.nextEpisode
+        playbackTarget = nil
     }
 }

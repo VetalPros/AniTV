@@ -154,6 +154,12 @@ Second pass (same day, after the user's own run on the simulator):
 - [x] Catalogue pages cached by request for five minutes (`CatalogCache`): paging back and forth no longer
       re-hits the service. The endpoint has no `ETag` (measured), so this is a client-side cache, not
       revalidation. The `refresh: true` path is wired to filters/search/retry but not asserted by a test.
+- [x] Player skip hint: custom control inside `AVPlayerViewController.contentOverlayView` (SwiftUI overlays
+      above the player never receive focus), two buttons — «Пропустить опенинг»/«Пропустить эндинг» and
+      «Смотреть», hint hidden while the viewer is in the player controls, and `EndingOfferResolver` in the kit
+      decides between skipping an ending and offering the next episode (15 s tail threshold, five unit tests).
+      `PlayerSkipUITests` covers focus, skipping, dismissing and hiding; the actual next-episode switch is a
+      content-dependent `XCTSkip` (see ADR 0026).
 - [x] Auto-refresh: `AutoRefreshPolicy` + `RefreshLoop` (one timer for both screens). «Новинки» every
       300 s and on returning to the tab after >60 s, favourites every 180 s plus an immediate re-read on
       entering the tab, and the detail screen re-reads the favourite state on every appear. Hidden screens

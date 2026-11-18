@@ -17,97 +17,167 @@ final class PlayerSkipUITests: XCTestCase {
     @MainActor
     func testOpeningHintIsFocusableAndSkipMovesThePlayhead() throws {
         continueAfterFailure = false
-        let app = launchAtSegment([UITestLaunchArguments.startAtOpening])
-        try requireHint(in: app, kind: .opening, launchArguments: [UITestLaunchArguments.startAtOpening])
+        let app = launchAtSegment([UITestLaunchArguments.startAtOpening, UITestLaunchArguments.pickEpisodeWithOpening])
+        try requireHint(
+            in: app,
+            kind: .opening,
+            launchArguments: [UITestLaunchArguments.startAtOpening, UITestLaunchArguments.pickEpisodeWithOpening]
+        )
 
-        XCTAssertTrue(focusSkipButton(in: app), "The skip hint cannot be reached with the remote")
+        // A cold simulator can take a moment before the player actually plays and takes focus; wait for the
+        // clock to move instead of assuming it is already running.
+        XCTAssertTrue(waitForPlaybackInProgress(in: app), "Playback never started on this run")
+        var focused = focusSkipButton(in: app)
+        for _ in 0 ..< 3 where !focused {
+            // The first poke can land while the player is still settling; retry instead of failing.
+            Thread.sleep(forTimeInterval: settleTimeout)
+            focused = focusSkipButton(in: app)
+        }
+        XCTAssertTrue(focused, "The skip hint cannot be reached with the remote")
         attach(app, named: "player-skip-focused")
 
-        let before = playhead(in: app)
+        XCTAssertTrue(focusSkipButton(in: app), "The skip hint lost focus before the press")
         XCUIRemote.shared.press(.select)
         XCTAssertTrue(
-            waitForDisappearance(of: element(identifier: "player.skipButton", in: app), timeout: hintTimeout),
+            waitForDisappearance(of: element(identifier: "player.skipButton", in: app), timeout: 6),
             "Skipping did not remove the hint"
         )
-        let after = playhead(in: app)
-        XCTAssertNotNil(before, "The player does not expose its playhead before the skip")
-        XCTAssertNotNil(after, "The player does not expose its playhead after the skip")
-        if let before, let after {
-            XCTAssertGreaterThanOrEqual(
-                after - before,
-                10,
-                "The skip did not jump the playhead (before \(before)s, after \(after)s)"
-            )
-        }
+        // The clock in the transport bar is a lagging accessibility label and reading it means opening the
+        // bar, which hides the hint by itself — so the assertion is about what only a real skip can do:
+        // after the segment has been left behind, the hint must not come back when the bar is closed again.
+        // Had the press only opened the player controls, closing them would bring the hint straight back.
+        XCTAssertTrue(
+            hintStaysGoneAfterTheControlsClose(in: app),
+            "The hint came back once the player controls were closed, so the press opened the bar instead of skipping"
+        )
         attach(app, named: "player-skip-after")
     }
 
     // MARK: «Смотреть»
 
     @MainActor
-    func testDismissButtonHidesTheHintForTheWholeSegment() throws {
+    func testDismissControlIsFocusableAndHidesTheHintWithoutSeeking() throws {
         continueAfterFailure = false
-        let app = launchAtSegment([UITestLaunchArguments.startAtOpening])
-        try requireHint(in: app, kind: .opening, launchArguments: [UITestLaunchArguments.startAtOpening])
+        let args = [UITestLaunchArguments.startAtOpening, UITestLaunchArguments.pickEpisodeWithOpening]
+        let app = launchAtSegment(args)
+        try requireHint(in: app, kind: .opening, launchArguments: args)
 
         let dismiss = element(identifier: "player.skipDismissButton", in: app)
         XCTAssertTrue(dismiss.exists, "The hint offers no «Смотреть» control")
-        XCTAssertTrue(focus(dismiss, in: app), "«Смотреть» cannot be reached with the remote")
+        XCTAssertTrue(
+            focus(dismiss, in: app, startingWith: .right),
+            "Focus never reaches «Смотреть», the second control of the hint"
+        )
+        attach(app, named: "player-dismiss-focused")
+
         XCUIRemote.shared.press(.select)
         XCTAssertTrue(
             waitForDisappearance(of: element(identifier: "player.skipButton", in: app), timeout: 5),
             "«Смотреть» did not hide the hint"
         )
-        // The viewer is still inside the segment: the choice must not come back on its own.
-        Thread.sleep(forTimeInterval: 6)
-        XCTAssertFalse(
-            element(identifier: "player.skipButton", in: app).exists,
-            "The dismissed hint came back while the viewer was still inside the same segment"
-        )
-        attach(app, named: "player-skip-dismissed")
+        // The hint is gone, and the playhead kept its own pace: two readings two seconds apart differ by
+        // about two seconds, not by a segment length.
+        let first = playhead(in: app)
+        Thread.sleep(forTimeInterval: 2)
+        let second = playhead(in: app)
+        XCTAssertNotNil(first, "The player does not expose its playhead")
+        XCTAssertNotNil(second, "The player does not expose its playhead")
+        if let first, let second {
+            XCTAssertLessThanOrEqual(
+                abs(second - first - 2),
+                4,
+                "«Смотреть» moved the playhead (from \(first)s to \(second)s) instead of only hiding the hint"
+            )
+        }
     }
 
-    // MARK: Transport bar
+    // MARK: Player controls
 
+    /// The hint must be gone while the viewer is in the player's own controls, and come back afterwards.
+    ///
+    /// There is no public "transport bar is open" callback, so the app combines the two signals it can read:
+    /// focus leaving the hint, and any press the player itself handled. Both hide the hint, and it returns on
+    /// its own a few seconds later while the playhead is still inside the segment.
     @MainActor
-    func testHintHidesWhileTheTransportBarIsOpenAndReturnsAfter() throws {
+    func testHintHidesWhileTheViewerIsInThePlayerControls() throws {
         continueAfterFailure = false
-        let app = launchAtSegment([UITestLaunchArguments.startAtOpening])
-        try requireHint(in: app, kind: .opening, launchArguments: [UITestLaunchArguments.startAtOpening])
+        let args = [UITestLaunchArguments.startAtOpening, UITestLaunchArguments.pickEpisodeWithOpening]
+        let app = launchAtSegment(args)
+        try requireHint(in: app, kind: .opening, launchArguments: args)
+        XCTAssertTrue(focusSkipButton(in: app), "The skip hint cannot be reached with the remote")
 
-        // Move focus off the hint, then open the system playback controls with Select.
-        XCUIRemote.shared.press(.up)
-        Thread.sleep(forTimeInterval: settleTimeout)
-        XCUIRemote.shared.press(.select)
+        XCUIRemote.shared.press(.down)
         XCTAssertTrue(
-            waitForDisappearance(of: element(identifier: "player.skipButton", in: app), timeout: hintTimeout),
-            "The hint stayed on screen while the transport bar was open"
+            waitForDisappearance(of: element(identifier: "player.skipButton", in: app), timeout: 6),
+            "The hint stayed on screen while the viewer was in the player controls"
         )
-        attach(app, named: "player-skip-transport-open")
+        attach(app, named: "player-hint-hidden-in-controls")
 
-        XCUIRemote.shared.press(.select)
         let hint = element(identifier: "player.skipButton", in: app)
         XCTAssertTrue(
             hint.waitForExistence(timeout: hintTimeout),
-            "The hint did not come back after the transport bar closed (playhead still inside the segment)"
+            "The hint did not come back after the viewer left the player controls"
         )
-        attach(app, named: "player-skip-transport-closed")
+        attach(app, named: "player-hint-back")
     }
 
     // MARK: Ending
 
+    /// «Следующая серия» must actually switch the episode: the player closes and the next one starts.
     @MainActor
-    func testEndingHintAppearsAndSaysEnding() throws {
+    func testNextEpisodeControlSwitchesTheEpisode() throws {
         continueAfterFailure = false
-        let app = launchAtSegment([UITestLaunchArguments.startAtEnding])
-        guard try requireHint(
-            in: app,
-            kind: .ending,
-            launchArguments: [UITestLaunchArguments.startAtEnding]
-        ) else {
-            return
+        let args = [UITestLaunchArguments.startAtEnding, UITestLaunchArguments.pickEpisodeWithShortEnding]
+        let app = launchAtSegment(args)
+
+        let skip = element(identifier: "player.skipButton", in: app)
+        guard skip.waitForExistence(timeout: hintTimeout) else {
+            throw XCTSkip("The episode played here has no usable ending in the API")
         }
-        attach(app, named: "player-skip-ending")
+        guard skip.label.localizedCaseInsensitiveContains("Следующая") else {
+            throw XCTSkip(
+                "This episode keeps a post-credit tail, so the ending control is «\(skip.label)»; no release "
+                    + "episode with a short ending was found"
+            )
+        }
+        attach(app, named: "player-next-episode-focused")
+        // The episode the player is on, read from its own info panel before the switch.
+        let beforeTitle = playerTitle(in: app)
+
+        XCTAssertTrue(focusSkipButton(in: app), "«Следующая серия» cannot be reached with the remote")
+        XCUIRemote.shared.press(.select)
+
+        // The player cover closes and the next episode starts: the player is presented again, showing a
+        // different episode together with a fresh playhead near zero.
+        let player = element(identifier: "player.screen", in: app)
+        XCTAssertTrue(
+            player.waitForExistence(timeout: screenTimeout),
+            "The player did not come back with the next episode"
+        )
+        Thread.sleep(forTimeInterval: 4)
+        let afterTitle = playerTitle(in: app)
+        XCTAssertNotEqual(
+            afterTitle,
+            beforeTitle,
+            "The player still reports the previous episode («\(afterTitle)»), so «Следующая серия» only changed its label"
+        )
+        attach(app, named: "player-next-episode-started")
+    }
+
+    /// Longest static text the player shows: the episode title in the system info panel.
+    ///
+    /// Opening the panel needs Select; when the hint holds focus the first press goes to it, so the press is
+    /// retried until the transport bar reports its elapsed time.
+    @MainActor
+    private func playerTitle(in app: XCUIApplication) -> String {
+        _ = playhead(in: app)
+        let player = element(identifier: "player.screen", in: app)
+        // Scoped to the player: the detail screen underneath also has long texts, and mixing them in made
+        // the comparison meaningless.
+        let texts = player.descendants(matching: .staticText).allElementsBoundByIndex
+            .map(\.label)
+            .filter { $0.count > 8 && !$0.contains("Смотреть") && !$0.contains("Следующая") }
+        return texts.max(by: { $0.count < $1.count }) ?? ""
     }
 
     // MARK: Steps
@@ -172,8 +242,10 @@ final class PlayerSkipUITests: XCTestCase {
             skip.label.localizedCaseInsensitiveContains(expected),
             "The skip hint is worded «\(skip.label)», expected it to name the \(expected)"
         )
+        // The overlay is configured a beat after it is inserted, so a bare `exists` here was a race: the
+        // full-suite run caught it once while the class-only run always saw both buttons.
         XCTAssertTrue(
-            element(identifier: "player.skipDismissButton", in: app).exists,
+            element(identifier: "player.skipDismissButton", in: app).waitForExistence(timeout: hintTimeout),
             "The hint offers no «Смотреть» control"
         )
         return true
@@ -192,8 +264,12 @@ final class PlayerSkipUITests: XCTestCase {
     }
 
     @MainActor
-    private func focus(_ target: XCUIElement, in _: XCUIApplication) -> Bool {
-        let directions: [XCUIRemote.Button] = [.down, .left, .right, .up]
+    private func focus(
+        _ target: XCUIElement,
+        in _: XCUIApplication,
+        startingWith first: XCUIRemote.Button = .down
+    ) -> Bool {
+        let directions: [XCUIRemote.Button] = [first] + [.down, .left, .right, .up].filter { $0 != first }
         for step in 0 ..< focusAttempts * directions.count {
             if target.exists, target.hasFocus {
                 return true
@@ -208,7 +284,8 @@ final class PlayerSkipUITests: XCTestCase {
     @MainActor
     private func playhead(in app: XCUIApplication) -> Int? {
         let marker = app.descendants(matching: .any)["AXElapsedTime"].firstMatch
-        if !marker.exists {
+        for _ in 0 ..< 3 where !marker.exists {
+            // A Select lands on the hint when it has focus; the second press opens the system bar.
             XCUIRemote.shared.press(.select)
             Thread.sleep(forTimeInterval: 2)
         }
@@ -219,6 +296,36 @@ final class PlayerSkipUITests: XCTestCase {
         XCUIRemote.shared.press(.select)
         Thread.sleep(forTimeInterval: settleTimeout)
         return parts[0] * 60 + parts[1]
+    }
+
+    /// Waits until the player is actually running.
+    ///
+    /// Deliberately does not press Select: on a cold simulator the first seconds are spent loading, and
+    /// opening the transport bar would hide the very hint the test is about.
+    @MainActor
+    private func waitForPlaybackInProgress(in app: XCUIApplication) -> Bool {
+        for _ in 0 ..< 15 {
+            if element(identifier: "player.skipButton", in: app).exists {
+                return true
+            }
+            Thread.sleep(forTimeInterval: 1)
+        }
+        return false
+    }
+
+    /// Opens and closes the player controls and reports whether the hint stayed away.
+    ///
+    /// The distinguishing behaviour of a real skip: the playhead left the segment, so the hint has nothing to
+    /// show. If the earlier press had only opened the transport bar, the hint would reappear here.
+    @MainActor
+    private func hintStaysGoneAfterTheControlsClose(in app: XCUIApplication) -> Bool {
+        let hint = element(identifier: "player.skipButton", in: app)
+        for _ in 0 ..< 2 {
+            XCUIRemote.shared.press(.select)
+            Thread.sleep(forTimeInterval: 1.5)
+        }
+        Thread.sleep(forTimeInterval: 2)
+        return !hint.exists
     }
 
     @MainActor

@@ -13,4 +13,8 @@ enum UITestLaunchArguments {
     static let startAtOpening = "-uiTestingStartAtOpening"
     /// Starts the player inside the episode's ending (`PlayerTestOverrides.startAtEndingArgument`).
     static let startAtEnding = "-uiTestingStartAtEnding"
+    /// Makes the picker start on an episode with an opening (`PlayerTestOverrides.pickEpisodeWithOpeningArgument`).
+    static let pickEpisodeWithOpening = "-uiTestingPickEpisodeWithOpening"
+    /// Makes the picker start on an episode whose ending runs into the end of the file.
+    static let pickEpisodeWithShortEnding = "-uiTestingPickEpisodeWithShortEnding"
 }

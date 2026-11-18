@@ -5,9 +5,13 @@ import SwiftUI
 /// to the detail screen.
 struct PlayerScreen: View {
     @Environment(\.dismiss) private var dismiss
+    /// Asked when the ending runs into the end of the file and the release has another episode; the detail
+    /// screen owns that navigation, exactly like the episode picker.
+    let onNextEpisode: () -> Void
     @State private var model: PlayerModel
 
-    init(request: PlaybackRequest) {
+    init(request: PlaybackRequest, onNextEpisode: @escaping () -> Void = {}) {
+        self.onNextEpisode = onNextEpisode
         _model = State(initialValue: PlayerModel(request: request))
     }
 
@@ -21,10 +25,12 @@ struct PlayerScreen: View {
                 qualities: model.sources.map(\.quality),
                 selectedQuality: model.selectedQuality,
                 onSelectQuality: model.selectQuality,
-                skip: model.visibleSkip,
+                skipAction: model.visibleSkipAction,
                 onSkip: model.skipActiveSegment,
+                onNextEpisode: onNextEpisode,
                 onDismissSkip: model.dismissSkipHint,
-                onPlayerSelect: { model.setPlaybackControlsOpen(!model.isPlaybackControlsOpen) }
+                onPlaybackControlsChange: model.setPlaybackControlsOpen,
+                onPlayerInteraction: model.playerInteraction
             )
             .ignoresSafeArea()
 

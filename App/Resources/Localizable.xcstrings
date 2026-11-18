@@ -919,6 +919,23 @@
         }
       }
     },
+    "player.skip.nextEpisode": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Следующая серия"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next episode"
+          }
+        }
+      }
+    },
     "player.skip.opening": {
       "extractionState": "manual",
       "localizations": {

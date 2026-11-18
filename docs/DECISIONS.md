@@ -607,3 +607,42 @@ staying what it is: a player of the streams the API hands it, nothing re-publish
 связанными» — every mention of AniLibria that refers to *this service* has to say AniLiberty. The rename
 was applied to `AGENTS.md`, `README.md`, this log and `docs/THIRD_PARTY_ASSETS.md`; web addresses and the
 `anilibria/anilibria-app` repository keep their names, because a URL is not a brand statement.
+
+---
+
+## 0026 — The skip hint lives inside the player, and the ending rule lives in the kit (2026-11-17)
+
+The owner could not press the skip control at all, saw it overlap the transport bar, and wanted a way to wave
+the hint away. Four things were wrong, and each fix is a general lesson rather than a patch.
+
+**A SwiftUI overlay above `AVPlayerViewController` is not focusable.** The button sat in a `ZStack` over the
+player representable and never joined the focus engine, so the remote could not reach it — the worst kind of
+bug, because it looks like a rendering issue and is actually a dead control. Custom controls over video on
+tvOS belong in `AVPlayerViewController.contentOverlayView`; the hint is now a plain `UIView` with a
+`UIStackView` of two `UIButton`s rather than a `UIHostingController`, because a hosted SwiftUI view inside the
+overlay gave focus to the first button only.
+
+**`preferredFocusEnvironments` on the overlay pinned focus to the first button.** Returning `[skipButton]`
+from the container was consulted on every focus update, so Left/Right moved to «Смотреть» and were pulled
+straight back. Removing the override — and granting initial focus once from the controller — made the second
+control reachable. The general rule: `preferredFocusEnvironments` is an *initial* target, not a leash.
+
+**"The transport bar is open" has no public signal.** The overlay's view tree exposes only private
+`AVNowPlaying*` views whose alpha and bounds do not distinguish the open state, and AVKit has no delegate
+callback for it. The honest substitute is focus: the hint asks for focus once when it appears, the transport
+bar can then open, focus leaves the overlay and `didUpdateFocus` hides the hint; it comes back when focus
+returns and the playhead is still inside the segment. Measured and asserted in
+`testHintHidesWhileTheViewerIsInThePlayerControls`. The z-order fix (the hint sits below the system UI inside
+the content overlay) means it can no longer overlap the bar even in the moment before focus moves.
+
+**The ending offer depends on what follows the credits, and that rule belongs in the kit.** Some episodes
+carry 26, 43 or 120 seconds of content after the `ending` range — an insert or the next-episode preview —
+and skipping straight to the next episode would throw it away. `EndingOfferResolver` (five unit tests) decides:
+a tail of 15 seconds or less means «Следующая серия», anything longer means «Пропустить эндинг» and a seek to
+the end of the range. The threshold sits between the two clusters measured across six releases (0–12 s and
+25 s+). The player only *asks* for the next episode; switching stays in the detail screen, which owns the
+picker.
+
+**Still not proven by a test:** that «Следующая серия» actually starts the next episode — the UI test needs a
+release whose current episode has a short ending, and the feed's first release does not always have one
+(`XCTSkip` with that reason). The label and the decision are covered by the unit tests.

@@ -76,6 +76,10 @@ not been released yet, so everything below is still subject to change.
   pause, «Профиль» re-reads the profile and favourites on every entry and every three minutes, and the
   detail screen re-reads the favourite state when it appears — a title added on the website shows up
   without restarting the app. A screen that is hidden or backgrounded runs no timer at all.
+- Player skip hint rebuilt: it lives in the player's content overlay (so the remote can finally reach it),
+  says «Пропустить опенинг» / «Пропустить эндинг», gains a «Смотреть» control that waves it away, hides
+  itself while the player controls are open, and offers «Следующая серия» only when the credits really run
+  into the end of the file — a tail with an insert or a preview is skipped, not jumped over.
 - Per-episode progress: the store keeps one record per episode of a release (migrating the old
   single-record payload on read), episode cards show a thin progress bar and mark the episode «Продолжить»
   would open.

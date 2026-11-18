@@ -115,8 +115,54 @@ final class ReleaseDetailViewModel {
             episodeTitle: episode.displayTitle,
             episode: episode,
             source: source,
-            startAt: startAt
+            startAt: startAt,
+            nextEpisode: nextPlayableEpisode(after: episode)
         )
+    }
+
+    /// Episode that follows `episode` in the release and can be played, if any.
+    private func nextPlayableEpisode(after episode: Episode) -> Episode? {
+        guard let episodes = release?.episodes,
+              let index = episodes.firstIndex(where: { $0.id == episode.id })
+        else {
+            return nil
+        }
+        return episodes[(index + 1)...].first { StreamResolver.preferredSource(for: $0) != nil }
+    }
+
+    /// Episode the picker should start on: the one «Продолжить» would resume, otherwise the first playable.
+    ///
+    /// A UI test can ask for an episode that actually has an opening (see `PlayerTestOverrides`), because
+    /// whether episode 1 has one is a property of the release, not of the player.
+    var pickerInitialEpisodeID: UUID? {
+        let shortEnding = PlayerTestOverrides.picksEpisodeWithShortEnding()
+            ? episodes.first(where: { isShortEnding($0) })
+            : nil
+        if let shortEnding {
+            return shortEnding.id
+        }
+        let openingEpisode = PlayerTestOverrides.picksEpisodeWithOpening()
+            ? episodes.first(where: {
+                StreamResolver.preferredSource(for: $0) != nil
+                    && TimecodeResolver.timecodes(for: $0).contains { $0.kind == .opening }
+            })
+            : nil
+        if let openingEpisode {
+            return openingEpisode.id
+        }
+        return resumeProgress?.episodeID ?? playableEpisode?.id
+    }
+
+    /// Whether this episode's ending runs into the end of the file and another episode follows.
+    private func isShortEnding(_ episode: Episode) -> Bool {
+        guard StreamResolver.preferredSource(for: episode) != nil,
+              let duration = episode.duration,
+              let ending = TimecodeResolver.timecodes(for: episode).first(where: { $0.kind == .ending })
+        else {
+            return false
+        }
+        return duration - ending.end <= PlayerModel.endingTailThreshold
+            && nextPlayableEpisode(after: episode) != nil
     }
 
     /// The remembered episode played from the remembered position, or `nil` when there is nothing

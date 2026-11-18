@@ -37,11 +37,77 @@ final class PlayerModel {
     /// the next opening or ending of the same episode shows the hint again.
     private(set) var dismissedSkipKey: String?
 
-    /// Whether the system playback controls are (believed to be) on screen.
+    /// Whether the hint is currently suppressed because the viewer is using the player's own controls.
     ///
     /// There is no public "transport bar is open" callback; see ``setPlaybackControlsOpen(_:)`` for what
     /// drives this.
     private(set) var isPlaybackControlsOpen = false
+
+    /// Restores the hint a few seconds after the viewer poked the player UI.
+    @ObservationIgnored private var hintRestoreTask: Task<Void, Never>?
+
+    /// How long the hint stays hidden after the viewer interacts with the player.
+    ///
+    /// The transport bar has no public visibility callback, and focus alone does not tell when it closes, so
+    /// the hint comes back by itself a few seconds after the last press. Short enough to be useful while the
+    /// opening is still on screen, long enough not to sit under the bar the viewer just opened.
+    static let hintSuppression: Duration = .seconds(4)
+
+    /// What the hint offers for a segment.
+    ///
+    /// The ending case depends on what is left after the marker: some episodes have post-credit inserts,
+    /// and jumping to the next episode would skip them. The decision lives here, once, so the label and
+    /// the action cannot disagree.
+    enum SkipAction: Equatable {
+        /// Seek past the segment and keep playing what follows.
+        case skip(SkipTimecode)
+        /// The ending runs into the end of the file: play the next episode instead.
+        case nextEpisode
+
+        var skipTimecode: SkipTimecode? {
+            if case let .skip(timecode) = self {
+                return timecode
+            }
+            return nil
+        }
+    }
+
+    /// Tail, in seconds, that counts as "the ending is the end of the file".
+    ///
+    /// Calibrated against `toaru-anbu-no-item`: 9 s and 11 s tails are credits running into the end, while
+    /// 26 s carries an insert worth watching. Fifteen seconds separates those cases with room on both
+    /// sides, and a shorter tail than that is not enough content to be worth keeping the viewer in.
+    static let endingTailThreshold = EndingOfferResolver.tailThreshold
+
+    /// What the hint should offer right now, or `nil` when it has to stay out of the way.
+    var visibleSkipAction: SkipAction? {
+        guard let skip = visibleSkip else { return nil }
+        return action(for: skip)
+    }
+
+    /// Resolves what a segment means for this episode.
+    ///
+    /// - Parameter skip: Segment the playhead is inside.
+    /// - Returns: Skip for openings and for endings with a real tail, next episode when the ending runs
+    ///   into the end of the file and the release has another playable episode.
+    func action(for skip: SkipTimecode) -> SkipAction {
+        guard skip.kind == .ending, let nextEpisode = request.nextEpisode else {
+            return .skip(skip)
+        }
+        let offer = EndingOfferResolver.offer(
+            ending: skip,
+            duration: request.episode.duration,
+            hasNextEpisode: true
+        )
+        guard offer == .nextEpisode else {
+            return .skip(skip)
+        }
+        let tail = (request.episode.duration ?? 0) - skip.end
+        Self.logger.info(
+            "Ending leaves \(tail, privacy: .public)s, offering the next episode (\(nextEpisode.ordinal, privacy: .public))"
+        )
+        return .nextEpisode
+    }
 
     /// The hint to show right now, or `nil` when it has to stay out of the way.
     var visibleSkip: SkipTimecode? {
@@ -199,7 +265,7 @@ final class PlayerModel {
     /// Skipping an ending therefore lands on the last second of the episode: choosing what plays next is
     /// the detail screen's job, not the player's.
     func skipActiveSegment() {
-        guard let activeSkip else { return }
+        guard let activeSkip, case .skip = action(for: activeSkip) else { return }
         player.seek(
             to: CMTime(seconds: activeSkip.end, preferredTimescale: 600),
             toleranceBefore: .zero,
@@ -217,17 +283,42 @@ final class PlayerModel {
         Self.logger.info("Skip hint dismissed for \(String(describing: activeSkip.kind), privacy: .public)")
     }
 
-    /// Records whether the system playback controls are on screen.
+    /// Hides the hint after a press the hint did not handle (rule "interaction hides the hint").
     ///
-    /// AVKit exposes no callback for the transport bar, so the app derives it from the presses the player
-    /// itself consumes: Select toggles that bar, and a press that reaches the player is by definition one
-    /// our overlay did not swallow. The hint is hidden while the flag is set.
+    /// Called for every press the player itself consumed, which is exactly when the transport bar is being
+    /// used. The hint returns on its own after ``hintSuppression``.
+    func playerInteraction() {
+        setPlaybackControlsOpen(true)
+    }
+
+    /// Records whether the viewer has moved into the system playback controls.
     ///
-    /// - Parameter open: `true` when the bar is believed to be visible.
+    /// AVKit exposes no "transport bar is open" callback. The only honest signal the app can read is the
+    /// focus engine: the hint lives in the player's own overlay, so while focus is inside the system
+    /// controls the viewer is interacting with them and the hint has to be out of the way. It comes back as
+    /// soon as focus returns to it. The hint also sits *below* the system UI in the view hierarchy now, so
+    /// even a bar that opens without moving focus can no longer be drawn over.
+    ///
+    /// - Parameter open: `true` while focus is outside the skip overlay.
     func setPlaybackControlsOpen(_ open: Bool) {
-        guard isPlaybackControlsOpen != open else { return }
-        isPlaybackControlsOpen = open
-        Self.logger.info("Playback controls \(open ? "opened" : "closed", privacy: .public)")
+        guard open else {
+            hintRestoreTask?.cancel()
+            hintRestoreTask = nil
+            guard isPlaybackControlsOpen else { return }
+            isPlaybackControlsOpen = false
+            Self.logger.info("Hint restored after player interaction")
+            return
+        }
+        // Re-arming on every focus callback would keep postponing the restore for ever, so the timer is
+        // started once per suppression.
+        guard !isPlaybackControlsOpen else { return }
+        isPlaybackControlsOpen = true
+        Self.logger.info("Hint suppressed: viewer is in the player controls")
+        hintRestoreTask = Task { [weak self] in
+            try? await Task.sleep(for: Self.hintSuppression)
+            guard !Task.isCancelled else { return }
+            self?.setPlaybackControlsOpen(false)
+        }
     }
 
     private func addPlayheadObserver() {
