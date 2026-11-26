@@ -20,7 +20,7 @@
 | Repository | public, <https://github.com/VetalPros/AniTV>, MIT (published 2026-11-17) |
 | DSH workspace | `c714b289-7397-4251-b27c-4ce3ce773cf6` (`~/Documents/anitv`) |
 | Physical Apple TV | **paired and in use** since 2026-11-26: Apple TV 4K `AppleTV18,1` (devicectl's marketing name: *4th generation*; session-5 notes said 3rd), name «Гостиная», tvOS 27.2.1 (24K157), UDID `00008150-000C62CA0101401C` |
-| Navigation | **System sidebar shipped in P1** (2026-11-27, ADR 0028): `RootShellView` with `.sidebarAdaptable`, header, four rows; the old top tab bar is gone. Content adaptation, test repair and «Медиатека» still pending |
+| Navigation | **System sidebar shipped in P1–P2** (2026-11-27, ADR 0028 + 0029): `RootShellView` with `.sidebarAdaptable`, header, four rows; the old top tab bar is gone; all sections share the `72 / 56` frame and clear the collapsed pill. Test repair (P4) and «Медиатека» (P5) still pending |
 
 ## Environment facts (verified on this machine)
 
@@ -276,14 +276,19 @@ the simulator — so both reported defects are closed against a real account, no
       the collapsed pill), device build signed and installed, and the shell captured on the owner's Apple
       TV. Not verified: Back semantics and per-section path preservation; the six older UI-test files
       still walk focus into the tab bar that no longer exists (P4).
+- [x] Navigation shell, phase P2 (2026-11-27): `DesignTokens.screenTopInset` (56) became the single top
+      inset, `ScreenHeader` uses it, and «Настройки» lost its private header plus the hardcoded 80/60
+      paddings, so all four sections share one frame. Verified with `NavigationSectionsUITests` — it opens
+      each section through the new test-only `-uiTestingSection` argument, captures it with the panel
+      expanded and collapsed, and shows no title or control under the pill, backgrounds full-bleed.
 
 ## Next steps (ordered)
 
-1. Continue the navigation redesign from P2 (`docs/NAVIGATION.md`): content adaptation — `ScreenHeader`'s
-   `.top` padding of 56 puts «Новинки» behind the expanded panel, `DesignTokens.screenInset` of 72 is the
-   other number to retune — then P4, which repairs the six UI-test files that still walk focus into the
-   gone tab bar (`LatestFeedUITests`, `CatalogUITests`, `AutoRefreshUITests`, `PlayerSkipUITests`,
-   `DetailResumeUITests`, `DetailEpisodePickerUITests`). A browsable «Каталог» row returns in P2, once
+1. Continue the navigation redesign at P4 (`docs/NAVIGATION.md`): the six UI-test files still walk focus
+   into the gone tab bar (`LatestFeedUITests`, `CatalogUITests`, `AutoRefreshUITests`,
+   `PlayerSkipUITests`, `DetailResumeUITests`, `DetailEpisodePickerUITests`) and now fail; their helpers
+   belong in `UITestSupport.swift`, driven by the shell's rows instead of the tab bar. Then the rest of
+   P3: Back semantics and per-section path/scroll preservation. A browsable «Каталог» row returns once
    `CatalogView` splits into search and browse.
 2. Re-sign on the Apple TV before the 7-day profile expires and record what happens when it does
    (in-app error? launch refused?). The TV now occupies one of the three free-account device slots;

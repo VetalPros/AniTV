@@ -30,7 +30,7 @@ struct ScreenHeader<Trailing: View>: View {
             trailing
         }
         .padding(.horizontal, DesignTokens.screenInset)
-        .padding(.top, 56)
+        .padding(.top, DesignTokens.screenTopInset)
         .padding(.bottom, 30)
     }
 }

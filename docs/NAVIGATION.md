@@ -187,7 +187,7 @@ Every phase is one commit, green before the next. Two agents never own the same 
 | Phase | What | Write scope | Verification |
 | --- | --- | --- | --- |
 | P1 ✅ | Shell: sections enum, `RootShellView`, search role, sidebar header, localisation keys; `RootTabView` deleted; minimum target raised to 27.0 (ADR 0029) | `App/Sources/App/`, `App/Resources/Localizable.xcstrings`, `project.yml` | **done 2026-11-27**: simulator build green, app launches, panel and pill captured, focus proven by `NavigationShellUITests` |
-| P2 | Content adaptation: `ScreenHeader` top spacing, full-bleed check per section, stale top-bar assumptions | `App/Sources/Design/`, the three feature screens | screenshots at 1920×1080 |
+| P2 ✅ | Content adaptation: one token for the top inset (`DesignTokens.screenTopInset`), `ScreenHeader` uses it, «Настройки» dropped its private header and its hardcoded 80/60 paddings | `App/Sources/Design/`, `App/Sources/Features/Settings/` | **done 2026-11-27**: every section captured in both states by `NavigationSectionsUITests` |
 | P3 ✅ | Navigation UI test: focus leaves the panel, Left brings it back | `App/UITests/NavigationShellUITests.swift` | **done 2026-11-27**: `xcodebuild test … -only-testing:AniTVUITests/NavigationShellUITests` passed, both states captured |
 | P4 | Existing UI tests repaired for the new shell (six files walk focus into the old tab bar) | `App/UITests/` | full UI suite |
 | P5 | «Медиатека» screen, once favourites and continue-watching exist | `App/Sources/Features/Library/` | separate ADR |
@@ -198,10 +198,19 @@ and the focus round trip were all exercised on the tvOS 27.2 simulator by
 `hasFocus`; its two attachments are the only images of the collapsed state we have. Still open: Back
 semantics and per-section path preservation (P3's remainder), and the existing six test files (P4).
 
-`ScreenHeader`'s `.top` padding of 56 and `DesignTokens.screenInset` of 72 are the two numbers most
-likely to fight the reference; both live in files the Lead owns, so P2 is a single owner. The P1 capture
-already shows the symptom P2 must fix: with the panel expanded, the section title «Новинки» sits behind
-it, while the reference has full-bleed artwork there.
+What P2 verified: `NavigationSectionsUITests` opens each section through the test-only
+`-uiTestingSection` launch argument (`RootShellView.initialSection`), captures it twice — once with the
+panel expanded on entry, once after a directional press collapses it — and asserts the screen is on
+display. Result: in the collapsed state no section title or control lands under the pill, every screen's
+background is full-bleed, and all four sections start at the same `72 / 56` insets. The expanded state
+still covers the left third of the content, exactly as the reference does when its panel is open — the
+difference is that Apple's content there is artwork and ours is text, so the earlier screenshots looked
+worse than they are.
+
+`DesignTokens.screenTopInset` (56) and `DesignTokens.screenInset` (72) are now the only two numbers any
+section uses for its frame, and the collapsed pill was measured against them: it ends at y ≈ 104 in the
+collapsed state, well above the title. The remaining visual gap to the reference is not spacing — it is
+that the reference puts artwork where we put a section title, which is P5's hero question, not P2's.
 
 ## 10. Open questions for the owner (answered 2026-11-27)
 

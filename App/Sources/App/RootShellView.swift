@@ -14,7 +14,25 @@ struct RootShellView: View {
         case settings
     }
 
-    @State private var selection: Section = .home
+    @State private var selection: Section = RootShellView.initialSection
+
+    /// Section to open on launch. Production always starts on «Главная»; a UI test may ask for another
+    /// one with `-uiTestingSection <search|home|profile|settings>` so it can capture every screen without
+    /// walking the focus engine into the panel.
+    private static var initialSection: Section {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let flag = arguments.firstIndex(of: "-uiTestingSection"),
+              arguments.index(after: flag) < arguments.endIndex
+        else {
+            return .home
+        }
+        switch arguments[arguments.index(after: flag)] {
+        case "search": return .search
+        case "profile": return .profile
+        case "settings": return .settings
+        default: return .home
+        }
+    }
 
     var body: some View {
         TabView(selection: $selection) {

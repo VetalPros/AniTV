@@ -21,6 +21,15 @@ enum UITestLaunchArguments {
     /// Restores both playback switches to their shipped defaults at launch.
     static let resetSettings = "-uiTestingResetSettings"
 
+    /// Opens a specific sidebar section at launch (`RootShellView.initialSection`), so a test can reach
+    /// every screen without steering focus through the panel.
+    static let section = "-uiTestingSection"
+
+    /// Launch arguments that open `section` on «Главная» / «Поиск» / «Профиль» / «Настройки».
+    static func opening(section name: String) -> [String] {
+        [section, name]
+    }
+
     /// Launch argument that sets the skip hint's lifetime (`PlayerTestOverrides.hintLifetime`).
     static let hintLifetimeKey = "-uiTestingHintLifetime"
 

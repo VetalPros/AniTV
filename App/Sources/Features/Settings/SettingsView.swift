@@ -17,8 +17,10 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: 36) {
-                header
+            VStack(alignment: .leading, spacing: 28) {
+                // The shared header, so «Настройки» starts exactly where every other section does — the
+                // shell has no top bar of its own to compensate for (ADR 0028).
+                ScreenHeader(title: "screen.settings.title", subtitle: "screen.settings.subtitle")
 
                 VStack(alignment: .leading, spacing: 28) {
                     Toggle("settings.openings", isOn: $settings.skipsOpenings)
@@ -26,16 +28,16 @@ struct SettingsView: View {
                     Toggle("settings.endings", isOn: $settings.skipsEndings)
                         .accessibilityIdentifier("settings.endings")
                 }
+                .padding(.horizontal, DesignTokens.screenInset)
 
                 Text("settings.hint.caption")
                     .font(DesignTokens.Typography.callout)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: 900, alignment: .leading)
+                    .padding(.horizontal, DesignTokens.screenInset)
 
                 Spacer(minLength: 0)
             }
-            .padding(.horizontal, 80)
-            .padding(.top, 60)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .accessibilityElement(children: .contain)
@@ -44,16 +46,6 @@ struct SettingsView: View {
         .onChange(of: settings) { _, value in
             guard isLoaded else { return }
             Task { await store.save(value) }
-        }
-    }
-
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("screen.settings.title")
-                .font(DesignTokens.Typography.screenTitle)
-            Text("screen.settings.subtitle")
-                .font(DesignTokens.Typography.body)
-                .foregroundStyle(.secondary)
         }
     }
 

@@ -9,6 +9,9 @@ enum DesignTokens {
 
     /// Horizontal breathing room between screen content and the display edges.
     static let screenInset: CGFloat = 72
+    /// Space between the top of a section and its title. Clears the collapsed sidebar pill, which sits in
+    /// the top-left corner (ADR 0028) — every section title starts below it.
+    static let screenTopInset: CGFloat = 56
     /// Vertical rhythm between major blocks on a screen.
     static let sectionSpacing: CGFloat = 40
     /// Poster columns for the latest-releases grid (six posters fit a 1080p canvas comfortably).
