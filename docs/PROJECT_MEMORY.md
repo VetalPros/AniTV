@@ -2,9 +2,10 @@
 
 > Update this file at the end of every session that changes the project's state.
 > Rules and constraints live in `AGENTS.md`; decisions live in `docs/DECISIONS.md`.
-> Last updated: **2026-11-26** (session 5: first build, install and launch on a physical Apple TV with a
-> free Apple ID; device signing through a gitignored xcconfig — ADR 0027, procedure in
-> `docs/INSTALL_DEVICE.md`).
+> Last updated: **2026-11-27** (session 6: navigation redesign specified — `docs/NAVIGATION.md` and ADR 0028
+> — after live captures of the system TV app and a sidebar spike on the owner's Apple TV. Previous,
+> session 5: first build, install and launch on a physical Apple TV with a free Apple ID, ADR 0027,
+> procedure in `docs/INSTALL_DEVICE.md`).
 
 ## Snapshot
 
@@ -18,7 +19,8 @@
 | Product name | Provisional `anitv` — final name and bundle ID decided later |
 | Repository | public, <https://github.com/VetalPros/AniTV>, MIT (published 2026-11-17) |
 | DSH workspace | `c714b289-7397-4251-b27c-4ce3ce773cf6` (`~/Documents/anitv`) |
-| Physical Apple TV | **paired and in use** since 2026-11-26: Apple TV 4K (3rd gen), tvOS 27.2.1 |
+| Physical Apple TV | **paired and in use** since 2026-11-26: Apple TV 4K `AppleTV18,1` (devicectl's marketing name: *4th generation*; session-5 notes said 3rd), name «Гостиная», tvOS 27.2.1 (24K157), UDID `00008150-000C62CA0101401C` |
+| Navigation | **Redesigned on paper only** (2026-11-27): `docs/NAVIGATION.md` + ADR 0028 — system sidebar (`.sidebarAdaptable`), not a hand-built shell; the top tab bar is still what ships |
 
 ## Environment facts (verified on this machine)
 
@@ -48,10 +50,34 @@
   runtime is not available. runtime path not found". Recovery, verified 2026-11-11:
   `xcrun simctl runtime scan-and-mount` (the `simctl runtime list` entry still says `Ready` with a
   `mountPath` under `/private/var/run/com.apple.security.cryptexd/mnt/`).
-- **The physical Apple TV is reachable from this Mac** (2026-11-26): Apple TV 4K (3rd gen),
-  `AppleTV18,1`, tvOS 27.2.1, Bonjour name `Gostinaa.local`. `xcrun devicectl list devices` shows it
-  as `connected` next to the two simulators; `devicectl device install/process launch/capture
-  screenshot` all work over Wi-Fi.
+- **The physical Apple TV is reachable from this Mac** (2026-11-26): Apple TV 4K (devicectl reports
+  `AppleTV18,1` and the marketing name *4th generation*), tvOS 27.2.1, Bonjour name `Gostinaa.local`.
+  `xcrun devicectl list devices` shows it as `available (paired)` next to the two simulators;
+  `devicectl device install/process launch/capture screenshot` all work over Wi-Fi.
+  - Screen capture command, verified 2026-11-27: `xcrun devicectl device capture screenshot --device
+    <udid|name> --destination <file.png>` — 1920×1080 for the TV app, and **one capture pixel is one
+    tvOS point**, so captures can be measured directly. There is no `--output` flag.
+  - `xcrun devicectl device process launch --device <udid> <bundle-id-or-path>`: user apps by bundle id
+    (`tv.anitv.client`), but the **system TV app only by path** `/Applications/AppleTV.app` — its bundle
+    id does not resolve (`com.apple.TV`, `com.apple.TVAppleTV`, `com.apple.tvapp`, `com.apple.TVShows`
+    all fail with CoreDevice error 10002 / OSStatus -10814). `devicectl device info apps` lists only
+    user-installed apps on tvOS.
+  - **There is no input channel into either the TV or the simulator**: `devicectl` cannot press the
+    remote or inject HID, and there is no `Simulator.app`, so any state that needs a key press must be
+    produced by the owner on the remote or by an XCUITest. Screenshots are observation only.
+- SwiftUI availability on tvOS, read from the AppleTVOS27.2 SDK's `SwiftUI.swiftinterface` (2026-11-27):
+  `.tabViewStyle(.sidebarAdaptable)` **tvOS 18.0+**, `TabSection` tvOS 18.0+, `Tab(role: .search)`
+  tvOS 18+ (renders as the pinned «Поиск» row); `tabViewSidebarHeader`/`tabViewSidebarFooter`
+  **tvOS 27.0+**; `tabViewSidebarBottomBar` unavailable on tvOS.
+- **Building the app needs the session outside the default sandbox.** Under `workspace-write`,
+  `xcodebuild` fails at package resolution: SwiftPM writes its manifest cache to
+  `~/Library/Caches/org.swift.swiftpm/manifests/ManifestLoading` ("Operation not permitted") and the
+  build then reports `Missing package product 'AniLibertyKit'`; `-packageCachePath` and
+  `-clonedSourcePackagesDirPath` do not work around it, and a project that uses Swift macros
+  (`@State`) also fails with "swift-plugin-server produced malformed response". With the session at
+  **danger-full-access** the same command is green (2026-11-27: `BUILD SUCCEEDED`). Note also that
+  `xcodebuild -resolvePackageDependencies` rejects `-derivedDataPath` unless `-scheme` is given.
+
 - Pairing flow in **Xcode 27.2** is *Device Hub* (`/Applications/Xcode.app/Contents/Applications/
   DeviceHub.app`, `com.apple.dt.Devices`): `+` → *Pair Nearby Device…* → choose Apple TV → PIN from
   the TV. The old *Devices and Simulators* window with a "Discovered" list is gone, so waiting for
@@ -232,27 +258,42 @@ the simulator — so both reported defects are closed against a real account, no
       came from the working tree that still holds the uncommitted «Настройки» work, so that screenshot
       shows a fourth tab that `main` does not have yet. Procedure, limits and troubleshooting:
       `docs/INSTALL_DEVICE.md`.
+- [x] Navigation redesign specified, no app code touched (2026-11-27): live captures of the system TV
+      app on the owner's TV in both the expanded and the collapsed state; a throwaway
+      `.tabViewStyle(.sidebarAdaptable)` app built for the tvOS 27.2 simulator (`.build/navspike/`,
+      gitignored, outside the project) that reproduced the reference look; `docs/NAVIGATION.md` with the
+      spec and ADR 0028 with the decision. Outcome: the shell is the **system sidebar**, not a hand-built
+      one, and the avatar/clock header is deferred because it needs tvOS 27.0. Phases P1–P5, write scopes
+      and the focus requirements are in the spec; nothing is verified about the collapsed state yet,
+      because this session had no input channel into the device.
 
 ## Next steps (ordered)
 
-1. Re-sign on the Apple TV before the 7-day profile expires and record what happens when it does
+1. Build the navigation shell (ADR 0028, spec `docs/NAVIGATION.md`): P1 replaces `RootTabView` with a
+   `.sidebarAdaptable` shell, P2 adapts the screens' top spacing, P3 adds the navigation UI test that
+   proves collapse-on-leave and Left-from-content, P4 repairs the six UI-test files that walk focus into
+   the old tab bar. The owner answers the open questions below first — the tvOS 26/27 choice alone changes
+   P1's shape.
+2. Re-sign on the Apple TV before the 7-day profile expires and record what happens when it does
    (in-app error? launch refused?). The TV now occupies one of the three free-account device slots;
    `docs/INSTALL_DEVICE.md` is the procedure to repeat.
-2. Exercise the favourite toggle against a live account: the add/remove calls and the rollback path have
+3. Exercise the favourite toggle against a live account: the add/remove calls and the rollback path have
    never run with a real token (doing it mutates the owner's favourites, so it needs their go-ahead). Same
-   for the `views/history` "continue watching" row, which is not built yet.
-3. Replace the borrowed app icon with an original mark before publishing anywhere — see
+   for the `views/history` "continue watching" row, which is not built yet — and «Медиатека» (P5 of the
+   navigation spec) depends on both.
+4. Replace the borrowed app icon with an original mark before publishing anywhere — see
    `docs/THIRD_PARTY_ASSETS.md`; the current one is AniLiberty's mark, used with their written permission
    (ADR 0025) — so this is no longer a blocker for publishing, only a provenance note.
-4. Capture real profile / favourites fixtures: the Kit's are synthesised from the OpenAPI schema. The Kit's
+5. Capture real profile / favourites fixtures: the Kit's are synthesised from the OpenAPI schema. The Kit's
    favourites ids/add/remove also assume the documented shapes (a `204` without a body would need the
    decode relaxed).
-5. Watch the advisory `ui-tests` CI job on a real GitHub runner; only then consider making it required
+6. Watch the advisory `ui-tests` CI job on a real GitHub runner; only then consider making it required
    (ADR 0013). Also pin `xcode-select` if the `macos-26` image starts shipping a different default Xcode.
-6. Decide the final product name / bundle identifier **before** the repository goes public (renaming the
+7. Decide the final product name / bundle identifier **before** the repository goes public (renaming the
    directory means re-registering the DSH workspace).
-7. Nice-to-haves nobody has asked for yet: a disk tier for the catalogue cache (it is memory-only now) and
-   a "continue watching" row on «Новинки» from `views/history`.
+8. Nice-to-haves nobody has asked for yet: a disk tier for the catalogue cache (it is memory-only now) and
+   a "continue watching" row on «Новинки» from `views/history` — the latter becomes redundant if
+   «Медиатека» lands.
 
 ## Deferred ideas (agreed, deliberately not scheduled)
 
@@ -348,6 +389,15 @@ not a commitment.
   `anitv` and the bundle id will be `top.<domain>.<name>` once the name is chosen. Renaming the
   directory later means re-registering the DSH workspace, so decide before the repository goes public.
 - Whether to enable an Xcode MCP bridge now or after the first successful build.
+- **Navigation (ADR 0028, spec `docs/NAVIGATION.md`), asked 2026-11-27 and still open:**
+  - **Minimum target 26.0 → 27.0?** Only the sidebar's avatar/name/clock header needs tvOS 27.0;
+    everything else works from tvOS 18. Until answered, the shell ships without that header.
+  - **«Медиатека» now or later?** The row needs «Избранное» and «Продолжить просмотр» screens that do not
+    exist; a five-row panel ships today.
+  - **«Поиск»** as a separate screen, or «Каталог» opened with the search field focused (the proposal).
+  - **Hero carousel on «Главная»** — part of this redesign or its own ADR (the reference's most visible
+    element).
+  - **Collapsed pill wording** — the section name («Главная») as in the reference, or a neutral «Меню».
 
 ## Known caveats
 
@@ -368,6 +418,9 @@ not a commitment.
   successfully touches a file in that subtree — they are not preloaded.
 - The app's in-memory workspace registry is authoritative at runtime: hand-editing
   `~/.dsh/storages/workspace.json` while the app runs is unreliable — register via the GUI.
+- `TabView` + `.sidebarAdaptable` on tvOS: the **expanded** look was reproduced in the simulator on
+  2026-11-27, but collapse-on-leave-of-focus and Left-from-content are **`unverified`** — that session had
+  no input channel. ADR 0028's fallback (a hand-built shell) stands until a UI test proves otherwise.
 
 ## Known tooling options (not installed)
 

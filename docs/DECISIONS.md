@@ -735,3 +735,71 @@ away.
 
 The 30-second lifetime is injectable through `-uiTestingHintLifetime`, so a test can watch a hint expire in
 four seconds instead of thirty; production never passes it.
+
+---
+
+## 0028 — Navigation becomes the system sidebar, not a hand-built shell (2026-11-27)
+
+*The log already carries two `0027` entries (a merge artefact of 2026-11-26). This entry takes the next
+free number rather than renumbering history.*
+
+**Context.** The owner asked for a cardinal change of the top-level navigation and pointed at the system
+Apple TV app as the reference. The shipped shell is one floating top bar of four `TabView` tabs.
+
+The reference was measured on the owner's own hardware rather than on a mockup: Apple TV 4K
+(AppleTV18,1), tvOS 27.2.1 (24K157), `xcrun devicectl device capture screenshot`, 1920×1080 captures in
+both the expanded and the collapsed state. It is a floating glass panel — avatar, name, clock, a search
+row, icon rows with a white pill on the focused one — that **overlays** a full-bleed hero, and collapses
+to a single pill carrying the current section. Width ≈ 340 pt, leading and top insets ≈ 40, radius ≈ 36.
+The captures stay out of the repository: they are Apple's UI and this repository is public. The numbers
+and the described behaviour are what the redesign is held to. `docs/NAVIGATION.md` holds the full spec.
+
+**Decision.** Build the shell on the system style, not by hand:
+
+- `TabView` + `.tabViewStyle(.sidebarAdaptable)`; sections are `Tab`s, search is
+  `Tab(role: .search)` and the system pins it above the rest, exactly as the reference does.
+- One `NavigationStack(path:)` per section, as today. The shell owns the selection and the section list
+  and nothing else — no networking, no view models.
+- No hand-written width animation, no custom collapse logic: the system's state machine, and therefore
+  Reduce Motion, come for free.
+- Section order: search, «Главная», «Каталог», «Профиль», «Настройки». «Медиатека» joins when the
+  favourites / continue-watching screens exist; the row is not shipped dead.
+
+**Evidence, gathered before the decision.** `TabViewStyle.sidebarAdaptable` is `@available(… tvOS 18.0)`
+in the AppleTVOS27.2 SDK's `SwiftUI.swiftinterface`; `TabSection` and `Tab(role: .search)` likewise. A
+throwaway app (`.build/navspike/`, gitignored, never part of the project) with six tabs was built for the
+tvOS 27.2 simulator, installed and captured: the style renders the reference for free — floating rounded
+panel, white pill, «Поиск» as its own magnifier row, content dimmed and full-bleed behind it. Its panel
+is narrower than the TV app's (≈ 235 vs ≈ 340) and it has no header block, which is the one visible gap.
+
+**The header is deferred, and that is deliberate.** `tabViewSidebarHeader`/`Footer` are
+`@available(… tvOS 27.0)`, while the project's baseline is 26.0 (ADR 0009) and AGENTS.md forbids
+`#available` fallbacks. So the first shell ships **without** the avatar/clock block: a working sidebar
+now, and one decision (`bump the minimum to 27.0?`) instead of one guarded branch. The owner's own box
+already runs 27.2.1.
+
+**Consequences.**
+
+- `RootTabView` is deleted; the shell is a new view under `App/Sources/App/`.
+- Six UI-test files walk focus into the old tab bar by accessibility identifier (`sparkles.tv`,
+  `square.grid.2x2`, `person.crop.circle`, `gearshape`, in `LatestFeedUITests`, `CatalogUITests`,
+  `AutoRefreshUITests`, `PlayerSkipUITests`, `DetailResumeUITests`, `DetailEpisodePickerUITests`) — all
+  of them are rewritten against the new shell, with the helpers centralised in `UITestSupport.swift`.
+- `ScreenHeader`'s `.top` padding of 56 assumed a top bar above it; under a sidebar the title sits in the
+  content's own top-left corner, as in the reference.
+- New localisation keys `nav.*`; existing `tab.*` wording is reused for row titles.
+
+**Fallback clause.** "The panel collapses when focus leaves it, and Left from content returns to it" is
+**unverified**: this session had no input channel into the simulator. The first navigation UI test must
+prove it. If it does not hold, this ADR is superseded by a hand-built shell — not patched around it.
+
+**Alternatives rejected.**
+
+- *Hand-built sidebar* (`HStack` + `@FocusState` + `GlassEffectContainer`): we would reimplement the
+  panel, its collapse state machine, its scroll behaviour and its accessibility, in the exact area where
+  this project has already lost days (ADR 0020's focus chain, the ADR 0026→0027 retreat from a second
+  player button). The system style is maintained by Apple and costs a `tabViewStyle` modifier.
+- *Keeping the current top bar and only retheming it*: the owner rejected that look; it is a retheme, not
+  the asked-for change.
+- *Adopting the header now by bumping to tvOS 27*: an irreversible narrowing of the supported audience on
+  the strength of one cosmetic row. Left as an open question for the owner.

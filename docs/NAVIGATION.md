@@ -1,0 +1,220 @@
+# Navigation shell — design note (for ADR 0028)
+
+Status: **proposal**, waiting on the owner's answers in §10. No code has been written against this
+document yet; the only artefact is the throwaway spike described in §2.3.
+
+Scope: the top-level navigation of the tvOS app — how the viewer moves between «Главная», «Каталог»,
+«Медиатека», «Профиль» and «Настройки». Player internals, the detail screen's own focus map and the
+catalogue's filter behaviour are out of scope and stay as they are (ADR 0014, 0016, 0020, 0027).
+
+---
+
+## 1. Why this exists
+
+The shipped shell is a system `TabView` with four tabs rendered as one floating top bar
+(`App/Sources/App/RootTabView.swift`, ADR 0027-era layout). The owner asked for a *cardinal* change of
+navigation and pointed at the system Apple TV app as the reference: a floating sidebar instead of a top
+bar, content full-bleed beneath it.
+
+Measured on the owner's own hardware, not on a mockup — see §2.
+
+## 2. Evidence
+
+### 2.1 The reference: the system TV app on the owner's Apple TV
+
+Device: **Apple TV 4K (4th generation, AppleTV18,1)**, UDID `00008150-000C62CA0101401C`, name
+«Гостиная», tvOS **27.2.1 (24K157)**, paired over the local network, Developer Mode enabled.
+Captures were taken on 2026-11-27 with
+
+```
+xcrun devicectl device capture screenshot --device 00008150-000C62CA0101401C --destination <file>
+```
+
+at 1920×1080, i.e. one capture pixel is one tvOS point.
+
+Observed, expanded state:
+
+- A floating panel of dark glass, inset from the leading, top and bottom edges, with large corner radii.
+  It **overlays** the hero; the content behind it is dimmed rather than reflowed.
+- Header block inside the panel: round profile avatar, the account name, a clock.
+- Then a search row (magnifier, no background), then the sections with icons — «Главная» (house),
+  «Apple TV», «MLS», «Магазин» (bag), «Медиатека».
+- The focused/selected row is a **white pill with black text**; the rest is grey text on transparency.
+- The panel scrolls independently when it holds more rows than fit.
+
+Observed, collapsed state (owner pressed Back on the remote):
+
+- No tab bar and no rail. A single compact pill top-left — «‹ Главная» — carries the current section and
+  is the way back into the panel.
+- The hero occupies the whole frame: backdrop, «Новое» badge, title logo, metadata line with an age
+  badge, a two-to-three line synopsis, then the action row — a white pill «▶ Воспроизвести», two round
+  buttons («+», «ⓘ»), a «›» chevron — page dots, and a «Продолжить просмотр» rail of posters below.
+
+Approximate geometry read off the capture (±5 pt): panel leading inset 40, top inset 40, width ≈ 340,
+corner radius ≈ 36, row height ≈ 64.
+
+The captures themselves are **not committed**: they show Apple's own UI and this repository is public.
+The numbers above are the durable part.
+
+### 2.2 The shipped shell, for comparison
+
+Same device, our app (`tv.anitv.client` 0.1.0) launched with `devicectl device process launch`:
+a centred floating top bar, ~915 pt wide, four items, white pill on the focused item, then a large
+`ScreenHeader` («Новинки» + subtitle) and a six-column poster grid.
+
+### 2.3 The spike: does the system sidebar exist on tvOS, and does it look like that?
+
+This decides whether we hand-build a shell or configure the system one, so it was checked before
+writing the ADR rather than after.
+
+- `TabViewStyle.sidebarAdaptable` — **available from tvOS 18.0** (`SwiftUI.swiftinterface` of the
+  AppleTVOS27.2 SDK).
+- `tabViewSidebarHeader` / `tabViewSidebarFooter` — **tvOS 27.0+**, `tabViewSidebarBottomBar` —
+  unavailable on tvOS. Our minimum is 26.0, so the avatar/clock header is the one part we cannot take
+  unconditionally.
+- `Tab(_:systemImage:role:.search)` and `TabSection` — tvOS 18.0+.
+
+A throwaway app (`.build/navspike/`, gitignored, **not** part of the project) with six `Tab`s —
+search first with `role: .search`, then Главная, Каталог, Медиатека, Профиль, Настройки — and
+`.tabViewStyle(.sidebarAdaptable)` was built for the tvOS 27.2 simulator, installed and captured with
+`xcrun simctl io <udid> screenshot`.
+
+Result: the system style renders the reference essentially for free — floating rounded glass panel,
+white pill on the focused row, «Поиск» as its own top row with the magnifier, content dimmed and
+full-bleed behind the panel. Measured there: leading inset 40, top inset ≈ 28, width ≈ 235, corner
+radius ≈ 34. The system panel is therefore **narrower** than the TV app's (~235 vs ~340) and has no
+header block on tvOS 26.
+
+What the spike could **not** show: the collapsed state and the focus transitions. The spike has no
+selection binding (it avoids `@State`), so it demonstrates the chrome, not the state machine. The
+simulator has no input channel in this session (no `Simulator.app`, no pointer, no HID injection through
+`simctl`), so "focus leaves the panel → it collapses to the current-section pill" remains **unverified**
+and is the first thing P1's UI test must prove.
+
+## 3. Decision in one paragraph
+
+Use the **system** sidebar — `TabView` + `.tabViewStyle(.sidebarAdaptable)` + `Tab(role: .search)` —
+instead of hand-building a focus-driven panel. It produces the reference behaviour, it is maintained by
+Apple, and it deletes the hand-written focus plumbing that a custom shell would need (an area where this
+project already has scars: ADR 0020, ADR 0026→0027). What we keep: one `NavigationStack` per section, so
+every section keeps its own back path; what changes: `RootTabView` becomes a shell that owns sections,
+not a tab bar.
+
+Full rationale and the rejected alternatives: ADR 0028 in `docs/DECISIONS.md`.
+
+## 4. Information architecture
+
+| Section | Value | Icon | Content today | Notes |
+| --- | --- | --- | --- | --- |
+| Поиск | `search` (role `.search`) | `magnifyingglass` | каталог with the search field focused | The system pins it above the sections, as in the TV app. Reuses `CatalogView`; a separate search screen would duplicate the view model. |
+| Главная | `home` | `house` | `LatestReleasesView` | Later: hero carousel + rails (separate decision) |
+| Каталог | `catalog` | `square.grid.2x2` | `CatalogView` | ADR 0020 behaviour unchanged |
+| Медиатека | `library` | `rectangle.stack` | **does not exist yet** | Needs «Избранное» + «Продолжить просмотр»; blocked on memory Next steps 2 and 7 |
+| Профиль | `profile` | `person.crop.circle` | `ProfileView` | Pairing code when signed out |
+| Настройки | `settings` | `gearshape` | `SettingsView` | Playback switches |
+
+Order matters: search first, content second, account last — the reference's order and the one the
+system style expects.
+
+Until «Медиатека» has a screen, the shell ships **without** that row rather than with a dead one. That is
+a one-line change either way.
+
+## 5. States, geometry, motion
+
+The system owns the two states; we own what is inside them.
+
+- **Expanded** — panel overlaid on the section content, content dimmed. Present only while focus is in
+  the panel.
+- **Collapsed** — a small pill with the current section's icon and name; content full-bleed.
+
+Constraints we control:
+
+- Content must not assume a top bar. `ScreenHeader` currently pads `.top` by 56 on top of the
+  `TabView`'s safe area; under the sidebar the section title sits in the content's own top-left corner,
+  as the reference does.
+- Content must stay full-bleed (`.ignoresSafeArea()` on backgrounds, hero artwork under any overlay) or
+  the reference look collapses to a boxed layout.
+- Nothing may be placed in the panel's leading 40 pt except through the panel itself.
+- Motion is the system's; we must not add our own width animation. `Reduce Motion` therefore comes for
+  free.
+
+## 6. Focus and the remote
+
+The focus engine is the product here; everything below is a requirement, not a nicety.
+
+1. **Entry.** Launch lands on the section's own default focus, not in the panel: `prefersDefaultFocus`
+   per screen stays as it is today (ADR 0012 — the detail screen claims focus itself).
+2. **Collapse on leaving.** Moving right into content collapses the panel. Must be proven by UI test.
+3. **Return.** From the leftmost focusable column of a section, Left must reach the panel — including
+   from inside a horizontal rail and from a `ScrollView`. History: ADR 0020 had to move controls out of
+   the grid's scroll view to make this work.
+4. **Back path.** Back inside a section pops its `NavigationStack`; a second Back at the section root
+   must collapse the panel (or leave it collapsed), never silently change section; at the outermost level
+   Back is the system's (Home).
+5. **Player.** The player is a `fullScreenCover` and must not show the panel at all.
+6. **The pill is focusable** and shows the current section — it is the only visible navigation affordance
+   in the collapsed state, so it needs an accessibility label, not just an icon.
+
+## 7. Routing
+
+One `NavigationStack(path:)` per section, as today: `ReleaseRoute` values merge where a section owns its
+own path (`LatestReleasesView`, `CatalogView`, `ProfileView` already do this). Switching sections must
+**preserve** each section's path and its scroll position; coming back to «Каталог» must not reset a
+filter (ADR 0020 keeps filter state in the view model; the shell must not recreate section views on
+every switch).
+
+The shell owns: the selection, the section list, and nothing else. No networking, no view models.
+
+## 8. Accessibility and localisation
+
+- Panel rows carry `accessibilityLabel` = section name; the current section is exposed as selected.
+- The collapsed pill announces "current section: <name>".
+- VoiceOver order: panel rows in display order, then content; the panel is one accessibility container.
+- Focus order inside a section is unchanged from today's per-screen contracts.
+- New keys in `Localizable.xcstrings` (ru + en): `nav.search`, `nav.home`, `nav.catalog`, `nav.library`,
+  `nav.profile`, `nav.settings`, `nav.currentSection` (format string for the pill). The existing
+  `tab.*` keys are reused for the row titles where the wording is unchanged.
+
+## 9. Phases and write scopes
+
+Every phase is one commit, green before the next. Two agents never own the same file.
+
+| Phase | What | Write scope | Verification |
+| --- | --- | --- | --- |
+| P1 | Shell: sections enum, `RootShellView`, search role, localisation keys; delete `RootTabView` | `App/Sources/App/`, `App/Resources/Localizable.xcstrings` | simulator build, app launches, sidebar appears |
+| P2 | Content adaptation: `ScreenHeader` top spacing, full-bleed check per section, stale top-bar assumptions | `App/Sources/Design/`, the three feature screens | screenshots at 1920×1080 |
+| P3 | Navigation UI test: collapse on leaving, return from content, Back semantics, section switch keeps path/scroll | `App/UITests/` (new file + `UITestSupport.swift`) | `xcodebuild test` |
+| P4 | Existing UI tests repaired for the new shell (six files walk focus into the old tab bar) | `App/UITests/` | full UI suite |
+| P5 | «Медиатека» screen, once favourites and continue-watching exist | `App/Sources/Features/Library/` | separate ADR |
+
+`ScreenHeader`'s `.top` padding of 56 and `DesignTokens.screenInset` of 72 are the two numbers most
+likely to fight the reference; both live in files the Lead owns, so P2 is a single owner.
+
+## 10. Open questions for the owner
+
+1. **Minimum target.** The avatar/clock header inside the panel needs tvOS **27.0**, and the project's
+   baseline is 26.0 (ADR 0009; AGENTS.md forbids `#available` fallbacks). Options: ship without the
+   header, bump the minimum to 27.0, or accept one guarded branch. The owner's own box runs 27.2.1.
+2. **«Медиатека» now or later?** It needs two screens that do not exist. A five-row panel (search,
+   Главная, Каталог, Профиль, Настройки) is shippable now; the row appears when the screens do.
+3. **Search row semantics.** «Поиск» opening «Каталог» with the field focused (proposed, no duplicate
+   state), or a separate screen.
+4. **Hero carousel on «Главная».** The reference's most visible element. A separate feature with its own
+   ADR — confirm it is not part of this change.
+5. **Collapsed pill wording.** «Главная» like the reference, or a neutral «Меню».
+
+## 11. Risks
+
+| # | Risk | Mitigation |
+| --- | --- | --- |
+| R1 | Collapsed/focus behaviour of `sidebarAdaptable` on tvOS is **unverified** — no input channel in this session | P3's UI test proves it on the simulator before P2 starts |
+| R2 | System panel is narrower than the TV app's (~235 vs ~340) and its header is tvOS 27-only | accepted, or Q1 answered with a bump |
+| R3 | Six UI tests walk focus into the old tab bar by accessibility identifier | P4, with the helpers centralised in `UITestSupport.swift` |
+| R4 | White pill over bright hero artwork loses contrast | scrim behind the panel, checked on real artwork |
+| R5 | Free account: 7-day profiles, 3 devices — device iteration is slow | simulator first, device captures per phase |
+| R6 | Building the app requires the DSH session to run with full file access: under the default `workspace-write` policy SwiftPM cannot write its manifest cache to `~/Library/Caches/org.swift.swiftpm` and the build dies with `Missing package product 'AniLibertyKit'` (observed 2026-11-27; same command green once the session was widened) | run P1–P5 builds with the wider policy, then build and `swift test` as the definition of done |
+
+## 12. What this document does not decide
+
+The detail screen, the catalogue's filters, the player's transport UI, the Top Shelf, and the app icon.
+Those keep their own ADRs.
