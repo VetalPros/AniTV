@@ -80,6 +80,10 @@ not been released yet, so everything below is still subject to change.
   segment and sits 300 pt above the bottom edge, clear of the transport bar. Left/Right between
   «Пропустить опенинг» and «Смотреть» is pinned with focus guides, which stopped the intermittent loss of
   focus that made the second button unreachable.
+- «Настройки» tab with two switches — «Автоматически пропускать опенинги» / «…эндинги», both off by default.
+  The skip hint is now a single control that disappears 30 seconds after it appears; the «Смотреть» button and
+  the focus workarounds around it are gone. Auto-skip seeks silently, and after an auto-skipped ending the
+  «Следующая серия» control is offered for the same 30 seconds.
 - Player skip hint rebuilt: it lives in the player's content overlay (so the remote can finally reach it),
   says «Пропустить опенинг» / «Пропустить эндинг», gains a «Смотреть» control that waves it away, hides
   itself while the player controls are open, and offers «Следующая серия» only when the credits really run

@@ -161,7 +161,7 @@ final class ReleaseDetailViewModel {
         else {
             return false
         }
-        return duration - ending.end <= PlayerModel.endingTailThreshold
+        return duration - ending.end <= EndingOfferResolver.tailThreshold
             && nextPlayableEpisode(after: episode) != nil
     }
 

@@ -701,3 +701,37 @@ free team issued an *Apple Development* certificate and a *tvOS Team Provisionin
 `<TEAM>.tv.anitv.client` — the earlier assumption that Keychain Sharing requires a paid account was wrong
 for this entitlement. The 7-day expiry from ADR 0003 now applies to real hardware; the repeatable
 procedure, the free-account limits and the troubleshooting table live in `docs/INSTALL_DEVICE.md`.
+
+---
+
+## 0027 — Skip behaviour becomes a setting, and the hint becomes a single control that expires (2026-11-18)
+
+The two-button hint of ADR 0026 did not survive the owner's remote: «Кнопка "Смотреть" всё также недоступна,
+при нажатии вправо просто идёт перемотка». Focus inside `AVPlayerViewController.contentOverlayView` kept
+landing on the player's own scrubber, so Right seeked instead of moving to the second control, and every fix
+aimed at the second button (focus guides, focus granting, hiding rules) was a crutch around a design that had
+one button too many.
+
+His redesign replaces it, and it is better than what we had:
+
+- **«Настройки» is a tab of its own** (fourth, after «Профиль»). Two switches — «Автоматически пропускать
+  опенинги» and «Автоматически пропускать эндинги» — both **off** by default, so nothing is ever skipped for a
+  viewer who did not ask. Values live in `PlaybackSettingsStore` (`UserDefaults`; these are preferences, not
+  secrets) and are saved on every change.
+- **One hint, no «Смотреть».** The control appears when the playhead enters a segment and disappears **30
+  seconds later if nobody presses it**, and does not come back for that segment. No countdown on the button —
+  the owner preferred a quiet disappearance to a ticking number.
+- **Auto-skip means silent**: openings seek to `opening.end` with no hint at all; endings seek to `ending.end`
+  and *then* offer «Следующая серия» for 30 seconds, because the tail may hold an insert (the reason for the
+  15-second rule of ADR 0026, which still decides whether the button says «Пропустить эндинг» or «Следующая
+  серия» when auto-skip is off).
+- **The crutches are gone**: the second button, the dismiss/`dismissedSkipKey` machinery, the focus guides and
+  the mutable appearance. One `UIButton`, the player's own chip look, and it takes focus when it appears — the
+  UI test now asserts `hasFocus` and that Select acts on it, which is the check that was failing before.
+
+The settings are read once when a playback session starts. Changing a switch in «Настройки» while the player
+is open does not affect the session already running — documented as a known limitation rather than pretended
+away.
+
+The 30-second lifetime is injectable through `-uiTestingHintLifetime`, so a test can watch a hint expire in
+four seconds instead of thirty; production never passes it.

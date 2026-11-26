@@ -885,23 +885,6 @@
         }
       }
     },
-    "player.skip.dismiss": {
-      "extractionState": "manual",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Смотреть"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Watch"
-          }
-        }
-      }
-    },
     "player.skip.ending": {
       "extractionState": "manual",
       "localizations": {
@@ -1327,6 +1310,91 @@
         }
       }
     },
+    "screen.settings.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Что плеер делает сам, а что спрашивает"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What the player does on its own, and what it asks"
+          }
+        }
+      }
+    },
+    "screen.settings.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        }
+      }
+    },
+    "settings.endings": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Автоматически пропускать эндинги"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip endings automatically"
+          }
+        }
+      }
+    },
+    "settings.hint.caption": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Если переключатель выключен, плеер показывает кнопку пропуска. Она исчезает через 30 секунд, если её не нажать."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With a switch off, the player offers a skip button. It disappears after 30 seconds unless you press it."
+          }
+        }
+      }
+    },
+    "settings.openings": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Автоматически пропускать опенинги"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip openings automatically"
+          }
+        }
+      }
+    },
     "tab.catalog": {
       "extractionState": "manual",
       "localizations": {
@@ -1374,6 +1442,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Профиль"
+          }
+        }
+      }
+    },
+    "tab.settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
           }
         }
       }

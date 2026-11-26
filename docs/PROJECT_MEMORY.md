@@ -172,6 +172,12 @@ Second pass (same day, after the user's own run on the simulator):
 - [x] Catalogue pages cached by request for five minutes (`CatalogCache`): paging back and forth no longer
       re-hits the service. The endpoint has no `ETag` (measured), so this is a client-side cache, not
       revalidation. The `refresh: true` path is wired to filters/search/retry but not asserted by a test.
+- [x] «Настройки» tab (ADR 0027): «Автоматически пропускать опенинги» and «…эндинги», both off by default,
+      persisted in `PlaybackSettingsStore`. The player reads them once per session. The skip hint is a single
+      control now, expiring 30 s after it appears; auto-skip seeks silently and, for an ending, offers
+      «Следующая серия» for the same 30 s. The «Смотреть» button and the focus crutches it needed are gone.
+      `SettingsUITests` proves the switches flip and survive a relaunch; `PlayerSkipUITests` proves the hint
+      takes focus, Select acts on it, it expires on its own, and auto-skip leaves no hint at all.
 - [x] Player skip hint: custom control inside `AVPlayerViewController.contentOverlayView` (SwiftUI overlays
       above the player never receive focus), two buttons — «Пропустить опенинг»/«Пропустить эндинг» and
       «Смотреть», hint never hidden by focus (it sits 300 pt up, clear of the transport bar; hiding it on focus

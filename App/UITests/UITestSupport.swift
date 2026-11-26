@@ -17,4 +17,18 @@ enum UITestLaunchArguments {
     static let pickEpisodeWithOpening = "-uiTestingPickEpisodeWithOpening"
     /// Makes the picker start on an episode whose ending runs into the end of the file.
     static let pickEpisodeWithShortEnding = "-uiTestingPickEpisodeWithShortEnding"
+
+    /// Restores both playback switches to their shipped defaults at launch.
+    static let resetSettings = "-uiTestingResetSettings"
+
+    /// Launch argument that sets the skip hint's lifetime (`PlayerTestOverrides.hintLifetime`).
+    static let hintLifetimeKey = "-uiTestingHintLifetime"
+
+    /// Shortens the skip hint's lifetime, so a test can watch it expire instead of waiting thirty seconds.
+    ///
+    /// - Parameter seconds: Lifetime the player should use.
+    /// - Returns: The launch argument and its value, ready to append to a launch-argument list.
+    static func hintLifetime(_ seconds: Int) -> [String] {
+        [hintLifetimeKey, String(seconds)]
+    }
 }

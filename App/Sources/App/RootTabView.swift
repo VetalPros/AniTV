@@ -1,3 +1,4 @@
+import AniLibertyKit
 import SwiftUI
 
 /// Top-level destination switching: the only navigational chrome the app owns.
@@ -6,6 +7,7 @@ struct RootTabView: View {
         case latest
         case catalog
         case profile
+        case settings
     }
 
     @State private var selection: AppTab = .latest
@@ -23,6 +25,19 @@ struct RootTabView: View {
             ProfileView()
                 .tabItem { Label("tab.profile", systemImage: "person.crop.circle") }
                 .tag(AppTab.profile)
+
+            SettingsView()
+                .tabItem { Label("tab.settings", systemImage: "gearshape") }
+                .tag(AppTab.settings)
         }
+        // UI tests start from the shipped defaults; without this a failed test could leave a switch on and
+        // the next run would read someone else's settings.
+        .task { await resetSettingsIfAsked() }
+    }
+
+    /// Restores the playback switches to their shipped defaults when a UI test asks for it.
+    private func resetSettingsIfAsked() async {
+        guard ProcessInfo.processInfo.arguments.contains("-uiTestingResetSettings") else { return }
+        await PlaybackSettingsStore().save(.defaults)
     }
 }

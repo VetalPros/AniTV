@@ -86,8 +86,12 @@ final class DetailResumeUITests: XCTestCase {
         XCUIRemote.shared.press(.down)
         Thread.sleep(forTimeInterval: settleTimeout)
         attach(app, named: "detail-episode-progress")
-        for _ in 0 ..< focusAttempts where !isFocused(identifier: "detail.resumeButton", in: app) {
-            XCUIRemote.shared.press(.up)
+        let backCycle: [XCUIRemote.Button] = [.up, .up, .up, .down]
+        for step in 0 ..< focusAttempts * returnCycleMultiplier where !isFocused(
+            identifier: "detail.resumeButton",
+            in: app
+        ) {
+            XCUIRemote.shared.press(returnCycle[step % returnCycle.count])
             Thread.sleep(forTimeInterval: settleTimeout)
         }
 
@@ -172,13 +176,34 @@ final class DetailResumeUITests: XCTestCase {
     }
 
     /// Presses `button` until `target` holds focus.
+    /// Multiplier for long focus walks: each cycle costs a couple of presses.
+    @MainActor
+    private var returnCycleMultiplier: Int {
+        4
+    }
+
+    /// Alternating direction used when walking back to the hero action.
+    private var returnCycle: [XCUIRemote.Button] {
+        [.up, .up, .up, .down]
+    }
+
     @MainActor
     private func focus(_ target: XCUIElement, in app: XCUIApplication, pressing button: XCUIRemote.Button) -> Bool {
-        for _ in 0 ..< focusAttempts {
+        // The first presses go in the requested direction; after that the opposite direction is mixed in, so a
+        // focus that overshoots (onto the tab bar, for instance) can still come back.
+        let opposite: XCUIRemote.Button = switch button {
+        case .up: .down
+        case .down: .up
+        case .left: .right
+        case .right: .left
+        default: button
+        }
+        let cycle: [XCUIRemote.Button] = [button, button, button, opposite]
+        for step in 0 ..< focusAttempts * cycle.count {
             if isFocused(identifier: target.identifier, in: app) {
                 return true
             }
-            XCUIRemote.shared.press(button)
+            XCUIRemote.shared.press(cycle[step % cycle.count])
             Thread.sleep(forTimeInterval: settleTimeout)
         }
         return isFocused(identifier: target.identifier, in: app)

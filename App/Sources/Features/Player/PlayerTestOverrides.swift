@@ -14,6 +14,8 @@ enum PlayerTestOverrides {
     static let pickEpisodeWithOpeningArgument = "-uiTestingPickEpisodeWithOpening"
     /// Launch argument that makes the picker start on an episode whose ending runs into the end of the file.
     static let pickEpisodeWithShortEndingArgument = "-uiTestingPickEpisodeWithShortEnding"
+    /// Launch argument with the hint's lifetime in seconds, so a test can watch it expire quickly.
+    static let hintLifetimeArgument = "-uiTestingHintLifetime"
     /// Launch argument that starts playback two seconds into the episode's ending.
     static let startAtEndingArgument = "-uiTestingStartAtEnding"
 
@@ -46,6 +48,21 @@ enum PlayerTestOverrides {
     /// - Returns: `true` when the argument is present.
     static func picksEpisodeWithOpening(arguments: [String] = ProcessInfo.processInfo.arguments) -> Bool {
         arguments.contains(pickEpisodeWithOpeningArgument)
+    }
+
+    /// How long the skip hint should live, when the test asks for a shorter life.
+    ///
+    /// - Parameter arguments: Process arguments; injectable for tests.
+    /// - Returns: Lifetime in seconds, or `nil` for the production value.
+    static func hintLifetime(arguments: [String] = ProcessInfo.processInfo.arguments) -> Duration? {
+        guard let index = arguments.firstIndex(of: hintLifetimeArgument),
+              arguments.indices.contains(index + 1),
+              let seconds = Double(arguments[index + 1]),
+              seconds > 0
+        else {
+            return nil
+        }
+        return .seconds(seconds)
     }
 
     /// Whether the picker should prefer an episode whose ending runs into the end of the file.

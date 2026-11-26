@@ -16,6 +16,10 @@ final class PlayerModel {
     /// within a comfortable margin of its first frame.
     private static let playheadInterval = CMTime(seconds: 0.5, preferredTimescale: 600)
 
+    /// How long the skip hint stays on screen without a press. The owner chose thirty seconds: long enough to
+    /// read the offer and decide, short enough not to sit on the picture for a whole episode.
+    static let productionHintLifetime: Duration = .seconds(30)
+
     /// How often the position is persisted while playback runs. Five seconds is short enough to
     /// survive a crash and long enough not to write on every poll.
     private static let progressSaveInterval: TimeInterval = 5
@@ -33,73 +37,34 @@ final class PlayerModel {
     /// The skip segment the playhead currently sits inside, or `nil` when no button should exist.
     private(set) var activeSkip: SkipTimecode?
 
-    /// Segment the viewer already waved away with «Смотреть». It stays hidden for that segment only, so
-    /// the next opening or ending of the same episode shows the hint again.
-    private(set) var dismissedSkipKey: String?
-
     /// What the hint offers for a segment.
-    ///
-    /// The ending case depends on what is left after the marker: some episodes have post-credit inserts,
-    /// and jumping to the next episode would skip them. The decision lives here, once, so the label and
-    /// the action cannot disagree.
     enum SkipAction: Equatable {
         /// Seek past the segment and keep playing what follows.
         case skip(SkipTimecode)
         /// The ending runs into the end of the file: play the next episode instead.
         case nextEpisode
-
-        var skipTimecode: SkipTimecode? {
-            if case let .skip(timecode) = self {
-                return timecode
-            }
-            return nil
-        }
     }
 
-    /// Tail, in seconds, that counts as "the ending is the end of the file".
+    /// The hint on screen right now, or `nil` when no button should exist.
     ///
-    /// Calibrated against `toaru-anbu-no-item`: 9 s and 11 s tails are credits running into the end, while
-    /// 26 s carries an insert worth watching. Fifteen seconds separates those cases with room on both
-    /// sides, and a shorter tail than that is not enough content to be worth keeping the viewer in.
-    static let endingTailThreshold = EndingOfferResolver.tailThreshold
+    /// One hint at a time: it appears when the playhead enters a segment and stays for ``hintLifetime`` unless
+    /// the viewer presses it. Nothing brings it back for the same segment — not a seek, not a re-poll.
+    private(set) var hint: SkipAction?
 
-    /// What the hint should offer right now, or `nil` when it has to stay out of the way.
-    var visibleSkipAction: SkipAction? {
-        guard let skip = visibleSkip else { return nil }
-        return action(for: skip)
-    }
-
-    /// Resolves what a segment means for this episode.
+    /// Settings read once when playback starts.
     ///
-    /// - Parameter skip: Segment the playhead is inside.
-    /// - Returns: Skip for openings and for endings with a real tail, next episode when the ending runs
-    ///   into the end of the file and the release has another playable episode.
-    func action(for skip: SkipTimecode) -> SkipAction {
-        guard skip.kind == .ending, let nextEpisode = request.nextEpisode else {
-            return .skip(skip)
-        }
-        let offer = EndingOfferResolver.offer(
-            ending: skip,
-            duration: request.episode.duration,
-            hasNextEpisode: true
-        )
-        guard offer == .nextEpisode else {
-            return .skip(skip)
-        }
-        let tail = (request.episode.duration ?? 0) - skip.end
-        Self.logger.info(
-            "Ending leaves \(tail, privacy: .public)s, offering the next episode (\(nextEpisode.ordinal, privacy: .public))"
-        )
-        return .nextEpisode
-    }
+    /// Changing them in another tab while the player is open is deliberately out of scope: the player would
+    /// have to re-evaluate a segment it has already passed.
+    @ObservationIgnored private let settings: PlaybackSettings
 
-    /// The hint to show right now, or `nil` when it has to stay out of the way.
-    var visibleSkip: SkipTimecode? {
-        guard let activeSkip, Self.key(for: activeSkip) != dismissedSkipKey else {
-            return nil
-        }
-        return activeSkip
-    }
+    /// How long a hint lives before it disappears on its own.
+    @ObservationIgnored private let hintLifetime: Duration
+
+    /// Segment whose hint already had its turn (pressed, expired, or auto-skipped).
+    @ObservationIgnored private var handledSegmentKey: String?
+
+    /// Task that hides the current hint when its lifetime runs out.
+    @ObservationIgnored private var hintExpiryTask: Task<Void, Never>?
 
     /// Localised player failure (technical cause kept separate from UI copy). `nil` while healthy.
     private(set) var playbackError: String?
@@ -117,9 +82,16 @@ final class PlayerModel {
     @ObservationIgnored private var timeObserver: Any?
     @ObservationIgnored private var statusObservation: NSKeyValueObservation?
 
-    init(request: PlaybackRequest, progressStore: PlaybackProgressStoring = PlaybackProgressStore()) {
+    init(
+        request: PlaybackRequest,
+        progressStore: PlaybackProgressStoring = PlaybackProgressStore(),
+        settings: PlaybackSettings? = nil
+    ) {
         self.request = request
         self.progressStore = progressStore
+        // The settings are read once, when the session is created; the caller passes what it loaded.
+        self.settings = settings ?? PlaybackSettings.defaults
+        hintLifetime = PlayerTestOverrides.hintLifetime() ?? Self.productionHintLifetime
         sources = StreamResolver.sources(for: request.episode)
         selectedQuality = request.source.quality
         let item = AVPlayerItem(url: request.source.url)
@@ -152,7 +124,7 @@ final class PlayerModel {
         selectedQuality = quality
         // The periodic observer re-derives this half a second later anyway; doing it here keeps the
         // skip button from showing the state of the previous item in between.
-        activeSkip = TimecodeResolver.activeSkip(for: timecodes, playhead: playhead.seconds)
+        updateSkip(for: playhead.seconds)
         player.play()
         Self.logger.info("Switched to \(quality.rawValue, privacy: .public)p at \(playhead.seconds, privacy: .public)s")
     }
@@ -167,7 +139,7 @@ final class PlayerModel {
                 toleranceBefore: .zero,
                 toleranceAfter: .zero
             )
-            activeSkip = TimecodeResolver.activeSkip(for: timecodes, playhead: startAt)
+            updateSkip(for: startAt)
             Self.logger.info("Resuming at \(startAt, privacy: .public)s")
         }
         player.play()
@@ -185,6 +157,9 @@ final class PlayerModel {
         }
         statusObservation?.invalidate()
         statusObservation = nil
+        hintExpiryTask?.cancel()
+        hintExpiryTask = nil
+        hint = nil
         Self.logger.info("Playback stopped")
     }
 
@@ -244,28 +219,34 @@ final class PlayerModel {
 
     // MARK: Skip intro / outro
 
-    /// Jumps past the active segment and keeps playing.
-    ///
-    /// Skipping an ending therefore lands on the last second of the episode: choosing what plays next is
-    /// the detail screen's job, not the player's.
-    func skipActiveSegment() {
-        guard let activeSkip, case .skip = action(for: activeSkip) else { return }
+    /// Acts on the hint: seeks past the segment, or hands over to the next episode.
+    func performHintAction() {
+        guard let hint else { return }
+        handledSegmentKey = activeSkip.map(Self.key(for:))
+        switch hint {
+        case let .skip(skip):
+            seekPast(skip)
+            activeSkip = nil
+            Self.logger.info("Skipped \(String(describing: skip.kind), privacy: .public) segment")
+        case .nextEpisode:
+            Self.logger.info("Next episode requested from the hint")
+            onNextEpisode?()
+        }
+        hideHint()
+    }
+
+    /// Seeks to the end of `segment` and keeps playing.
+    private func seekPast(_ segment: SkipTimecode) {
         player.seek(
-            to: CMTime(seconds: activeSkip.end, preferredTimescale: 600),
+            to: CMTime(seconds: segment.end, preferredTimescale: 600),
             toleranceBefore: .zero,
             toleranceAfter: .zero
         )
-        self.activeSkip = nil
         player.play()
-        Self.logger.info("Skipped \(String(describing: activeSkip.kind), privacy: .public) segment")
     }
 
-    /// Hides the hint for the current segment without touching the playhead.
-    func dismissSkipHint() {
-        guard let activeSkip else { return }
-        dismissedSkipKey = Self.key(for: activeSkip)
-        Self.logger.info("Skip hint dismissed for \(String(describing: activeSkip.kind), privacy: .public)")
-    }
+    /// Called by the screen when the hint's action is "next episode".
+    @ObservationIgnored var onNextEpisode: (@MainActor () -> Void)?
 
     // The hint is never hidden by focus or by presses.
     //
@@ -290,13 +271,84 @@ final class PlayerModel {
         }
     }
 
+    /// Applies the behaviour table to whatever segment the playhead is inside.
+    ///
+    /// The table lives here, once: an opening with the setting on is skipped silently; otherwise the hint
+    /// appears for ``hintLifetime``; an ending with the setting on is skipped and *then* offers the next
+    /// episode; without the setting the Kit's `EndingOfferResolver` decides which action to offer.
     private func updateSkip(for playhead: Double) {
         let skip = TimecodeResolver.activeSkip(for: timecodes, playhead: playhead)
-        if let skip, let dismissedSkipKey, Self.key(for: skip) != dismissedSkipKey {
-            // A different segment: the viewer's earlier "не сейчас" does not carry over.
-            self.dismissedSkipKey = nil
-        }
         activeSkip = skip
+        guard let skip else {
+            hideHint()
+            return
+        }
+        let key = Self.key(for: skip)
+        guard key != handledSegmentKey else {
+            hideHint()
+            return
+        }
+        switch skip.kind {
+        case .opening:
+            if settings.skipsOpenings {
+                handledSegmentKey = key
+                seekPast(skip)
+                activeSkip = nil
+                hideHint()
+                Self.logger.info("Auto-skipped the opening")
+                return
+            }
+            show(.skip(skip))
+        case .ending:
+            let offer = EndingOfferResolver.offer(
+                ending: skip,
+                duration: request.episode.duration,
+                hasNextEpisode: request.nextEpisode != nil
+            )
+            if settings.skipsEndings {
+                handledSegmentKey = key
+                seekPast(skip)
+                activeSkip = nil
+                if request.nextEpisode != nil {
+                    // The credits stop the picture; what the viewer wants next is the following episode.
+                    show(.nextEpisode)
+                    Self.logger.info("Auto-skipped the ending, offering the next episode")
+                } else {
+                    hideHint()
+                    Self.logger.info("Auto-skipped the ending without a next episode")
+                }
+                return
+            }
+            show(offer == .nextEpisode ? .nextEpisode : .skip(skip))
+        }
+    }
+
+    /// Shows a hint and starts its lifetime.
+    ///
+    /// Idempotent: the playhead is polled twice a second, and re-arming on every poll would keep the hint
+    /// alive for as long as the segment lasts.
+    private func show(_ action: SkipAction) {
+        if hint == action, hintExpiryTask != nil {
+            return
+        }
+        hint = action
+        hintExpiryTask?.cancel()
+        let lifetime = hintLifetime
+        let key = activeSkip.map(Self.key(for:))
+        hintExpiryTask = Task { [weak self] in
+            try? await Task.sleep(for: lifetime)
+            guard !Task.isCancelled, let self, hint != nil else { return }
+            // Expired without a press: the offer does not come back for this segment.
+            handledSegmentKey = key
+            hideHint()
+            Self.logger.info("Hint expired without a press")
+        }
+    }
+
+    private func hideHint() {
+        hintExpiryTask?.cancel()
+        hintExpiryTask = nil
+        hint = nil
     }
 
     /// Stable identity of a segment, used to remember that its hint was dismissed.

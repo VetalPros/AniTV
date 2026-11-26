@@ -15,13 +15,10 @@ struct PlayerViewController: UIViewControllerRepresentable {
     let qualities: [StreamQuality]
     let selectedQuality: StreamQuality
     let onSelectQuality: (StreamQuality) -> Void
-    /// Skip hint to show, `nil` when it has to stay out of the way.
-    let skipAction: PlayerModel.SkipAction?
-    let onSkip: () -> Void
-    let onNextEpisode: () -> Void
-    let onDismissSkip: () -> Void
-    // Focus left the hint (the viewer is in the player's own controls) or came back.
-    // A press the player itself handled while the hint was not focused.
+    /// Hint to show, `nil` when it has to stay out of the way.
+    let hint: PlayerModel.SkipAction?
+    /// Acts on the hint: seek past the segment, or hand over to the next episode.
+    let onHintAction: () -> Void
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
@@ -63,8 +60,7 @@ struct PlayerViewController: UIViewControllerRepresentable {
             guard let contentOverlay = controller.contentOverlayView else { return }
             let overlay = SkipHintOverlayView()
             overlay.translatesAutoresizingMaskIntoConstraints = false
-            overlay.onSkip = representable.onSkip
-            overlay.onDismiss = representable.onDismissSkip
+            overlay.onSkip = representable.onHintAction
             contentOverlay.addSubview(overlay)
             NSLayoutConstraint.activate([
                 overlay.trailingAnchor.constraint(
@@ -87,34 +83,24 @@ struct PlayerViewController: UIViewControllerRepresentable {
 
         func updateOverlay(on controller: QualityPlayerViewController, from representable: PlayerViewController) {
             guard let overlay else { return }
-            overlay.onSkip = representable.onSkip
-            overlay.onDismiss = representable.onDismissSkip
+            overlay.onSkip = representable.onHintAction
 
-            guard let action = representable.skipAction else {
+            guard let action = representable.hint else {
                 overlay.isHidden = true
                 controller.overlayIsVisible = false
                 return
             }
-            overlay.configure(
-                primary: Self.primaryTitle(for: action),
-                primaryIsProminent: action == .nextEpisode || Self.isOpening(action),
-                dismiss: String(localized: "player.skip.dismiss")
-            )
+            overlay.configure(title: Self.title(for: action), isProminent: action == .nextEpisode)
             overlay.isHidden = false
             if !controller.overlayIsVisible {
                 controller.overlayIsVisible = true
-                controller.resetOverlayFocusGrant()
                 // Ask for focus once, then leave the focus engine alone: keeping the overlay as the preferred
                 // environment would trap focus inside it and the transport bar could never open.
                 controller.requestOverlayFocus()
             }
         }
 
-        private static func isOpening(_ action: PlayerModel.SkipAction) -> Bool {
-            action.skipTimecode?.kind == .opening
-        }
-
-        private static func primaryTitle(for action: PlayerModel.SkipAction) -> String {
+        private static func title(for action: PlayerModel.SkipAction) -> String {
             switch action {
             case let .skip(timecode):
                 let key = timecode.kind == .opening ? "player.skip.opening" : "player.skip.ending"
@@ -197,26 +183,13 @@ final class QualityPlayerViewController: AVPlayerViewController {
     /// Whether the hint is currently shown.
     var overlayIsVisible = false
 
-    /// Whether the hint has already been given the focus once for the current appearance.
+    /// Preferred focus: the hint, while it is on screen.
     ///
-    /// The overlay is the preferred focus target only until the engine has actually landed on it; after that
-    /// it is released, otherwise focus could never leave and the transport bar would never open.
-    private var overlayFocusGranted = false
-
-    override func didUpdateFocus(in context: UIFocusUpdateContext, with coordinator: UIFocusAnimationCoordinator) {
-        super.didUpdateFocus(in: context, with: coordinator)
-        // Focus only marks that the hint has had its turn; it no longer hides anything. Hiding on focus lost
-        // the hint at the worst moment — while the viewer was pressing Right to reach «Смотреть» — and a
-        // control that vanishes as you reach for it is worse than one that overlaps.
-        let focused = UIFocusSystem.focusSystem(for: self)?.focusedItem as? UIView
-        if let overlayView, let focused, focused.isDescendant(of: overlayView) {
-            overlayFocusGranted = true
-        }
-    }
-
-    /// Preferred focus: the hint, until it has had its turn.
+    /// There is one control now, so keeping the hint focused is what makes Select press it — the owner's
+    /// report that Right only scrubbed was exactly this: the hint never held focus. Nothing else lives in the
+    /// overlay, so there is no second control to reach and no reason to hand focus back.
     override var preferredFocusEnvironments: [UIFocusEnvironment] {
-        if overlayIsVisible, !overlayFocusGranted, let overlayView {
+        if overlayIsVisible, let overlayView {
             return [overlayView]
         }
         return super.preferredFocusEnvironments
@@ -230,11 +203,6 @@ final class QualityPlayerViewController: AVPlayerViewController {
     func requestOverlayFocus() {
         setNeedsFocusUpdate()
         updateFocusIfNeeded()
-    }
-
-    /// Lets the next appearance of the hint ask for focus again.
-    func resetOverlayFocusGrant() {
-        overlayFocusGranted = false
     }
 
     private var appliedSignature: String?

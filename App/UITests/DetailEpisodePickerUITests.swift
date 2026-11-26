@@ -88,8 +88,11 @@ final class DetailEpisodePickerUITests: XCTestCase {
         let heroActions = app.descendants(matching: .any).matching(
             NSPredicate(format: "hasFocus == 1 AND identifier IN %@", ["detail.playButton", "detail.resumeButton"])
         )
-        for _ in 0 ..< focusAttempts where !heroActions.firstMatch.exists {
-            XCUIRemote.shared.press(.up)
+        // Up walks back towards the hero, but a walk that ends on the tab bar can never come down again, so
+        // the direction alternates instead of assuming focus is always below the hero.
+        let returnCycle: [XCUIRemote.Button] = [.up, .up, .up, .down]
+        for step in 0 ..< focusAttempts * returnCycle.count where !heroActions.firstMatch.exists {
+            XCUIRemote.shared.press(returnCycle[step % returnCycle.count])
             Thread.sleep(forTimeInterval: settleTimeout)
         }
         XCTAssertTrue(heroActions.firstMatch.exists, "Up never returned to a hero action")
