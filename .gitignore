@@ -38,6 +38,8 @@ Packages/
 *.mobileprovision
 *.entitlements.local
 Config/Secrets.xcconfig
+# Local signing identity (DEVELOPMENT_TEAM); Config/Base.xcconfig includes it when present.
+Config/Local.xcconfig
 .env
 .env.*
 !/.env.example

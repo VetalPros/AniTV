@@ -1,0 +1,11 @@
+// Base configuration for the AniTV target.
+//
+// DEVELOPMENT_TEAM is not committed: it identifies a personal Apple developer account.
+// Put it in Config/Local.xcconfig (gitignored), which this file includes when it exists:
+//
+//     DEVELOPMENT_TEAM = XXXXXXXXXX
+//
+// Without that file the project still generates and builds for the simulator; device signing
+// simply has no team until you create it. See docs/INSTALL_DEVICE.md.
+
+#include? "Local.xcconfig"

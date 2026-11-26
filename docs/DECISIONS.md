@@ -664,3 +664,40 @@ The other lesson from the same round: **Left/Right between the two buttons was n
 alone — a Right press sometimes left the hint for the player's controls. Two one-point-wide `UIFocusGuide`s,
 one on each side of the gap between the buttons, pin the direction; two consecutive full-suite runs passed
 after that, where before it failed roughly one run in three.
+
+---
+
+## 0027 — Device builds sign automatically, and the team lives in a gitignored xcconfig (2026-11-26)
+
+**Context.** Everything so far was built for the simulator, where ad-hoc signing was enough
+(`CODE_SIGN_IDENTITY: "-"`, `CODE_SIGN_STYLE: Manual`). A physical Apple TV appeared (Apple TV 4K,
+tvOS 27.2.1) and the only Apple ID available is a **free Personal Team**. A device build cannot proceed
+without a development team, and the team ID identifies a personal developer account, so it must not enter
+a public repository (AGENTS.md §2.2, §4).
+
+**Decision.** The target signs automatically. `project.yml` pins `CODE_SIGN_STYLE: Automatic` and nothing
+else: no team, no identity, no provisioning profile specifier. The team arrives from
+`Config/Base.xcconfig` (committed, referenced as the target's configuration file for both build
+configurations), which contains a single optional include:
+
+```
+#include? "Local.xcconfig"
+```
+
+The included file is gitignored and holds one line, `DEVELOPMENT_TEAM = <team>`. `.gitignore` covers it
+next to the already-ignored `Config/Secrets.xcconfig`.
+
+**Alternatives rejected.** XcodeGen's environment substitution
+(`DEVELOPMENT_TEAM: ${DEVELOPMENT_TEAM}`) writes the literal `${DEVELOPMENT_TEAM}` into the generated
+project when the variable is unset, and that string then surfaces in the Xcode UI; a committed team ID
+publishes the account identifier; pointing `configFiles` straight at the gitignored file fails spec
+validation in CI — verified: *"Target has invalid config file path … for config Debug"*.
+
+**Consequences.** `xcodegen generate` without the local file still succeeds, and the simulator/CI build
+with `CODE_SIGNING_ALLOWED=NO` still passes (checked both ways on 2026-11-26). Installing on hardware is a
+one-line local setup plus `-allowProvisioningUpdates` in the build. Measured on the first device build: the
+free team issued an *Apple Development* certificate and a *tvOS Team Provisioning Profile*, and the
+`keychain-access-groups` entitlement from `App/AniTV.entitlements` survived signing as
+`<TEAM>.tv.anitv.client` — the earlier assumption that Keychain Sharing requires a paid account was wrong
+for this entitlement. The 7-day expiry from ADR 0003 now applies to real hardware; the repeatable
+procedure, the free-account limits and the troubleshooting table live in `docs/INSTALL_DEVICE.md`.

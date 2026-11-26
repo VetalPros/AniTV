@@ -38,8 +38,10 @@ AniTV — клиент для просмотра аниме с AniLiberty на A
 
 Проект в активной разработке: сборочный пайплайн и ядро `AniLibertyKit` готовы и покрыты
 тестами, три основных сценария (лента, карточка релиза, плеер) проходят **UI-тесты на
-симуляторе tvOS**, на физическом устройстве приложение ещё не запускалось. Статус в таблице
-отражает то, что лежит в репозитории сейчас, а не планы.
+симуляторе tvOS**. Приложение также **устанавливается и запускается на физическом Apple TV**
+с бесплатным аккаунтом разработчика (проверено 2026-11-26 на tvOS 27.2.1 — см.
+`docs/INSTALL_DEVICE.md`). Статус в таблице отражает то, что лежит в репозитории сейчас, а не
+планы.
 
 Обозначения: ✅ проверено командой · 🚧 код есть, нужна доработка или проверка на устройстве ·
 📋 запланировано · 💡 идея, отложена (обоснование — `docs/PROJECT_MEMORY.md`) · ❓ не проверено
@@ -71,7 +73,7 @@ AniTV — клиент для просмотра аниме с AniLiberty на A
 | Локализация ru/en (String Catalogs) | ✅ | `App/Resources/Localizable.xcstrings` |
 | Сборка приложения под симулятор tvOS (`generic/platform=tvOS Simulator`) | ✅ | `project.yml`, `App/` |
 | UI-тесты XCUITest: лента → карточка → серии → плеер, переключение качества | ✅ | `App/UITests/` |
-| Подпись и установка на устройство (бесплатный аккаунт) | 📋 | `project.yml` |
+| Подпись и установка на устройство (бесплатный аккаунт, профиль на 7 дней) | ✅ | `project.yml`, `Config/Base.xcconfig`, `docs/INSTALL_DEVICE.md` |
 
 Значок ✅ у модулей `AniLibertyKit` означает, что `swift test --package-path AniLibertyKit`
 проходит локально (25 тестов в 4 сьютах, без сети — на фикстурах из `Tests/…/Fixtures`).
@@ -159,6 +161,29 @@ xcrun simctl launch --console-pty booted tv.anitv.client
 Эта команда проверена в текущем окружении: `xcodegen generate` и
 `xcodebuild ... -destination 'generic/platform=tvOS Simulator' CODE_SIGNING_ALLOWED=NO build`
 завершаются успехом (BUILD SUCCEEDED). Именно её использует CI, поэтому имя симулятора не нужно.
+
+### Установка на физический Apple TV
+
+Нужны приставка с tvOS 26.0 или новее, Apple ID (бесплатного достаточно) в *Xcode ▸ Settings ▸
+Accounts* и сопряжение Mac ↔ Apple TV по сети: в Device Hub (**Xcode ▸ Open Developer Tool ▸
+Device Hub**) нажать `+` → *Pair Nearby Device…*, на приставке держать открытым экран
+«Настройки ▸ Пульты и устройства ▸ Пульт и устройства». Полная последовательность, ограничения
+бесплатного аккаунта и разбор типичных сбоев — в [`docs/INSTALL_DEVICE.md`](docs/INSTALL_DEVICE.md).
+
+Team ID в репозиторий не попадает: он хранится в `Config/Local.xcconfig` (файл в `.gitignore`),
+который подключается из `Config/Base.xcconfig`. Без этого файла проект генерируется и собирается
+под симулятор и CI, а сборке под устройство просто не задана команда разработчика.
+
+```bash
+xcodebuild -project AniTV.xcodeproj -scheme AniTV \
+  -destination 'platform=tvOS,id=UDID' -configuration Release \
+  -allowProvisioningUpdates -derivedDataPath .build/DeviceDerivedData build
+xcrun devicectl device install app --device UDID \
+  .build/DeviceDerivedData/Build/Products/Release-appletvos/AniTV.app
+```
+
+Проверено 2026-11-26: подпись личным сертификатом бесплатной команды, установка по Wi-Fi, запуск
+и загрузка ленты с настоящими данными — кадр в `docs/screenshots/device-feed.jpg`.
 
 Перед отправкой изменений форматирование и линт обязательны:
 

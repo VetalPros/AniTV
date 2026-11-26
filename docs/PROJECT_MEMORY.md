@@ -2,8 +2,9 @@
 
 > Update this file at the end of every session that changes the project's state.
 > Rules and constraints live in `AGENTS.md`; decisions live in `docs/DECISIONS.md`.
-> Last updated: **2026-11-13** (session 4: app icon + static Top Shelf from the upstream Android TV app;
-> ADR 0017, provenance in `docs/THIRD_PARTY_ASSETS.md`).
+> Last updated: **2026-11-26** (session 5: first build, install and launch on a physical Apple TV with a
+> free Apple ID; device signing through a gitignored xcconfig — ADR 0027, procedure in
+> `docs/INSTALL_DEVICE.md`).
 
 ## Snapshot
 
@@ -11,13 +12,13 @@
 | --- | --- |
 | Stage | **Vertical slice 1 is end-to-end verified.** Feed, release detail and player driven by XCUITest on the tvOS simulator |
 | Target platform | tvOS 26.0 (single target for now) |
-| Distribution | TestFlight / ad-hoc only. App Store out of scope |
+| Distribution | TestFlight / ad-hoc only. App Store out of scope. A **free-account device install works** (verified 2026-11-26) |
 | Apple Developer | **Free** account (7-day profiles, 3 devices, no App Groups/CloudKit/Push) |
 | License | **MIT** — confirmed 2026-11-10 (`LICENSE`) |
 | Product name | Provisional `anitv` — final name and bundle ID decided later |
-| Repository | local, `~/Documents/anitv`, `git init` done, no remote yet |
+| Repository | public, <https://github.com/VetalPros/AniTV>, MIT (published 2026-11-17) |
 | DSH workspace | `c714b289-7397-4251-b27c-4ce3ce773cf6` (`~/Documents/anitv`) |
-| Physical Apple TV | not available yet (expected ~1 week after launch) |
+| Physical Apple TV | **paired and in use** since 2026-11-26: Apple TV 4K (3rd gen), tvOS 27.2.1 |
 
 ## Environment facts (verified on this machine)
 
@@ -47,6 +48,23 @@
   runtime is not available. runtime path not found". Recovery, verified 2026-11-11:
   `xcrun simctl runtime scan-and-mount` (the `simctl runtime list` entry still says `Ready` with a
   `mountPath` under `/private/var/run/com.apple.security.cryptexd/mnt/`).
+- **The physical Apple TV is reachable from this Mac** (2026-11-26): Apple TV 4K (3rd gen),
+  `AppleTV18,1`, tvOS 27.2.1, Bonjour name `Gostinaa.local`. `xcrun devicectl list devices` shows it
+  as `connected` next to the two simulators; `devicectl device install/process launch/capture
+  screenshot` all work over Wi-Fi.
+- Pairing flow in **Xcode 27.2** is *Device Hub* (`/Applications/Xcode.app/Contents/Applications/
+  DeviceHub.app`, `com.apple.dt.Devices`): `+` → *Pair Nearby Device…* → choose Apple TV → PIN from
+  the TV. The old *Devices and Simulators* window with a "Discovered" list is gone, so waiting for
+  the device to appear in a list finds nothing. Device Hub needs the macOS **Local Network**
+  permission; `tvOS has no Developer Mode switch`, and Apple re-pairs after an OS upgrade.
+- The LAN has **IPv6 link-local plus a ULA** (`fd1f:22dd:ac9f:4d65::/64`) but no global IPv6 and no
+  IPv6 router (`networksetup -getinfo "Wi-Fi"` → `IPv6 Router: none`). That is enough: `ping6`
+  answers on both addresses and tvOS pairing requires IPv6 to exist, not to be routed.
+- Free Personal Team details measured: team is `isFreeProvisioningTeam = 1`; the first
+  `-allowProvisioningUpdates` device build created the *Apple Development* certificate and the
+  *tvOS Team Provisioning Profile: tv.anitv.client*; `App/AniTV.entitlements` keeps
+  `keychain-access-groups = <TEAM>.tv.anitv.client` in the signed app, i.e. the free team **does**
+  accept that entitlement (the earlier "Keychain Sharing is paid-only" assumption was wrong).
 
 ## Done
 
@@ -196,22 +214,38 @@ the simulator — so both reported defects are closed against a real account, no
       With focus on another tile the system shows its own wallpaper, which is why the earlier screenshot
       looked as if the artwork had been dropped — it was never removed, just not focused.
 
+- [x] Device signing is automatic, and the team is **not** in the repository (ADR 0027):
+      `CODE_SIGN_STYLE: Automatic` in `project.yml`, the team ID in the gitignored
+      `Config/Local.xcconfig`, which `Config/Base.xcconfig` pulls in with `#include?`. Verified both
+      ways: with the file a device build signs with the Personal Team; without it `xcodegen generate`
+      succeeds and the simulator build with `CODE_SIGNING_ALLOWED=NO` (the CI command) still passes.
+- [x] First install on the physical Apple TV (2026-11-26): `xcodebuild -allowProvisioningUpdates`
+      signed the app, `devicectl device install` installed it over Wi-Fi, `devicectl device process
+      launch` started it, and the live feed loaded from the API on the TV itself. Screen captured with
+      `devicectl device capture screenshot` → `docs/screenshots/device-feed.jpg`. The build installed
+      came from the working tree that still holds the uncommitted «Настройки» work, so that screenshot
+      shows a fourth tab that `main` does not have yet. Procedure, limits and troubleshooting:
+      `docs/INSTALL_DEVICE.md`.
+
 ## Next steps (ordered)
 
-1. Exercise the favourite toggle against a live account: the add/remove calls and the rollback path have
+1. Re-sign on the Apple TV before the 7-day profile expires and record what happens when it does
+   (in-app error? launch refused?). The TV now occupies one of the three free-account device slots;
+   `docs/INSTALL_DEVICE.md` is the procedure to repeat.
+2. Exercise the favourite toggle against a live account: the add/remove calls and the rollback path have
    never run with a real token (doing it mutates the owner's favourites, so it needs their go-ahead). Same
    for the `views/history` "continue watching" row, which is not built yet.
-2. Replace the borrowed app icon with an original mark before publishing anywhere — see
+3. Replace the borrowed app icon with an original mark before publishing anywhere — see
    `docs/THIRD_PARTY_ASSETS.md`; the current one is AniLiberty's mark, used with their written permission
    (ADR 0025) — so this is no longer a blocker for publishing, only a provenance note.
-3. Capture real profile / favourites fixtures: the Kit's are synthesised from the OpenAPI schema. The Kit's
+4. Capture real profile / favourites fixtures: the Kit's are synthesised from the OpenAPI schema. The Kit's
    favourites ids/add/remove also assume the documented shapes (a `204` without a body would need the
    decode relaxed).
-4. Watch the advisory `ui-tests` CI job on a real GitHub runner; only then consider making it required
+5. Watch the advisory `ui-tests` CI job on a real GitHub runner; only then consider making it required
    (ADR 0013). Also pin `xcode-select` if the `macos-26` image starts shipping a different default Xcode.
-5. Decide the final product name / bundle identifier **before** the repository goes public (renaming the
+6. Decide the final product name / bundle identifier **before** the repository goes public (renaming the
    directory means re-registering the DSH workspace).
-6. Nice-to-haves nobody has asked for yet: a disk tier for the catalogue cache (it is memory-only now) and
+7. Nice-to-haves nobody has asked for yet: a disk tier for the catalogue cache (it is memory-only now) and
    a "continue watching" row on «Новинки» from `views/history`.
 
 ## Deferred ideas (agreed, deliberately not scheduled)
@@ -295,6 +329,11 @@ not a commitment.
 - A free Apple ID cannot produce App Groups, so a Top Shelf extension cannot read app data. Plan:
   static Top Shelf imagery or no Top Shelf at all.
 - 7-day signing expiry means the app on a physical Apple TV stops launching weekly until re-signed.
+  Not observed yet: the first device profile was created on 2026-11-26, so the expiry behaviour is
+  still `unverified`.
+- Device Hub is useless without the macOS **Local Network** permission for the app (and for Xcode);
+  that, not the network, is the usual reason the device list stays empty while `ping`/Bonjour work
+  from the terminal.
 - The old `api.anilibria.tv` host is gone (HTTP 410). Only `aniliberty.top` / `anilibria.top` work.
 - The tvOS simulator runtime unmounts itself occasionally; `xcrun simctl runtime scan-and-mount` brings it
   back without re-downloading (see Environment facts). A `simctl bootstatus -b` can fail with "cannot
