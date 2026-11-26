@@ -20,7 +20,7 @@
 | Repository | public, <https://github.com/VetalPros/AniTV>, MIT (published 2026-11-17) |
 | DSH workspace | `c714b289-7397-4251-b27c-4ce3ce773cf6` (`~/Documents/anitv`) |
 | Physical Apple TV | **paired and in use** since 2026-11-26: Apple TV 4K `AppleTV18,1` (devicectl's marketing name: *4th generation*; session-5 notes said 3rd), name «Гостиная», tvOS 27.2.1 (24K157), UDID `00008150-000C62CA0101401C` |
-| Navigation | **Redesigned on paper only** (2026-11-27): `docs/NAVIGATION.md` + ADR 0028 — system sidebar (`.sidebarAdaptable`), not a hand-built shell; the top tab bar is still what ships |
+| Navigation | **System sidebar shipped in P1** (2026-11-27, ADR 0028): `RootShellView` with `.sidebarAdaptable`, header, four rows; the old top tab bar is gone. Content adaptation, test repair and «Медиатека» still pending |
 
 ## Environment facts (verified on this machine)
 
@@ -29,8 +29,9 @@
   `/Applications/Xcode.app/Contents/Developer`. License accepted, first-launch components installed.
   **Verified working** (`xcodebuild -version`, `xcrun simctl`, `xcodebuild -showsdks`).
 - SDKs: `appletvos27.2`, `appletvsimulator27.2`. Runtime: **tvOS 27.2 (24K150)**, id
-  `com.apple.CoreSimulator.SimRuntime.tvOS-27-2`. SDKs are 27.x while the deployment target stays
-  26.0 — that is fine and intended.
+  `com.apple.CoreSimulator.SimRuntime.tvOS-27-2`. SDKs are 27.x and, since 2026-11-27, so is the
+  deployment target (**27.0**, ADR 0029 — raised from 26.0 for the sidebar header); a 26.0 runtime is
+  not installed, so nothing below 27 can be exercised here.
 - Simulators available (both `Apple TV 4K (4th generation)`):
   - `1CEE9693-F8EB-45A4-8223-1679EE0EFC5A` (4K)
   - `A51D0687-F8A5-494D-B199-3AAB94271BFB` (1080p)
@@ -266,14 +267,24 @@ the simulator — so both reported defects are closed against a real account, no
       one, and the avatar/clock header is deferred because it needs tvOS 27.0. Phases P1–P5, write scopes
       and the focus requirements are in the spec; nothing is verified about the collapsed state yet,
       because this session had no input channel into the device.
+- [x] Navigation shell, phase P1 (2026-11-27, ADR 0028 + ADR 0029): `RootShellView` replaces
+      `RootTabView` — `TabView` with `.tabViewStyle(.sidebarAdaptable)`, a `tabViewSidebarHeader`
+      (avatar placeholder, «AniTV», clock), «Поиск» as `Tab(role: .search)`, then «Главная», «Профиль»,
+      «Настройки». Minimum target raised to **27.0** for the header. `tab.*` strings replaced by `nav.*`.
+      Verified: simulator build green, Kit tests green (91), `NavigationShellUITests` passes on the tvOS
+      27.2 simulator (focus leaves the panel into the posters and Left brings it back — attachments show
+      the collapsed pill), device build signed and installed, and the shell captured on the owner's Apple
+      TV. Not verified: Back semantics and per-section path preservation; the six older UI-test files
+      still walk focus into the tab bar that no longer exists (P4).
 
 ## Next steps (ordered)
 
-1. Build the navigation shell (ADR 0028, spec `docs/NAVIGATION.md`): P1 replaces `RootTabView` with a
-   `.sidebarAdaptable` shell, P2 adapts the screens' top spacing, P3 adds the navigation UI test that
-   proves collapse-on-leave and Left-from-content, P4 repairs the six UI-test files that walk focus into
-   the old tab bar. The owner answers the open questions below first — the tvOS 26/27 choice alone changes
-   P1's shape.
+1. Continue the navigation redesign from P2 (`docs/NAVIGATION.md`): content adaptation — `ScreenHeader`'s
+   `.top` padding of 56 puts «Новинки» behind the expanded panel, `DesignTokens.screenInset` of 72 is the
+   other number to retune — then P4, which repairs the six UI-test files that still walk focus into the
+   gone tab bar (`LatestFeedUITests`, `CatalogUITests`, `AutoRefreshUITests`, `PlayerSkipUITests`,
+   `DetailResumeUITests`, `DetailEpisodePickerUITests`). A browsable «Каталог» row returns in P2, once
+   `CatalogView` splits into search and browse.
 2. Re-sign on the Apple TV before the 7-day profile expires and record what happens when it does
    (in-app error? launch refused?). The TV now occupies one of the three free-account device slots;
    `docs/INSTALL_DEVICE.md` is the procedure to repeat.
@@ -389,15 +400,13 @@ not a commitment.
   `anitv` and the bundle id will be `top.<domain>.<name>` once the name is chosen. Renaming the
   directory later means re-registering the DSH workspace, so decide before the repository goes public.
 - Whether to enable an Xcode MCP bridge now or after the first successful build.
-- **Navigation (ADR 0028, spec `docs/NAVIGATION.md`), asked 2026-11-27 and still open:**
-  - **Minimum target 26.0 → 27.0?** Only the sidebar's avatar/name/clock header needs tvOS 27.0;
-    everything else works from tvOS 18. Until answered, the shell ships without that header.
-  - **«Медиатека» now or later?** The row needs «Избранное» and «Продолжить просмотр» screens that do not
-    exist; a five-row panel ships today.
-  - **«Поиск»** as a separate screen, or «Каталог» opened with the search field focused (the proposal).
+- **Navigation (ADR 0028, spec `docs/NAVIGATION.md`), asked 2026-11-27:**
+  - ~~**Minimum target 26.0 → 27.0?**~~ **Answered: yes, raised** (ADR 0029) — the sidebar header ships.
+  - ~~**«Медиатека» now or later?**~~ **Answered: later**, together with its screens (P5); four rows today.
+  - **«Поиск»** as a separate screen, or «Каталог» opened with the search field focused (what P1 ships).
   - **Hero carousel on «Главная»** — part of this redesign or its own ADR (the reference's most visible
     element).
-  - **Collapsed pill wording** — the section name («Главная») as in the reference, or a neutral «Меню».
+  - **Collapsed pill wording** — the section name, which is what the system shows today.
 
 ## Known caveats
 
@@ -418,9 +427,11 @@ not a commitment.
   successfully touches a file in that subtree — they are not preloaded.
 - The app's in-memory workspace registry is authoritative at runtime: hand-editing
   `~/.dsh/storages/workspace.json` while the app runs is unreliable — register via the GUI.
-- `TabView` + `.sidebarAdaptable` on tvOS: the **expanded** look was reproduced in the simulator on
-  2026-11-27, but collapse-on-leave-of-focus and Left-from-content are **`unverified`** — that session had
-  no input channel. ADR 0028's fallback (a hand-built shell) stands until a UI test proves otherwise.
+- `TabView` + `.sidebarAdaptable` on tvOS: **verified** 2026-11-27 in the simulator — the panel expands
+  over the content, collapses to a section pill when focus enters the posters, and Left from the first
+  poster column returns focus to the panel (`AniTVUITests/NavigationShellUITests`). Its panel is narrower
+  than the TV app's and it draws no chevron in the collapsed pill on tvOS 27.2, which the owner may or may
+  not want matched.
 
 ## Known tooling options (not installed)
 

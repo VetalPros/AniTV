@@ -21,7 +21,8 @@ Traits that define the project:
 - **Native by the book.** SwiftUI, Swift 6 strict concurrency, system components only
   (`AVPlayerViewController`, `TabView`, `NavigationStack`, focus engine). No web views for core UI,
   no cross-platform UI frameworks, no third-party Swift packages without an ADR.
-- **tvOS 26.0 as the minimum target.** Liquid Glass (`glassEffect`, `GlassEffectContainer`) is used
+- **tvOS 27.0 as the minimum target** (raised from 26.0 on 2026-11-27, ADR 0029 — the sidebar header
+  of ADR 0028 needs it). Liquid Glass (`glassEffect`, `GlassEffectContainer`) is used
   unconditionally — no `#available` branches for older OS versions.
 - **Distribution: TestFlight only** (and ad-hoc/simulator during development). The App Store is out
   of scope. Signing uses a **free** Apple Developer account — see constraints in §2.
@@ -215,7 +216,7 @@ formatted with `swiftformat .` and linted with `swiftlint --strict`.
   inside `actor`s or `@MainActor` types.
 - **SwiftUI + Observation**: `@Observable` models, `@State`/`@Environment` plumbing. No
   `ObservableObject`/`@Published` in new code.
-- **Availability**: target tvOS 26.0 outright. No `if #available` fallbacks for older systems.
+- **Availability**: target tvOS 27.0 outright. No `if #available` fallbacks for older systems.
 - **Liquid Glass**: use system materials and `glassEffect`/`GlassEffectContainer`. Never recreate
   blur with custom `visualEffect` or gradients that imitate the system.
 - **Focus is a first-class citizen** on tvOS: `prefersDefaultFocus`, `.defaultFocus`, `FocusState`,

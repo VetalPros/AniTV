@@ -834,6 +834,91 @@
         }
       }
     },
+    "nav.header.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AniTV"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AniTV"
+          }
+        }
+      }
+    },
+    "nav.home": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Home"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Главная"
+          }
+        }
+      }
+    },
+    "nav.profile": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profile"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Профиль"
+          }
+        }
+      }
+    },
+    "nav.search": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поиск"
+          }
+        }
+      }
+    },
+    "nav.settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки"
+          }
+        }
+      }
+    },
     "player.close": {
       "extractionState": "manual",
       "localizations": {
@@ -905,16 +990,16 @@
     "player.skip.nextEpisode": {
       "extractionState": "manual",
       "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Следующая серия"
-          }
-        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Next episode"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Следующая серия"
           }
         }
       }
@@ -1313,16 +1398,16 @@
     "screen.settings.subtitle": {
       "extractionState": "manual",
       "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Что плеер делает сам, а что спрашивает"
-          }
-        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "What the player does on its own, and what it asks"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Что плеер делает сам, а что спрашивает"
           }
         }
       }
@@ -1330,16 +1415,16 @@
     "screen.settings.title": {
       "extractionState": "manual",
       "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Настройки"
-          }
-        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Settings"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки"
           }
         }
       }
@@ -1347,16 +1432,16 @@
     "settings.endings": {
       "extractionState": "manual",
       "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Автоматически пропускать эндинги"
-          }
-        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Skip endings automatically"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Автоматически пропускать эндинги"
           }
         }
       }
@@ -1364,16 +1449,16 @@
     "settings.hint.caption": {
       "extractionState": "manual",
       "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Если переключатель выключен, плеер показывает кнопку пропуска. Она исчезает через 30 секунд, если её не нажать."
-          }
-        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "With a switch off, the player offers a skip button. It disappears after 30 seconds unless you press it."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Если переключатель выключен, плеер показывает кнопку пропуска. Она исчезает через 30 секунд, если её не нажать."
           }
         }
       }
@@ -1381,84 +1466,16 @@
     "settings.openings": {
       "extractionState": "manual",
       "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Автоматически пропускать опенинги"
-          }
-        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Skip openings automatically"
           }
-        }
-      }
-    },
-    "tab.catalog": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Catalog"
-          }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Каталог"
-          }
-        }
-      }
-    },
-    "tab.latest": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "New Releases"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Новинки"
-          }
-        }
-      }
-    },
-    "tab.profile": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Profile"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Профиль"
-          }
-        }
-      }
-    },
-    "tab.settings": {
-      "extractionState": "manual",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Настройки"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Settings"
+            "value": "Автоматически пропускать опенинги"
           }
         }
       }

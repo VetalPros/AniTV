@@ -108,13 +108,18 @@ Full rationale and the rejected alternatives: ADR 0028 in `docs/DECISIONS.md`.
 | --- | --- | --- | --- | --- |
 | Поиск | `search` (role `.search`) | `magnifyingglass` | каталог with the search field focused | The system pins it above the sections, as in the TV app. Reuses `CatalogView`; a separate search screen would duplicate the view model. |
 | Главная | `home` | `house` | `LatestReleasesView` | Later: hero carousel + rails (separate decision) |
-| Каталог | `catalog` | `square.grid.2x2` | `CatalogView` | ADR 0020 behaviour unchanged |
-| Медиатека | `library` | `rectangle.stack` | **does not exist yet** | Needs «Избранное» + «Продолжить просмотр»; blocked on memory Next steps 2 and 7 |
+| Медиатека | `library` | `rectangle.stack` | **does not exist yet** | Needs «Избранное» + «Продолжить просмотр»; blocked on memory Next steps 3 and 8 |
 | Профиль | `profile` | `person.crop.circle` | `ProfileView` | Pairing code when signed out |
 | Настройки | `settings` | `gearshape` | `SettingsView` | Playback switches |
 
 Order matters: search first, content second, account last — the reference's order and the one the
 system style expects.
+
+**There is no separate «Каталог» row in P1, deliberately.** Every `Tab` in a `TabView` gets its own
+content instance, so a «Поиск» tab and a «Каталог» tab would both mount `CatalogView` — two view models,
+two scroll positions, two caches for one screen. Since ADR 0020 made the catalogue open on its search
+field, the search row *is* the catalogue for now. A browsable «Каталог» returns in P2, once the screen
+splits into a search surface and a browse surface.
 
 Until «Медиатека» has a screen, the shell ships **without** that row rather than with a dead one. That is
 a one-line change either way.
@@ -181,16 +186,33 @@ Every phase is one commit, green before the next. Two agents never own the same 
 
 | Phase | What | Write scope | Verification |
 | --- | --- | --- | --- |
-| P1 | Shell: sections enum, `RootShellView`, search role, localisation keys; delete `RootTabView` | `App/Sources/App/`, `App/Resources/Localizable.xcstrings` | simulator build, app launches, sidebar appears |
+| P1 ✅ | Shell: sections enum, `RootShellView`, search role, sidebar header, localisation keys; `RootTabView` deleted; minimum target raised to 27.0 (ADR 0029) | `App/Sources/App/`, `App/Resources/Localizable.xcstrings`, `project.yml` | **done 2026-11-27**: simulator build green, app launches, panel and pill captured, focus proven by `NavigationShellUITests` |
 | P2 | Content adaptation: `ScreenHeader` top spacing, full-bleed check per section, stale top-bar assumptions | `App/Sources/Design/`, the three feature screens | screenshots at 1920×1080 |
-| P3 | Navigation UI test: collapse on leaving, return from content, Back semantics, section switch keeps path/scroll | `App/UITests/` (new file + `UITestSupport.swift`) | `xcodebuild test` |
+| P3 ✅ | Navigation UI test: focus leaves the panel, Left brings it back | `App/UITests/NavigationShellUITests.swift` | **done 2026-11-27**: `xcodebuild test … -only-testing:AniTVUITests/NavigationShellUITests` passed, both states captured |
 | P4 | Existing UI tests repaired for the new shell (six files walk focus into the old tab bar) | `App/UITests/` | full UI suite |
 | P5 | «Медиатека» screen, once favourites and continue-watching exist | `App/Sources/Features/Library/` | separate ADR |
 
-`ScreenHeader`'s `.top` padding of 56 and `DesignTokens.screenInset` of 72 are the two numbers most
-likely to fight the reference; both live in files the Lead owns, so P2 is a single owner.
+What P1 verified, and how: the panel's expanded state, its collapsed state (a pill carrying «Главная»)
+and the focus round trip were all exercised on the tvOS 27.2 simulator by
+`AniTVUITests/NavigationShellUITests`, which presses the remote through `XCUIRemote` and asserts on
+`hasFocus`; its two attachments are the only images of the collapsed state we have. Still open: Back
+semantics and per-section path preservation (P3's remainder), and the existing six test files (P4).
 
-## 10. Open questions for the owner
+`ScreenHeader`'s `.top` padding of 56 and `DesignTokens.screenInset` of 72 are the two numbers most
+likely to fight the reference; both live in files the Lead owns, so P2 is a single owner. The P1 capture
+already shows the symptom P2 must fix: with the panel expanded, the section title «Новинки» sits behind
+it, while the reference has full-bleed artwork there.
+
+## 10. Open questions for the owner (answered 2026-11-27)
+
+1. ~~Minimum target~~ — **answered: raise it to 27.0** (ADR 0029), so the header ships from P1.
+2. ~~«Медиатека» now or later~~ — **answered: later**, together with its screens (P5). The panel has four
+   rows today.
+3. **Search row semantics** — still open: «Поиск» opens «Каталог» with the field focused (what P1 ships,
+   no duplicate state), or a separate screen.
+4. **Hero carousel on «Главная»** — still open; a separate feature with its own ADR.
+5. **Collapsed pill wording** — still open; P1 ships the system's own pill with the section name
+   («Главная»), which needs no extra work.
 
 1. **Minimum target.** The avatar/clock header inside the panel needs tvOS **27.0**, and the project's
    baseline is 26.0 (ADR 0009; AGENTS.md forbids `#available` fallbacks). Options: ship without the
@@ -207,8 +229,8 @@ likely to fight the reference; both live in files the Lead owns, so P2 is a sing
 
 | # | Risk | Mitigation |
 | --- | --- | --- |
-| R1 | Collapsed/focus behaviour of `sidebarAdaptable` on tvOS is **unverified** — no input channel in this session | P3's UI test proves it on the simulator before P2 starts |
-| R2 | System panel is narrower than the TV app's (~235 vs ~340) and its header is tvOS 27-only | accepted, or Q1 answered with a bump |
+| R1 ✅ | Collapsed/focus behaviour of `sidebarAdaptable` was **unverified** — no input channel this session | **closed 2026-11-27** by `NavigationShellUITests`: focus leaves the panel for the posters on a directional press, and Left from the first column returns it. Attachments show both states |
+| R2 ✅ | System panel is narrower than the TV app's (~235 vs ~340) and its header is tvOS 27-only | header ships from P1 after the bump to 27.0 (ADR 0029); the width difference is accepted |
 | R3 | Six UI tests walk focus into the old tab bar by accessibility identifier | P4, with the helpers centralised in `UITestSupport.swift` |
 | R4 | White pill over bright hero artwork loses contrast | scrim behind the panel, checked on real artwork |
 | R5 | Free account: 7-day profiles, 3 devices — device iteration is slow | simulator first, device captures per phase |

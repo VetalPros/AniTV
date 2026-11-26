@@ -5,7 +5,8 @@ name: AniTV
 options:
   bundleIdPrefix: tv.anitv
   deploymentTarget:
-    tvOS: "26.0"
+    # Raised from 26.0 on 2026-11-27 (ADR 0029): the sidebar header of ADR 0028 is tvOS 27.0-only.
+    tvOS: "27.0"
   createIntermediateGroups: true
   developmentLanguage: en
 

@@ -803,3 +803,37 @@ prove it. If it does not hold, this ADR is superseded by a hand-built shell — 
   the asked-for change.
 - *Adopting the header now by bumping to tvOS 27*: an irreversible narrowing of the supported audience on
   the strength of one cosmetic row. Left as an open question for the owner.
+
+---
+
+## 0029 — The minimum target is raised to tvOS 27.0 (2026-11-27)
+
+**Context.** ADR 0028 chose the system sidebar, whose header block — avatar, name, clock — is
+`@available(… tvOS 27.0)` (`tabViewSidebarHeader`/`Footer` in the AppleTVOS27.2 SDK). The project's
+baseline was 26.0 (ADR 0001, ADR 0009), and AGENTS.md §7 forbids `#available` fallbacks, so the header
+was deferred to the owner's decision. On 2026-11-27 the owner answered: raise the minimum rather than
+ship a sidebar without the header.
+
+**Decision.** `project.yml` declares `deploymentTarget.tvOS: "27.0"`. The 26.0 rule in AGENTS.md §1 and
+§7 is edited to 27.0. No compatibility shims, no `#available` branches — the whole point of the move is
+that the API is simply available.
+
+**Why it is cheap here.** The only hardware in use already runs 27.2.1 (the owner's Apple TV) and the
+only runtime on this machine is the tvOS 27.2 simulator (the 26.0 runtime is not installed at all), so
+nothing we can actually execute changes. Distribution is TestFlight/ad-hoc to a handful of devices; there
+is no App Store audience to strand. The cost is hypothetical (a viewer on tvOS 26) and the benefit is the
+navigation the owner asked for.
+
+**Consequences.**
+
+- The shell ships with the header of the reference: avatar placeholder, «AniTV», current time.
+- The account display name is still unavailable (signing in is an OTP pairing, ADR 0021 — the Kit
+  exposes no name), so the header shows the app instead. Recorded as a follow-up, not a defect.
+- CI on `macos-26` runners builds against the tvOS 27.2 SDK, so nothing changes there; a runner with an
+  older SDK would now fail to build, which is the intended signal.
+- Supersedes the "26.0" lines of ADR 0001 and ADR 0009; every other decision that leans on 26.0
+  (Liquid Glass, no availability branches) still holds.
+
+**Alternatives rejected.** *Shipping the sidebar without its header* — the owner judged the header part
+of the look he asked for. *One guarded branch* — explicit violation of AGENTS.md §7 and a permanent
+divergence between 26-and-27 code paths that nothing on this machine could exercise.
