@@ -289,6 +289,25 @@ simulator plus network. Budget: roughly half a day for the spike, then the carou
 the app; if the system turns out to refresh the Top Shelf too rarely to be worth it, keep the static
 artwork and drop this idea.
 
+## Installed on the owner's Apple TV (2026-11-27)
+
+Release build signed with the personal team from `Config/Local.xcconfig`, installed and launched on
+`Гостиная` (`00008150-000C62CA0101401C`, Apple TV 4K, tvOS 27.2.1) with the procedure in
+`docs/INSTALL_DEVICE.md`:
+
+```
+xcodebuild ... -destination 'platform=tvOS,id=00008150-000C62CA0101401C' -configuration Release \
+  -allowProvisioningUpdates -derivedDataPath .build/DeviceDerivedData build      → BUILD SUCCEEDED
+xcrun devicectl device install app --device 00008150-… AniTV.app               → App installed
+xcrun devicectl device process launch --device 00008150-… tv.anitv.client      → Launched
+xcrun devicectl device capture screenshot … --destination /tmp/appletv-live.png → 1920×1080
+```
+
+The screenshot shows the live feed with the new four-tab bar including «Настройки», so the build on the
+device is the current `main` (`c2973d8`). Signing is `Apple Development: vetalirusa@gmail.com`, team
+`9KLFP6C3LT`; a free personal team means the profile lives **seven days**, after which the app stops
+launching until it is installed again — that is a property of the account, not of the code.
+
 ## CI on the real runner (2026-11-17)
 
 The first run on GitHub did two useful things at once. The **advisory UI suite passed on a GitHub-hosted
