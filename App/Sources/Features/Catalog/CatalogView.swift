@@ -1,11 +1,36 @@
 import AniLibertyKit
 import SwiftUI
 
-/// «Каталог» tab: search, filters and the paged result grid.
+/// The catalogue screen, in one of two shapes (ADR 0030): «Поиск» finds a title by name, «Каталог»
+/// browses it by filters. Both share the view model, the paging and the detail push.
 ///
 /// The screen keeps its own navigation stack so a poster pushes the same detail screen the
-/// «Новинки» tab uses; the filter pickers are covers, not part of the stack.
+/// «Новинки» section uses; the filter pickers are covers, not part of the stack.
 struct CatalogView: View {
+    /// Which shape the screen takes. Search shows the text field, browse shows the filter chips; a screen
+    /// that showed both would have to explain why half of it is redundant.
+    enum Mode: String {
+        case search
+        case browse
+
+        var title: LocalizedStringKey {
+            switch self {
+            case .search: "screen.search.title"
+            case .browse: "screen.catalog.title"
+            }
+        }
+
+        var subtitle: LocalizedStringKey {
+            switch self {
+            case .search: "screen.search.subtitle"
+            case .browse: "screen.catalog.subtitle"
+            }
+        }
+    }
+
+    /// Defaults to search so a preview or a test can build the screen with no arguments.
+    var mode: Mode = .search
+
     @State private var model = CatalogViewModel()
     /// Owned by the shell, so the section survives its own view being recreated (ADR 0028 §7).
     @Binding var path: [ReleaseRoute]
@@ -29,7 +54,7 @@ struct CatalogView: View {
             ZStack {
                 AniTVBackground()
                 VStack(spacing: 0) {
-                    ScreenHeader(title: "screen.catalog.title", subtitle: "screen.catalog.subtitle") {
+                    ScreenHeader(title: mode.title, subtitle: mode.subtitle) {
                         resultCount
                     }
                     controls
@@ -67,8 +92,12 @@ struct CatalogView: View {
 
     private var controls: some View {
         VStack(alignment: .leading, spacing: 18) {
-            searchField
-            filterChips
+            if mode == .search {
+                searchField
+            }
+            if mode == .browse {
+                filterChips
+            }
         }
         .padding(.horizontal, DesignTokens.screenInset)
         .padding(.bottom, 28)

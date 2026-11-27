@@ -12,7 +12,7 @@ final class CatalogUITests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
 
-        openCatalogTab(in: app)
+        openCatalog(in: app, mode: .catalog)
         attach(app, named: "catalog-grid")
 
         let count = app.staticTexts["catalog.resultCount"]
@@ -35,16 +35,15 @@ final class CatalogUITests: XCTestCase {
 
         // «Любой» is the first row and would leave the count unchanged, so walk down until a real genre
         // holds focus instead of trusting a fixed number of presses.
-        for _ in 0 ..< 6 {
-            let focusedOption = app.descendants(matching: .any)
-                .matching(NSPredicate(format: "hasFocus == 1 AND identifier BEGINSWITH %@", "filterPicker.option."))
-                .firstMatch
-            if focusedOption.exists, focusedOption.identifier != "filterPicker.option.any" {
-                break
-            }
+        for _ in 0 ..< 8 where focusedOptionIdentifier(in: app) == "filterPicker.option.any" {
             XCUIRemote.shared.press(.down)
-            Thread.sleep(forTimeInterval: settle)
+            Thread.sleep(forTimeInterval: 0.5)
         }
+        XCTAssertNotEqual(
+            focusedOptionIdentifier(in: app),
+            "filterPicker.option.any",
+            "The picker never moved off «Любой», so the filter could not change"
+        )
         XCUIRemote.shared.press(.select)
         Thread.sleep(forTimeInterval: settle)
 
@@ -87,7 +86,7 @@ final class CatalogUITests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
 
-        openCatalogTab(in: app)
+        openCatalog(in: app, mode: .catalog)
         let count = app.staticTexts["catalog.resultCount"]
         XCTAssertTrue(count.waitForExistence(timeout: loadTimeout))
         let unfiltered = count.label
@@ -117,17 +116,18 @@ final class CatalogUITests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
 
-        openCatalogTab(in: app)
+        openCatalog(in: app, mode: .search)
         let count = app.staticTexts["catalog.resultCount"]
         XCTAssertTrue(count.waitForExistence(timeout: loadTimeout))
         let unfiltered = count.label
 
-        // Focus the field the way a viewer would: Down into the chip row, back Up onto the field.
-        XCUIRemote.shared.press(.down)
-        Thread.sleep(forTimeInterval: 0.8)
-        XCUIRemote.shared.press(.up)
-        Thread.sleep(forTimeInterval: 0.8)
+        // «Поиск» has no chip row (ADR 0030), so the field is the only control above the grid: walk a
+        // little until it holds focus instead of assuming Down-then-Up lands on it.
         let field = app.descendants(matching: .any)["catalog.searchField"].firstMatch
+        for direction in [XCUIRemote.Button.up, .down, .up, .down, .right] where !field.hasFocus {
+            XCUIRemote.shared.press(direction)
+            Thread.sleep(forTimeInterval: 0.8)
+        }
         XCTAssertTrue(field.hasFocus, "The search field did not take focus")
 
         XCUIRemote.shared.press(.select)
@@ -147,13 +147,22 @@ final class CatalogUITests: XCTestCase {
     // MARK: Helpers
 
     @MainActor
-    private func openCatalogTab(in app: XCUIApplication) {
-        // «Поиск» is the row that opens the catalogue: search and browse are one screen (ADR 0020, 0028).
-        XCTAssertTrue(ShellNavigator.open(.search, in: app), "The sidebar never reached «Поиск»")
+    private func openCatalog(in app: XCUIApplication, mode: ShellSection) {
+        let marker = mode == .search ? "catalog.searchField" : "catalog.genreChip"
+        XCTAssertTrue(ShellNavigator.open(mode, in: app), "The sidebar never reached \(mode)")
         XCTAssertTrue(
-            app.descendants(matching: .any)["catalog.searchField"].firstMatch.waitForExistence(timeout: loadTimeout),
-            "«Поиск» never opened the catalogue screen"
+            app.descendants(matching: .any)[marker].firstMatch.waitForExistence(timeout: loadTimeout),
+            "\(mode) never opened its screen"
         )
+    }
+
+    /// The accessibility identifier of the option that holds focus inside the filter picker, if any.
+    @MainActor
+    private func focusedOptionIdentifier(in app: XCUIApplication) -> String? {
+        let element = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "hasFocus == 1 AND identifier BEGINSWITH %@", "filterPicker.option."))
+            .firstMatch
+        return element.exists ? element.identifier : nil
     }
 
     @MainActor

@@ -834,6 +834,23 @@
         }
       }
     },
+    "nav.catalog": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catalog"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Каталог"
+          }
+        }
+      }
+    },
     "nav.header.title": {
       "extractionState": "manual",
       "localizations": {
@@ -1299,13 +1316,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Search the catalogue and filter it by genre, type, year and order"
+            "value": "Filter the catalogue by genre, type, year and order"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Поиск по каталогу с фильтрами по жанру, типу, году и порядку"
+            "value": "Фильтры по жанру, типу, году и порядку"
           }
         }
       }
@@ -1391,6 +1408,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Профиль"
+          }
+        }
+      }
+    },
+    "screen.search.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search AniLiberty by title"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поиск по названию на AniLiberty"
+          }
+        }
+      }
+    },
+    "screen.search.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поиск"
           }
         }
       }

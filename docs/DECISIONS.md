@@ -837,3 +837,42 @@ navigation the owner asked for.
 **Alternatives rejected.** *Shipping the sidebar without its header* — the owner judged the header part
 of the look he asked for. *One guarded branch* — explicit violation of AGENTS.md §7 and a permanent
 divergence between 26-and-27 code paths that nothing on this machine could exercise.
+
+---
+
+## 0030 — Search and browse are two screens, and «Каталог» returns to the panel (2026-11-27)
+
+**Context.** When the sidebar replaced the tab bar (ADR 0028), the panel shipped with four rows:
+«Поиск», «Главная», «Профиль», «Настройки». The catalogue had no row of its own because search and
+browse were **one** screen: `CatalogView` showed a search field *and* filter chips over one grid
+(ADR 0020). Two rows pointing at the same screen would have duplicated its state — every `Tab` gets its
+own content instance — and the result was the cosmetic contradiction the owner noticed: the collapsed
+pill said «Поиск» while the screen's own title said «Каталог».
+
+**Decision.** One screen, two shapes, two rows.
+
+- `CatalogView` gains a `Mode`: `.search` and `.browse`. Search shows the text field and hides the chips;
+  browse shows the chips and hides the field. Everything else — view model, 400 ms debounce, paging,
+  detail push, `NavigationStack` path — is shared code, not a copy.
+- The panel gets «Каталог» (`square.grid.2x2`) back, between «Главная» and «Профиль»: search first, then
+  content, then account — the reference's order. Five rows, and the sections' vertical order in
+  `ShellSection` (tests) still matches what the viewer sees.
+- Each section keeps its own path (`ShellNavigationState.search` / `.catalog`), because they are separate
+  destinations that can hold separate releases.
+- Wording is now consistent: the row, the pill and the screen title agree for both sections.
+
+**Consequences.**
+
+- Two `CatalogViewModel` instances exist while both sections have been visited, so the app can hold two
+  catalogue result sets with different filters. That is the point — a filter set in «Каталог» must not
+  narrow «Поиск» — and the Kit's response cache keeps the cost to a second request per fresh session, not
+  per keystroke.
+- «Поиск» still opens on its field and «Каталог» on the chips row, because the grid keeps
+  `takesDefaultFocus: false` (ADR 0020's lesson: the grid must not steal focus from the control above it).
+- Tests: `ShellSection` gained `.catalog`, `CatalogUITests` points the filter tests at «Каталог» and the
+  typing test at «Поиск», and `NavigationSectionsUITests` captures five sections instead of four.
+
+**Alternatives rejected.** *Renaming the only row to «Каталог» and dropping the search role* — the
+reference pins a search row above the sections, and the owner asked for that look. *One screen showing
+field and chips together* — the half that does not apply to the task in hand is the half that steals
+focus, which is how ADR 0020's focus chain got broken in the first place.

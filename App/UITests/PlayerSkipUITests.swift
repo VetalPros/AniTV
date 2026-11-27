@@ -165,15 +165,27 @@ final class PlayerSkipUITests: XCTestCase {
     @MainActor
     private func leaveToFeed(in app: XCUIApplication) {
         let card = element(identifier: "latest.posterCard", in: app)
-        for _ in 0 ..< 3 where !card.exists {
+        // Player → detail → feed: three Menu presses at best, and each of them may need a moment.
+        for _ in 0 ..< 6 where !card.exists {
             XCUIRemote.shared.press(.menu)
             Thread.sleep(forTimeInterval: settleTimeout)
         }
+        if !card.exists {
+            XCUIRemote.shared.press(.menu)
+            Thread.sleep(forTimeInterval: settleTimeout * 2)
+        }
+        XCTAssertTrue(
+            card.waitForExistence(timeout: screenTimeout),
+            "Menu never brought the feed back, so the sidebar cannot be reached"
+        )
     }
 
     /// Opens «Настройки», flips one switch and returns to the feed.
     @MainActor
     private func setSwitch(identifier: String, on: Bool, in app: XCUIApplication) -> Bool {
+        // The player is a full-screen cover and the sidebar deliberately is not drawn over it, so the
+        // panel can only be reached after the player is closed.
+        leaveToFeed(in: app)
         XCTAssertTrue(openSection(.settings, in: app), "The sidebar never reached «Настройки»")
         guard let toggle = waitForElement(identifier: identifier, in: app),
               focusToggle(toggle, in: app) else { return false }

@@ -15,6 +15,6 @@ import Observation
 final class ShellNavigationState {
     var home: [ReleaseRoute] = []
     var search: [ReleaseRoute] = []
+    var catalog: [ReleaseRoute] = []
     var profile: [ReleaseRoute] = []
-
 }

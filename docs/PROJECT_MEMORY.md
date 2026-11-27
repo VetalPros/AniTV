@@ -20,7 +20,7 @@
 | Repository | public, <https://github.com/VetalPros/AniTV>, MIT (published 2026-11-17) |
 | DSH workspace | `c714b289-7397-4251-b27c-4ce3ce773cf6` (`~/Documents/anitv`) |
 | Physical Apple TV | **paired and in use** since 2026-11-26: Apple TV 4K `AppleTV18,1` (devicectl's marketing name: *4th generation*; session-5 notes said 3rd), name «Гостиная», tvOS 27.2.1 (24K157), UDID `00008150-000C62CA0101401C` |
-| Navigation | **System sidebar shipped in P1–P4** (2026-11-27, ADR 0028 + 0029): `RootShellView` with `.sidebarAdaptable`, header, four rows; the old top tab bar is gone; all sections share the `72 / 56` frame and clear the collapsed pill; the UI suite was repaired for the shell. «Медиатека» (P5) and the P3 remainder still pending |
+| Navigation | **System sidebar shipped** (2026-11-27, ADR 0028/0029/0030): `RootShellView` with `.sidebarAdaptable`, header, **five** rows (Поиск, Главная, Каталог, Профиль, Настройки); «Поиск» and «Каталог» are two modes of `CatalogView`; paths live in `ShellNavigationState`; UI suite green. «Медиатека» (P5) and focus/scroll restoration still pending |
 
 ## Environment facts (verified on this machine)
 
@@ -296,33 +296,42 @@ the simulator — so both reported defects are closed against a real account, no
       13:38:56 across one switch). Encoded as an expected failure, with the fix sketched in
       `docs/NAVIGATION.md` §7. Lifting the view models into the shell was tried and reverted — the feed
       never left its loading state.
+- [x] Search and browse split, «Каталог» back in the panel (2026-11-27, ADR 0030): `CatalogView` gained a
+      `Mode` (`.search` shows the field, `.browse` shows the chips), the shell gained a fifth row and
+      `ShellNavigationState.catalog`, and the pill, screen title and row finally agree. `CatalogUITests`
+      now drives the filter tests on «Каталог» and the typing test on «Поиск»; `NavigationSectionsUITests`
+      captures five sections. Also fixed a latent test bug: `PlayerSkipUITests.setSwitch` tried to open
+      «Настройки» from inside the full-screen player, where the sidebar is unreachable by design.
 
 ## Next steps (ordered)
 
-1. Restore focus and scroll when a section comes back (`docs/NAVIGATION.md` §7): `TabView` unloads an
+1. De-flake the UI suite: replace the remaining fixed `Thread.sleep` choreography with polling helpers (the
+   `ShellNavigator` pattern), starting with the player-hint focus check and the filter-picker walk. Until
+   then a full run may fail one or two tests that pass in isolation — see the caveat list.
+2. Restore focus and scroll when a section comes back (`docs/NAVIGATION.md` §7): `TabView` unloads an
    unselected section, so it returns to the top and refetches. Needs an external `FocusState` in
    `ReleasePosterGrid` (the pattern `EpisodeGrid` uses), a `ScrollViewReader` for the remembered card, and
    the view models lifted above the tabs — the last one was attempted on 2026-11-27 and reverted because
    the feed stopped loading, so start by understanding that failure. A browsable «Каталог» row returns
    once `CatalogView` splits into search and browse (the «Поиск»/«Каталог» wording mismatch goes with it).
-2. Re-sign on the Apple TV before the 7-day profile expires and record what happens when it does
+3. Re-sign on the Apple TV before the 7-day profile expires and record what happens when it does
    (in-app error? launch refused?). The TV now occupies one of the three free-account device slots;
    `docs/INSTALL_DEVICE.md` is the procedure to repeat.
-3. Exercise the favourite toggle against a live account: the add/remove calls and the rollback path have
+4. Exercise the favourite toggle against a live account: the add/remove calls and the rollback path have
    never run with a real token (doing it mutates the owner's favourites, so it needs their go-ahead). Same
    for the `views/history` "continue watching" row, which is not built yet — and «Медиатека» (P5 of the
    navigation spec) depends on both.
-4. Replace the borrowed app icon with an original mark before publishing anywhere — see
+5. Replace the borrowed app icon with an original mark before publishing anywhere — see
    `docs/THIRD_PARTY_ASSETS.md`; the current one is AniLiberty's mark, used with their written permission
    (ADR 0025) — so this is no longer a blocker for publishing, only a provenance note.
-5. Capture real profile / favourites fixtures: the Kit's are synthesised from the OpenAPI schema. The Kit's
+6. Capture real profile / favourites fixtures: the Kit's are synthesised from the OpenAPI schema. The Kit's
    favourites ids/add/remove also assume the documented shapes (a `204` without a body would need the
    decode relaxed).
-6. Watch the advisory `ui-tests` CI job on a real GitHub runner; only then consider making it required
+7. Watch the advisory `ui-tests` CI job on a real GitHub runner; only then consider making it required
    (ADR 0013). Also pin `xcode-select` if the `macos-26` image starts shipping a different default Xcode.
-7. Decide the final product name / bundle identifier **before** the repository goes public (renaming the
+8. Decide the final product name / bundle identifier **before** the repository goes public (renaming the
    directory means re-registering the DSH workspace).
-8. Nice-to-haves nobody has asked for yet: a disk tier for the catalogue cache (it is memory-only now) and
+9. Nice-to-haves nobody has asked for yet: a disk tier for the catalogue cache (it is memory-only now) and
    a "continue watching" row on «Новинки» from `views/history` — the latter becomes redundant if
    «Медиатека» lands.
 
@@ -447,6 +456,11 @@ not a commitment.
   successfully touches a file in that subtree — they are not preloaded.
 - The app's in-memory workspace registry is authoritative at runtime: hand-editing
   `~/.dsh/storages/workspace.json` while the app runs is unreliable — register via the GUI.
+- The UI suite is **timing-fragile**: it drives the remote with fixed `Thread.sleep` choreography, so a full
+  run can fail one or two tests that pass on their own — observed 2026-11-27 in different tests on
+  different runs (2026-11-27: «The expiring hint never held focus» in `PlayerSkipUITests`, «the genre filter
+  did not apply» in `CatalogUITests`). Both classes are green when run alone. The fix is to convert those
+  sleeps into polling helpers of the `ShellNavigator` kind, task by task, not to raise timeouts.
 - `TabView` with `.sidebarAdaptable` **unloads the content of a section that is not selected**: the
   section's `@State` (view model, path, focus, scroll) is destroyed and rebuilt on return. Paths must live
   in `ShellNavigationState`; focus, scroll and loaded data do not survive (measured 2026-11-27).

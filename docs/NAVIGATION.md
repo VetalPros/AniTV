@@ -106,20 +106,20 @@ Full rationale and the rejected alternatives: ADR 0028 in `docs/DECISIONS.md`.
 
 | Section | Value | Icon | Content today | Notes |
 | --- | --- | --- | --- | --- |
-| Поиск | `search` (role `.search`) | `magnifyingglass` | каталог with the search field focused | The system pins it above the sections, as in the TV app. Reuses `CatalogView`; a separate search screen would duplicate the view model. |
+| Поиск | `search` (role `.search`) | `magnifyingglass` | `CatalogView(mode: .search)` | The system pins it above the sections, as in the TV app. Field only, no chips (ADR 0030). |
 | Главная | `home` | `house` | `LatestReleasesView` | Later: hero carousel + rails (separate decision) |
+| Каталог | `catalog` | `square.grid.2x2` | `CatalogView(mode: .browse)` | Chips only, no field (ADR 0030). Returns to the panel with this ADR. |
 | Медиатека | `library` | `rectangle.stack` | **does not exist yet** | Needs «Избранное» + «Продолжить просмотр»; blocked on memory Next steps 3 and 8 |
 | Профиль | `profile` | `person.crop.circle` | `ProfileView` | Pairing code when signed out |
 | Настройки | `settings` | `gearshape` | `SettingsView` | Playback switches |
 
 Order matters: search first, content second, account last — the reference's order and the one the
-system style expects.
+`ShellSection` order in the tests follows, because the panel is walked top-down.
 
-**There is no separate «Каталог» row in P1, deliberately.** Every `Tab` in a `TabView` gets its own
-content instance, so a «Поиск» tab and a «Каталог» tab would both mount `CatalogView` — two view models,
-two scroll positions, two caches for one screen. Since ADR 0020 made the catalogue open on its search
-field, the search row *is* the catalogue for now. A browsable «Каталог» returns in P2, once the screen
-splits into a search surface and a browse surface.
+«Поиск» and «Каталог» are **two shapes of one screen**, not two screens: `CatalogView.Mode` decides
+whether the field or the chips are on display, and both keep their own navigation path. That is how the
+row, the pill and the screen title finally agree — before ADR 0030 the only row was labelled «Поиск»
+while the screen behind it said «Каталог».
 
 Until «Медиатека» has a screen, the shell ships **without** that row rather than with a dead one. That is
 a one-line change either way.
@@ -158,7 +158,10 @@ The focus engine is the product here; everything below is a requirement, not a n
 4. **Back path.** Back inside a section pops its `NavigationStack`; a second Back at the section root
    must collapse the panel (or leave it collapsed), never silently change section; at the outermost level
    Back is the system's (Home).
-5. **Player.** The player is a `fullScreenCover` and must not show the panel at all.
+5. **Player.** The player is a `fullScreenCover` and must not show the panel at all — which also means the
+   sidebar is **unreachable while it is up**: a test (or a viewer) that wants another section closes the
+   player first. `PlayerSkipUITests` learned this the hard way on 2026-11-27, when a previously skipped
+   branch tried to open «Настройки» from inside the player.
 6. **The pill is focusable** and shows the current section — it is the only visible navigation affordance
    in the collapsed state, so it needs an accessibility label, not just an icon.
 
@@ -255,8 +258,8 @@ that the reference puts artwork where we put a section title, which is P5's hero
 1. ~~Minimum target~~ — **answered: raise it to 27.0** (ADR 0029), so the header ships from P1.
 2. ~~«Медиатека» now or later~~ — **answered: later**, together with its screens (P5). The panel has four
    rows today.
-3. **Search row semantics** — still open: «Поиск» opens «Каталог» with the field focused (what P1 ships,
-   no duplicate state), or a separate screen.
+3. ~~**Search row semantics**~~ — **answered and shipped 2026-11-27** (ADR 0030): «Поиск» and «Каталог»
+   are two modes of `CatalogView`, with their own rows, titles and paths.
 4. **Hero carousel on «Главная»** — still open; a separate feature with its own ADR.
 5. **Collapsed pill wording** — still open; P1 ships the system's own pill with the section name
    («Главная»), which needs no extra work.

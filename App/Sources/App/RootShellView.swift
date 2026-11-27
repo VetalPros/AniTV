@@ -10,6 +10,7 @@ struct RootShellView: View {
     private enum Section: Hashable {
         case search
         case home
+        case catalog
         case profile
         case settings
     }
@@ -31,6 +32,7 @@ struct RootShellView: View {
         }
         switch arguments[arguments.index(after: flag)] {
         case "search": return .search
+        case "catalog": return .catalog
         case "profile": return .profile
         case "settings": return .settings
         default: return .home
@@ -41,13 +43,15 @@ struct RootShellView: View {
         TabView(selection: $selection) {
             // `role: .search` is what pins the magnifier row above the sections, as in the reference.
             Tab("nav.search", systemImage: "magnifyingglass", value: Section.search, role: .search) {
-                // Search and browse are the same screen today (ADR 0020: the catalogue opens on its
-                // search field), so a separate «Каталог» row would only duplicate its state.
-                CatalogView(path: $navigation.search)
+                CatalogView(mode: .search, path: $navigation.search)
             }
 
             Tab("nav.home", systemImage: "house", value: Section.home) {
                 LatestReleasesView(path: $navigation.home)
+            }
+
+            Tab("nav.catalog", systemImage: "square.grid.2x2", value: Section.catalog) {
+                CatalogView(mode: .browse, path: $navigation.catalog)
             }
 
             Tab("nav.profile", systemImage: "person.crop.circle", value: Section.profile) {

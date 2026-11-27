@@ -13,6 +13,7 @@ final class NavigationSectionsUITests: XCTestCase {
         let sections: [(name: String, markers: [String])] = [
             ("home", ["latest.posterCard"]),
             ("search", ["catalog.searchField"]),
+            ("catalog", ["catalog.genreChip"]),
             // Signed out the profile shows the pairing code; signed in it offers «Сменить аккаунт».
             ("profile", ["profile.pairingCode", "profile.reconnect"]),
             ("settings", ["settings.screen"]),

@@ -52,6 +52,7 @@ enum UITestLaunchArguments {
 enum ShellSection: String, CaseIterable {
     case search
     case home
+    case catalog
     case profile
     case settings
 
@@ -60,6 +61,7 @@ enum ShellSection: String, CaseIterable {
         switch self {
         case .search: ["catalog.searchField"]
         case .home: ["latest.posterCard"]
+        case .catalog: ["catalog.genreChip"]
         case .profile: ["profile.pairingCode", "profile.reconnect"]
         case .settings: ["settings.screen"]
         }
