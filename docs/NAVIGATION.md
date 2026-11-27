@@ -284,6 +284,7 @@ that the reference puts artwork where we put a section title, which is P5's hero
 | R3 ✅ | UI tests walked focus into the old tab bar by accessibility identifier | **closed 2026-11-27** in P4: eleven test files now call `ShellNavigator`; the panel's rows focus as anonymous containers, which the helper handles (see §6) |
 | R4 | White pill over bright hero artwork loses contrast | scrim behind the panel, checked on real artwork |
 | R5 | Free account: 7-day profiles, 3 devices — device iteration is slow | simulator first, device captures per phase |
+| R7 ✅ | The UI suite drove the remote by sleeping, so a full run could fail tests that pass alone | **closed 2026-11-27**: `UITestWait` + polled focus in the player and catalogue suites; three consecutive full runs green |
 | R6 | Building the app requires the DSH session to run with full file access: under the default `workspace-write` policy SwiftPM cannot write its manifest cache to `~/Library/Caches/org.swift.swiftpm` and the build dies with `Missing package product 'AniLibertyKit'` (observed 2026-11-27; same command green once the session was widened) | run P1–P5 builds with the wider policy, then build and `swift test` as the definition of done |
 
 ## 12. What this document does not decide

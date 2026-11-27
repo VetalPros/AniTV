@@ -296,6 +296,14 @@ the simulator — so both reported defects are closed against a real account, no
       13:38:56 across one switch). Encoded as an expected failure, with the fix sketched in
       `docs/NAVIGATION.md` §7. Lifting the view models into the shell was tried and reverted — the feed
       never left its loading state.
+- [x] UI suite de-flaked where it kept failing (2026-11-27): `PlayerSkipUITests` no longer samples the
+      transport bar once (the first reading after revealing it is often `0:00`, which used to be judged as a
+      failed seek) and no longer gives the hint ~5 s to claim focus inside a 4-second lifetime; the
+      catalogue tests wait for the result counter to change instead of sleeping, and a shared
+      `UITestWait` helper (`until`, `forDisappearance`, `forLabelChange`) now holds those expectations.
+      Three consecutive full runs: 24 passed / 0 failed, with the known ending-hint focus gap recorded as
+      an expected failure rather than hidden. Also fixed for real: `leaveToFeed` used to press Menu while
+      the feed was still loading, which at a section root sends the app to the Home screen.
 - [x] Search and browse split, «Каталог» back in the panel (2026-11-27, ADR 0030): `CatalogView` gained a
       `Mode` (`.search` shows the field, `.browse` shows the chips), the shell gained a fifth row and
       `ShellNavigationState.catalog`, and the pill, screen title and row finally agree. `CatalogUITests`
@@ -305,9 +313,10 @@ the simulator — so both reported defects are closed against a real account, no
 
 ## Next steps (ordered)
 
-1. De-flake the UI suite: replace the remaining fixed `Thread.sleep` choreography with polling helpers (the
-   `ShellNavigator` pattern), starting with the player-hint focus check and the filter-picker walk. Until
-   then a full run may fail one or two tests that pass in isolation — see the caveat list.
+1. Finish converting fixed sleeps to expectations if they start flaking again: the player and catalogue
+   suites are done (`UITestWait`, polled focus), the detail/profile/settings suites still use
+   `Thread.sleep` but have not flaked. The player's ending-hint focus gap is a **product** question, not a
+   test one — see the caveat list.
 2. Restore focus and scroll when a section comes back (`docs/NAVIGATION.md` §7): `TabView` unloads an
    unselected section, so it returns to the top and refetches. Needs an external `FocusState` in
    `ReleasePosterGrid` (the pattern `EpisodeGrid` uses), a `ScrollViewReader` for the remembered card, and
@@ -464,6 +473,10 @@ not a commitment.
   navigation. One *real* bug was hiding among those flakes: `PlayerSkipUITests.leaveToFeed` pressed Menu
   while the feed was still loading, which at a section root hands the screen to tvOS — fixed by pressing
   Menu only while the player or the detail cover is on screen.
+- **Player hint focus (product issue, `unverified` as a diagnosis):** after auto-skipping the credits the
+  «Следующая серия» chip is on screen but does not take focus within 8 s, while the opening hint does.
+  `PlayerSkipUITests` records it as an expected failure; ADR 0027 promises the hint claims focus, so this
+  is either a race in the focus grant or a difference between the opening and ending paths.
 - `TabView` with `.sidebarAdaptable` **unloads the content of a section that is not selected**: the
   section's `@State` (view model, path, focus, scroll) is destroyed and rebuilt on return. Paths must live
   in `ShellNavigationState`; focus, scroll and loaded data do not survive (measured 2026-11-27).

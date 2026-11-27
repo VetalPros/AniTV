@@ -26,30 +26,10 @@ final class CatalogUITests: XCTestCase {
             "The catalogue grid stayed empty"
         )
 
-        // Down walks the header controls; the genre chip is the first filter.
-        XCTAssertTrue(focusChip("catalog.genreChip", in: app), "The remote never reached the genre chip")
-        XCUIRemote.shared.press(.select)
-        let picker = app.descendants(matching: .any)["filterPicker.screen"].firstMatch
-        XCTAssertTrue(picker.waitForExistence(timeout: 15), "The genre chip did not open its picker")
-        attach(app, named: "catalog-genre-picker")
+        chooseGenre(in: app)
+        attach(app, named: "catalog-filtered")
 
-        // «Любой» is the first row and would leave the count unchanged, so walk down until a real genre
-        // holds focus instead of trusting a fixed number of presses.
-        for _ in 0 ..< 8 where focusedOptionIdentifier(in: app) == "filterPicker.option.any" {
-            XCUIRemote.shared.press(.down)
-            Thread.sleep(forTimeInterval: 0.5)
-        }
-        XCTAssertNotEqual(
-            focusedOptionIdentifier(in: app),
-            "filterPicker.option.any",
-            "The picker never moved off «Любой», so the filter could not change"
-        )
-        XCUIRemote.shared.press(.select)
-        Thread.sleep(forTimeInterval: settle)
-
-        XCTAssertFalse(picker.exists, "Choosing a genre did not close the picker")
-        XCTAssertTrue(count.waitForExistence(timeout: loadTimeout))
-        let filtered = count.label
+        let filtered = UITestWait.forLabelChange(of: count, from: unfiltered, timeout: loadTimeout)
         XCTAssertNotEqual(
             filtered,
             unfiltered,
@@ -91,23 +71,16 @@ final class CatalogUITests: XCTestCase {
         XCTAssertTrue(count.waitForExistence(timeout: loadTimeout))
         let unfiltered = count.label
 
-        XCTAssertTrue(focusChip("catalog.genreChip", in: app), "The remote never reached the genre chip")
-        XCUIRemote.shared.press(.select)
-        XCTAssertTrue(
-            app.descendants(matching: .any)["filterPicker.screen"].firstMatch.waitForExistence(timeout: 15)
-        )
-        XCUIRemote.shared.press(.down)
-        Thread.sleep(forTimeInterval: settle)
-        XCUIRemote.shared.press(.select)
-        Thread.sleep(forTimeInterval: settle)
-        XCTAssertNotEqual(count.label, unfiltered, "The genre filter did not apply")
+        chooseGenre(in: app)
+        let filtered = UITestWait.forLabelChange(of: count, from: unfiltered, timeout: loadTimeout)
+        XCTAssertNotEqual(filtered, unfiltered, "The genre filter did not apply")
 
         let reset = app.buttons["catalog.resetButton"]
         XCTAssertTrue(reset.waitForExistence(timeout: 15), "The reset control did not appear")
         XCTAssertTrue(focusReset(in: app), "The remote never reached the reset control")
         XCUIRemote.shared.press(.select)
-        Thread.sleep(forTimeInterval: 2)
-        XCTAssertEqual(count.label, unfiltered, "Reset did not restore the unfiltered result count")
+        let restored = UITestWait.forLabelChange(of: count, from: filtered, timeout: loadTimeout)
+        XCTAssertEqual(restored, unfiltered, "Reset did not restore the unfiltered result count")
     }
 
     @MainActor
@@ -153,6 +126,29 @@ final class CatalogUITests: XCTestCase {
         XCTAssertTrue(
             app.descendants(matching: .any)[marker].firstMatch.waitForExistence(timeout: loadTimeout),
             "\(mode) never opened its screen"
+        )
+    }
+
+    /// Opens the genre picker, moves off «Любой» onto a real genre and confirms it.
+    @MainActor
+    private func chooseGenre(in app: XCUIApplication) {
+        XCTAssertTrue(focusChip("catalog.genreChip", in: app), "The remote never reached the genre chip")
+        XCUIRemote.shared.press(.select)
+        let picker = app.descendants(matching: .any)["filterPicker.screen"].firstMatch
+        XCTAssertTrue(picker.waitForExistence(timeout: 15), "The genre chip did not open its picker")
+        for _ in 0 ..< 8 where focusedOptionIdentifier(in: app) == "filterPicker.option.any" {
+            XCUIRemote.shared.press(.down)
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+        XCTAssertNotEqual(
+            focusedOptionIdentifier(in: app),
+            "filterPicker.option.any",
+            "The picker never moved off «Любой», so the filter could not change"
+        )
+        XCUIRemote.shared.press(.select)
+        XCTAssertTrue(
+            UITestWait.forDisappearance(of: picker, timeout: 10),
+            "Choosing a genre did not close the picker"
         )
     }
 

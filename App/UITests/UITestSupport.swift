@@ -43,6 +43,33 @@ enum UITestLaunchArguments {
     }
 }
 
+/// Expectation helpers for the UI tests: wait for a condition, not for a fixed number of seconds.
+@MainActor
+enum UITestWait {
+    /// Polls `condition` until it holds or the timeout expires.
+    static func until(_ timeout: TimeInterval, poll: TimeInterval = 0.25, _ condition: () -> Bool) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if condition() {
+                return true
+            }
+            Thread.sleep(forTimeInterval: poll)
+        }
+        return condition()
+    }
+
+    /// Waits for an element to leave the accessibility tree.
+    static func forDisappearance(of element: XCUIElement, timeout: TimeInterval) -> Bool {
+        until(timeout) { !element.exists }
+    }
+
+    /// Waits until the element's label differs from `previous`, and returns the label it settled on.
+    static func forLabelChange(of element: XCUIElement, from previous: String, timeout: TimeInterval) -> String {
+        _ = until(timeout) { element.exists && element.label != previous }
+        return element.label
+    }
+}
+
 /// The sidebar sections of the shell (ADR 0028), in the order they are stacked vertically.
 ///
 /// The rows focus as anonymous containers — the row buttons keep their identifiers but are not what the
