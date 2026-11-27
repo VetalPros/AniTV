@@ -12,16 +12,16 @@
 | Item | Value |
 | --- | --- |
 | Stage | **Vertical slice 1 is end-to-end verified.** Feed, release detail and player driven by XCUITest on the tvOS simulator |
-| Target platform | tvOS 26.0 (single target for now) |
-| Distribution | TestFlight / ad-hoc only. App Store out of scope. A **free-account device install works** (verified 2026-11-26) |
-| Apple Developer | **Free** account (7-day profiles, 3 devices, no App Groups/CloudKit/Push) |
+| Target platform | tvOS 27.0 (single target for now; raised on 2026-11-27, ADR 0029) |
+| Distribution | **TestFlight** (ADR 0033). App Store listing out of scope. `scripts/release-testflight.sh` + `docs/RELEASE.md`; the first upload is blocked on the paid team and an App Store Connect account (see Environment facts) |
+| Apple Developer | **Paid membership since 2026-11-27** (ADR 0033): profiles last a year, 100 devices per type; App Groups/Push/CloudKit are *available* but not configured |
 | License | **MIT** — confirmed 2026-11-10 (`LICENSE`) |
-| Product name | Provisional `anitv` — final name and bundle ID decided later |
+| Product name | Marketing name still provisional (`AniTV`); bundle ID **fixed at `tv.anitv.client`** by the owner on 2026-11-27, before the first App Store Connect record |
 | Repository | public, <https://github.com/VetalPros/AniTV>, MIT (published 2026-11-17) |
 | DSH workspace | `c714b289-7397-4251-b27c-4ce3ce773cf6` (`~/Documents/anitv`) |
 | Simulator account | **signed in** since 2026-11-27 (owner paired on the tvOS 27.2 simulator), so the favourites rail and the profile screens can be exercised for real |
 | Physical Apple TV | **paired and in use** since 2026-11-26: Apple TV 4K `AppleTV18,1` (devicectl's marketing name: *4th generation*; session-5 notes said 3rd), name «Гостиная», tvOS 27.2.1 (24K157), UDID `00008150-000C62CA0101401C` |
-| Navigation | **System sidebar shipped** (2026-11-27, ADR 0028/0029/0030): `RootShellView` with `.sidebarAdaptable`, header, **five** rows (Поиск, Главная, Каталог, Профиль, Настройки); «Поиск» and «Каталог» are two modes of `CatalogView`; paths live in `ShellNavigationState`; UI suite green. «Медиатека» (P5) and focus/scroll restoration still pending |
+| Navigation | **System sidebar shipped** (2026-11-27, ADR 0028/0029/0030): `RootShellView` with `.sidebarAdaptable`, the account in the header (ADR 0032, opens the profile as a cover) and **four** rows (Поиск, Главная, Каталог, Настройки); «Поиск» and «Каталог» are two modes of `CatalogView`; paths live in `ShellNavigationState`; UI suite green. «Медиатека» (P5) and focus/scroll restoration still pending |
 
 ## Environment facts (verified on this machine)
 
@@ -71,6 +71,14 @@
   `.tabViewStyle(.sidebarAdaptable)` **tvOS 18.0+**, `TabSection` tvOS 18.0+, `Tab(role: .search)`
   tvOS 18+ (renders as the pinned «Поиск» row); `tabViewSidebarHeader`/`tabViewSidebarFooter`
   **tvOS 27.0+**; `tabViewSidebarBottomBar` unavailable on tvOS.
+- **TestFlight pipeline, measured 2026-11-27 (Xcode 27.2)**: `xcodebuild archive -configuration Release
+  -destination 'generic/platform=tvOS' -allowProvisioningUpdates` **succeeds** →
+  `.build/AniTV.xcarchive`. `-exportArchive -exportOptionsPlist Config/ExportOptions.plist`
+  (`method: app-store-connect`) **fails** for two Apple-side reasons: *"Team «Vitalii Proskurnia» does not
+  have permission to create «Apple TV App Store» provisioning profiles"* (the team in
+  `Config/Local.xcconfig` is still the personal one) and *"No provider associated with App Store Connect
+  user"* (Xcode has no App Store Connect account signed in). `xcrun altool` exists and takes
+  `--upload-app -f <ipa> -t appletvos` with either an API key or an app-specific password.
 - **Building the app needs the session outside the default sandbox.** Under `workspace-write`,
   `xcodebuild` fails at package resolution: SwiftPM writes its manifest cache to
   `~/Library/Caches/org.swift.swiftpm/manifests/ManifestLoading` ("Operation not permitted") and the
@@ -96,6 +104,14 @@
 
 ## Done
 
+- [x] TestFlight delivery pipeline (2026-11-27, ADR 0033): `App/Resources/PrivacyInfo.xcprivacy` (the only
+      required-reason API is `UserDefaults`, reason `CA92.1`), `ITSAppUsesNonExemptEncryption: false`,
+      `CURRENT_PROJECT_VERSION = $(BUILD_NUMBER)` with `BUILD_NUMBER = 1` as the fallback in
+      `Config/Base.xcconfig`, `Config/ExportOptions.plist` (`app-store-connect`, automatic signing, symbols
+      kept), `scripts/release-testflight.sh` (generate → archive → export → validate → upload, credentials
+      from the environment only) and `docs/RELEASE.md` (checklist + troubleshooting). Measured: the archive
+      succeeds, the export stops on the two Apple-side blockers in Environment facts. Bundle ID confirmed as
+      `tv.anitv.client`.
 Environment:
 - [x] Xcode 27.2 installed; tvOS 27.2 simulator runtime downloaded and verified.
 - [x] Verified the AniLiberty public API surface and HLS playback by hand (see `api-notes.md`).
@@ -333,34 +349,40 @@ the simulator — so both reported defects are closed against a real account, no
 
 ## Next steps (ordered)
 
-1. Finish converting fixed sleeps to expectations if they start flaking again: the player and catalogue
+1. Finish the first TestFlight upload (ADR 0033, `docs/RELEASE.md`): put the **paid** team ID into
+   `Config/Local.xcconfig`, sign that team in under Xcode → Settings → Accounts, create the App ID
+   `tv.anitv.client` with Keychain Sharing, create the App Store Connect record (platform tvOS), then run
+   `./scripts/release-testflight.sh`. Export currently fails with *"team does not have permission to create
+   «Apple TV App Store» profiles"* and *"No provider associated with App Store Connect user"* — both are the
+   owner's logins, not code.
+2. Finish converting fixed sleeps to expectations if they start flaking again: the player and catalogue
    suites are done (`UITestWait`, polled focus), the detail/profile/settings suites still use
    `Thread.sleep` but have not flaked. The player's ending-hint focus gap is a **product** question, not a
    test one — see the caveat list.
-2. Restore focus and scroll when a section comes back (`docs/NAVIGATION.md` §7): `TabView` unloads an
+3. Restore focus and scroll when a section comes back (`docs/NAVIGATION.md` §7): `TabView` unloads an
    unselected section, so it returns to the top and refetches. Needs an external `FocusState` in
    `ReleasePosterGrid` (the pattern `EpisodeGrid` uses), a `ScrollViewReader` for the remembered card, and
    the view models lifted above the tabs — the last one was attempted on 2026-11-27 and reverted because
    the feed stopped loading, so start by understanding that failure. A browsable «Каталог» row returns
    once `CatalogView` splits into search and browse (the «Поиск»/«Каталог» wording mismatch goes with it).
-3. Re-sign on the Apple TV before the 7-day profile expires and record what happens when it does
+4. Watch what happens when the yearly profile expires (it replaced the 7-day ritual; nothing observed yet)
    (in-app error? launch refused?). The TV now occupies one of the three free-account device slots;
    `docs/INSTALL_DEVICE.md` is the procedure to repeat.
-4. Exercise the favourite toggle against a live account: the add/remove calls and the rollback path have
+5. Exercise the favourite toggle against a live account: the add/remove calls and the rollback path have
    never run with a real token (doing it mutates the owner's favourites, so it needs their go-ahead). Same
    for the `views/history` "continue watching" row, which is not built yet — and «Медиатека» (P5 of the
    navigation spec) depends on both.
-5. Replace the borrowed app icon with an original mark before publishing anywhere — see
+6. Replace the borrowed app icon with an original mark before publishing anywhere — see
    `docs/THIRD_PARTY_ASSETS.md`; the current one is AniLiberty's mark, used with their written permission
    (ADR 0025) — so this is no longer a blocker for publishing, only a provenance note.
-6. Capture real profile / favourites fixtures: the Kit's are synthesised from the OpenAPI schema. The Kit's
+7. Capture real profile / favourites fixtures: the Kit's are synthesised from the OpenAPI schema. The Kit's
    favourites ids/add/remove also assume the documented shapes (a `204` without a body would need the
    decode relaxed).
-7. Watch the advisory `ui-tests` CI job on a real GitHub runner; only then consider making it required
+8. Watch the advisory `ui-tests` CI job on a real GitHub runner; only then consider making it required
    (ADR 0013). Also pin `xcode-select` if the `macos-26` image starts shipping a different default Xcode.
-8. Decide the final product name / bundle identifier **before** the repository goes public (renaming the
+9. Decide the final product name / bundle identifier **before** the repository goes public (renaming the
    directory means re-registering the DSH workspace).
-9. Nice-to-haves nobody has asked for yet: a disk tier for the catalogue cache (it is memory-only now) and
+10. Nice-to-haves nobody has asked for yet: a disk tier for the catalogue cache (it is memory-only now) and
    a "continue watching" row on «Новинки» from `views/history` — the latter becomes redundant if
    «Медиатека» lands.
 
@@ -485,6 +507,12 @@ not a commitment.
   successfully touches a file in that subtree — they are not preloaded.
 - The app's in-memory workspace registry is authoritative at runtime: hand-editing
   `~/.dsh/storages/workspace.json` while the app runs is unreliable — register via the GUI.
+- **TestFlight needs three things that live outside the repository**: a paid Team ID in
+  `Config/Local.xcconfig`, that team signed into Xcode, and an App Store Connect app record. Without all
+  three, `-exportArchive` fails before anything is uploaded (measured 2026-11-27). Builds also expire after
+  90 days, so a long-lived testing group needs re-uploads.
+- The app is an **unofficial** client of a third-party service: external TestFlight testing passes Apple's
+  beta review, so the service's written permission (ADR 0025) is the document to have ready.
 - The UI suite is **timing-fragile**: it drives the remote with fixed `Thread.sleep` choreography, so a full
   run can fail one or two tests that pass on their own — observed 2026-11-27 in different tests on
   different runs (2026-11-27: «The expiring hint never held focus», «The skip did not move the playhead (0s)»

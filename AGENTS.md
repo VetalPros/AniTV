@@ -24,8 +24,10 @@ Traits that define the project:
 - **tvOS 27.0 as the minimum target** (raised from 26.0 on 2026-11-27, ADR 0029 — the sidebar header
   of ADR 0028 needs it). Liquid Glass (`glassEffect`, `GlassEffectContainer`) is used
   unconditionally — no `#available` branches for older OS versions.
-- **Distribution: TestFlight only** (and ad-hoc/simulator during development). The App Store is out
-  of scope. Signing uses a **free** Apple Developer account — see constraints in §2.
+- **Distribution: TestFlight** (and ad-hoc/simulator during development). The App Store listing is out
+  of scope. Since 2026-11-27 the project has a **paid** Apple Developer Program membership (ADR 0033):
+  `scripts/release-testflight.sh` and `docs/RELEASE.md` are the delivery path, and the team ID lives in
+  the gitignored `Config/Local.xcconfig` — see constraints in §2.
 - **Unofficial.** The project name, bundle identifier and branding must never claim to be official
   and must not use the "AniLiberty"/"Libria" trademarks as product identity.
 
@@ -35,12 +37,13 @@ Read `docs/PROJECT_MEMORY.md` for current state and `docs/DECISIONS.md` for the 
 
 ## 2. Hard constraints (never violate)
 
-1. **Free Apple Developer account.** Consequences that shape design, not a temporary annoyance:
-   - No App Groups → Top Shelf extension cannot read app data; Top Shelf must be either static
-     imagery or omitted.
-   - No CloudKit, no Push Notifications, no Sign in with Apple.
-   - Provisioning profiles expire in 7 days; at most 3 devices. Builds must be re-signed regularly.
-   - Never write code that silently depends on a paid entitlement.
+1. **Apple Developer Program membership** (paid since 2026-11-27, ADR 0033).
+   - Profiles last a year and the device limit is 100 per type — the old 7-day re-sign ritual is over.
+   - App Groups, Push, CloudKit and Sign in with Apple are *available* but **not configured**: the Top
+     Shelf carousel stops being blocked by the account, yet nothing may assume a capability that has no
+     decision and no provisioning behind it. Never write code that silently depends on such an entitlement.
+   - Distribution goes through TestFlight: `docs/RELEASE.md` is the checklist, `scripts/release-testflight.sh`
+     the repeatable command, and the App Store Connect record is the owner's to create.
 2. **No secrets in the repository, ever.** No API keys, no `sessionToken`, no credentials, no
    `.p12`, no `.mobileprovision`. The user's session token lives in the **Keychain** only.
    CI runs on public runners with no secrets.
@@ -207,6 +210,15 @@ xcrun simctl launch --console-pty booted tv.anitv.client
 
 Definition of done for any code change: `swift test` green, simulator build green, no new warnings,
 formatted with `swiftformat .` and linted with `swiftlint --strict`.
+
+Releasing a build to testers (paid team, App Store Connect record and credentials required):
+
+```bash
+./scripts/release-testflight.sh          # archive → export → validate → upload
+UPLOAD=0 ./scripts/release-testflight.sh # everything except the upload
+```
+
+What has to exist on Apple's side, and the failures that actually happen: `docs/RELEASE.md`.
 
 ---
 

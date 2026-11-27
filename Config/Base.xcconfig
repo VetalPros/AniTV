@@ -9,3 +9,8 @@
 // simply has no team until you create it. See docs/INSTALL_DEVICE.md.
 
 #include? "Local.xcconfig"
+
+// Build number used when nothing overrides it. The release script passes a fresh one:
+//     xcodebuild ... BUILD_NUMBER=202611271930
+// TestFlight refuses a build number that was already uploaded for the same marketing version.
+BUILD_NUMBER = 1

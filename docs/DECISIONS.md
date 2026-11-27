@@ -965,3 +965,60 @@ the system TV app does it: the profile *is* the header, and there is no row for 
 one screen, and the row would still be the odd one out next to a header that already shows the account.
 *Reading the name from the profile screen's view model* — that screen may never have been opened, so the
 header would sit empty until the viewer visited it.
+
+---
+
+## 0033 — The account is a paid Developer Program membership, and TestFlight becomes the delivery path (2026-11-27)
+
+**Context.** Everything about distribution so far assumed a **free** Apple ID: 7-day provisioning profiles,
+three devices, no App Groups, and no App Store Connect at all (ADR 0003, ADR 0027, `docs/INSTALL_DEVICE.md`).
+On 2026-11-27 the owner bought a Developer Program membership and asked what a TestFlight release needs.
+
+**Decision.** Treat TestFlight as the shipping path and make the repository produce a releasable package:
+
+- `App/Resources/PrivacyInfo.xcprivacy` declares the only required-reason API in use (`UserDefaults`,
+  reason `CA92.1` — the playback switches and the device identifier). Nothing is collected, so the data
+  arrays stay empty.
+- `ITSAppUsesNonExemptEncryption: false` in `project.yml`: HTTPS only, so export compliance is answered
+  once in the bundle instead of at every upload.
+- `CURRENT_PROJECT_VERSION` is now `$(BUILD_NUMBER)`; `Config/Base.xcconfig` defaults it to `1` and the
+  release script passes a fresh UTC `yyyymmddHHMM`, because TestFlight refuses a reused build number.
+- `Config/ExportOptions.plist` exports with `method: app-store-connect`, automatic signing, symbols kept,
+  and `manageAppVersionAndBuildNumber: false` — the build number is chosen by us, not rewritten by Xcode.
+- `scripts/release-testflight.sh` does generate → archive → export → validate → upload, taking credentials
+  from the environment only (App Store Connect API key preferred, app-specific password as the fallback).
+  Nothing secret enters the repository, which is still a public one.
+- `docs/RELEASE.md` is the checklist: what has to exist on Apple's side, what this repository provides,
+  versioning, and the failures that actually bite.
+
+**What the first real run proved** (2026-11-27, Xcode 27.2): `xcodebuild archive -destination
+'generic/platform=tvOS'` **succeeds** and produces `.build/AniTV.xcarchive`. `-exportArchive` **fails**, and
+for reasons that are on Apple's side, not in the code:
+
+1. the team in `Config/Local.xcconfig` is still the *personal* team — *"Team «Vitalii Proskurnia» does not
+   have permission to create «Apple TV App Store» provisioning profiles"*;
+2. Xcode has no App Store Connect account signed in — *"No provider associated with App Store Connect
+   user"*.
+
+So the pipeline is complete and blocked exactly where a human has to log in: a paid Team ID in
+`Config/Local.xcconfig`, that team signed in under Xcode → Settings → Accounts, and the app record created
+in App Store Connect.
+
+**Consequences.**
+
+- The 7-day expiry procedure in `docs/INSTALL_DEVICE.md` stays as history, but profiles on the paid team
+  live a year, and the device limit is no longer the reason to avoid hardware.
+- **App Groups, Push, CloudKit and Sign in with Apple are technically available now.** None of them is
+  used yet; the Top Shelf carousel (deferred in memory) stops being blocked by the account. Nothing here
+  reintroduces a dependency on an entitlement without its own decision.
+- The free-account constraint in AGENTS.md §2 is rewritten; the rule that actually protected us — *never
+  depend on a paid entitlement you have not configured* — stays.
+- Bundle ID stays **`tv.anitv.client`** (owner's decision, 2026-11-27): changing it after the first upload
+  would mean a new App Store Connect record.
+- External TestFlight testing needs Apple's beta review; internal testing does not. The app is an
+  unofficial client of a third-party service, so the written permission from the service (ADR 0025) is
+  the document to keep at hand if review asks.
+
+**Alternatives rejected.** *Staying on ad-hoc installs* — the owner asked for TestFlight explicitly.
+*Uploading by hand from Xcode Organizer only* — a documented script is repeatable and reviewable, and CI
+can run the same commands later.
