@@ -4,7 +4,8 @@ import SwiftUI
 /// "Новинки" tab: poster grid of the most recent releases, pushing into the detail screen.
 struct LatestReleasesView: View {
     @State private var model = LatestReleasesViewModel()
-    @State private var path: [ReleaseRoute] = []
+    /// Owned by the shell, so the section survives its own view being recreated (ADR 0028 §7).
+    @Binding var path: [ReleaseRoute]
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {

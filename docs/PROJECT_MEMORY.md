@@ -288,15 +288,23 @@ the simulator — so both reported defects are closed against a real account, no
       behaviours had to be learned from the running app rather than guessed: the panel's rows focus as
       **anonymous containers** (their `Button`s keep the SF Symbol identifiers but are `Disabled` and are
       not what `hasFocus` reports), and Up stops at the first row instead of wrapping.
+- [x] Navigation shell, phase P3 (2026-11-27, partly): `NavigationStateUITests` proves that Back pops a
+      section's own stack without changing section, and that a pushed release survives a trip to
+      «Настройки» — after the paths moved out of the section views into `ShellNavigationState`, because
+      `TabView` unloads a section that is not selected and took the `@State` path with it. **Not** solved:
+      focus and scroll restart at the top on return, and the section refetches (caption 13:38:35 →
+      13:38:56 across one switch). Encoded as an expected failure, with the fix sketched in
+      `docs/NAVIGATION.md` §7. Lifting the view models into the shell was tried and reverted — the feed
+      never left its loading state.
 
 ## Next steps (ordered)
 
-1. Finish P3 of the navigation redesign (`docs/NAVIGATION.md`): Back inside a section must pop its own
-   stack, a second Back at the section root must collapse the panel rather than change section, and
-   switching sections must preserve each stack's path and scroll position. None of that is verified yet —
-   the shell's tests cover opening sections and the focus round trip only. A browsable «Каталог» row
-   returns once `CatalogView` splits into search and browse (the «Поиск»/«Каталог» wording mismatch goes
-   with it).
+1. Restore focus and scroll when a section comes back (`docs/NAVIGATION.md` §7): `TabView` unloads an
+   unselected section, so it returns to the top and refetches. Needs an external `FocusState` in
+   `ReleasePosterGrid` (the pattern `EpisodeGrid` uses), a `ScrollViewReader` for the remembered card, and
+   the view models lifted above the tabs — the last one was attempted on 2026-11-27 and reverted because
+   the feed stopped loading, so start by understanding that failure. A browsable «Каталог» row returns
+   once `CatalogView` splits into search and browse (the «Поиск»/«Каталог» wording mismatch goes with it).
 2. Re-sign on the Apple TV before the 7-day profile expires and record what happens when it does
    (in-app error? launch refused?). The TV now occupies one of the three free-account device slots;
    `docs/INSTALL_DEVICE.md` is the procedure to repeat.
@@ -439,6 +447,9 @@ not a commitment.
   successfully touches a file in that subtree — they are not preloaded.
 - The app's in-memory workspace registry is authoritative at runtime: hand-editing
   `~/.dsh/storages/workspace.json` while the app runs is unreliable — register via the GUI.
+- `TabView` with `.sidebarAdaptable` **unloads the content of a section that is not selected**: the
+  section's `@State` (view model, path, focus, scroll) is destroyed and rebuilt on return. Paths must live
+  in `ShellNavigationState`; focus, scroll and loaded data do not survive (measured 2026-11-27).
 - The sidebar's rows expose `Button`s with the SF Symbol identifiers (`house`, `gearshape`, …) but those
   buttons are `Disabled`; the focus engine reports an **unnamed container** per row instead. Tests must
   therefore walk the panel geometrically (`ShellNavigator`), not by identifier, and must not expect Up to

@@ -7,7 +7,8 @@ import SwiftUI
 /// «Новинки» tab uses; the filter pickers are covers, not part of the stack.
 struct CatalogView: View {
     @State private var model = CatalogViewModel()
-    @State private var path: [ReleaseRoute] = []
+    /// Owned by the shell, so the section survives its own view being recreated (ADR 0028 §7).
+    @Binding var path: [ReleaseRoute]
     @State private var picker: FilterPicker?
     @FocusState private var isSearchFocused: Bool
 

@@ -15,6 +15,9 @@ struct RootShellView: View {
     }
 
     @State private var selection: Section = RootShellView.initialSection
+    /// Section paths live here, above the tabs, so a section keeps its stack when the tab is unloaded
+    /// and reloaded (`ShellNavigationState`, ADR 0028 §7).
+    @State private var navigation = ShellNavigationState()
 
     /// Section to open on launch. Production always starts on «Главная»; a UI test may ask for another
     /// one with `-uiTestingSection <search|home|profile|settings>` so it can capture every screen without
@@ -40,15 +43,15 @@ struct RootShellView: View {
             Tab("nav.search", systemImage: "magnifyingglass", value: Section.search, role: .search) {
                 // Search and browse are the same screen today (ADR 0020: the catalogue opens on its
                 // search field), so a separate «Каталог» row would only duplicate its state.
-                CatalogView()
+                CatalogView(path: $navigation.search)
             }
 
             Tab("nav.home", systemImage: "house", value: Section.home) {
-                LatestReleasesView()
+                LatestReleasesView(path: $navigation.home)
             }
 
             Tab("nav.profile", systemImage: "person.crop.circle", value: Section.profile) {
-                ProfileView()
+                ProfileView(path: $navigation.profile)
             }
 
             Tab("nav.settings", systemImage: "gearshape", value: Section.settings) {

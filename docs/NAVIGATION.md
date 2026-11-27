@@ -178,13 +178,35 @@ it instead of walking a tab bar that no longer exists.
 
 ## 7. Routing
 
-One `NavigationStack(path:)` per section, as today: `ReleaseRoute` values merge where a section owns its
-own path (`LatestReleasesView`, `CatalogView`, `ProfileView` already do this). Switching sections must
-**preserve** each section's path and its scroll position; coming back to «Каталог» must not reset a
-filter (ADR 0020 keeps filter state in the view model; the shell must not recreate section views on
-every switch).
+One `NavigationStack(path:)` per section. The paths are **owned by the shell**, in
+`ShellNavigationState`, and handed to the sections as `@Binding`s — they are not `@State` inside the
+section views.
 
-The shell owns: the selection, the section list, and nothing else. No networking, no view models.
+That is not a style preference. `TabView` unloads the content of a section that is not selected, and a
+`@State` path dies with it: measured on 2026-11-27, opening a release, visiting «Настройки» and coming
+back landed on the grid instead of the release. With the path lifted into the shell the same walk returns
+to the open release, which `NavigationStateUITests` now asserts.
+
+**What survives a section switch, and what does not** (all measured, not assumed):
+
+| Thing | Survives? | Why |
+| --- | --- | --- |
+| Navigation path (pushed release) | **yes** | lives in `ShellNavigationState` |
+| Selected section | yes | the shell's own state |
+| Grid focus and scroll position | **no** | the section's view is unloaded; it comes back at the top |
+| Loaded data | **no** | the view model is `@State` inside the section, so it refetches: the freshness caption moved 13:38:35 → 13:38:56 across one switch |
+| Catalogue filters (ADR 0020) | **no** | same reason — the filter state lives in the section's view model |
+
+Restoring focus and scroll is a known limitation, encoded as an expected failure in
+`NavigationStateUITests.testGridFocusIsNotPreservedBecauseTheSectionIsUnloaded`. The fix is not a
+one-liner: it needs the grid to take an external `FocusState` (the pattern `EpisodeGrid` already uses for
+episodes), a `ScrollViewReader` to bring the remembered card back, and the view models lifted above the
+tabs so the list does not re-order underneath the remembered id. Lifting the models alone was tried and
+**reverted**: with the models owned by the shell the feed never left its loading state, so that path needs
+its own investigation before it is attempted again.
+
+The shell owns: the selection, the section list, the section paths, and nothing else. No networking, no
+view models.
 
 ## 8. Accessibility and localisation
 
@@ -204,7 +226,7 @@ Every phase is one commit, green before the next. Two agents never own the same 
 | --- | --- | --- | --- |
 | P1 ✅ | Shell: sections enum, `RootShellView`, search role, sidebar header, localisation keys; `RootTabView` deleted; minimum target raised to 27.0 (ADR 0029) | `App/Sources/App/`, `App/Resources/Localizable.xcstrings`, `project.yml` | **done 2026-11-27**: simulator build green, app launches, panel and pill captured, focus proven by `NavigationShellUITests` |
 | P2 ✅ | Content adaptation: one token for the top inset (`DesignTokens.screenTopInset`), `ScreenHeader` uses it, «Настройки» dropped its private header and its hardcoded 80/60 paddings | `App/Sources/Design/`, `App/Sources/Features/Settings/` | **done 2026-11-27**: every section captured in both states by `NavigationSectionsUITests` |
-| P3 ✅ | Navigation UI test: focus leaves the panel, Left brings it back | `App/UITests/NavigationShellUITests.swift` | **done 2026-11-27**: `xcodebuild test … -only-testing:AniTVUITests/NavigationShellUITests` passed, both states captured |
+| P3 ◑ | Navigation UI tests: focus leaves the panel and comes back; Back pops the section stack; a section switch keeps the pushed release | `App/UITests/NavigationShellUITests.swift`, `NavigationStateUITests.swift` | **partly done 2026-11-27**: focus round trip, Back semantics and path preservation pass; focus/scroll restoration is a documented limitation (§7) |
 | P4 ✅ | Existing UI tests repaired for the new shell: eight files walked focus into the old tab bar, all of them now go through `ShellNavigator` | `App/UITests/` | **done 2026-11-27**: full UI suite on the tvOS 27.2 simulator |
 | P5 | «Медиатека» screen, once favourites and continue-watching exist | `App/Sources/Features/Library/` | separate ADR |
 

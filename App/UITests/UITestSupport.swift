@@ -69,8 +69,10 @@ enum ShellSection: String, CaseIterable {
 /// Walks the remote into the sidebar, because there is no tab bar to walk up into any more.
 @MainActor
 enum ShellNavigator {
-    /// Opens `section` from wherever focus is, and proves it by waiting for the section's own marker.
-    static func open(_ section: ShellSection, in app: XCUIApplication, settle: TimeInterval = 1.2) -> Bool {
+    /// Moves focus onto `section`'s row and presses Select, without waiting for a particular screen: use
+    /// this when the section is expected to come back on a pushed detail rather than on its root.
+    @discardableResult
+    static func select(_ section: ShellSection, in app: XCUIApplication, settle: TimeInterval = 1.2) -> Bool {
         guard enterPanel(in: app) else { return false }
 
         // Clamp to the first row, then step down once per row: the panel is one focus column.
@@ -83,11 +85,17 @@ enum ShellNavigator {
             Thread.sleep(forTimeInterval: 0.35)
         }
         XCUIRemote.shared.press(.select)
+        Thread.sleep(forTimeInterval: settle)
+        return true
+    }
 
+    /// Opens `section` from wherever focus is, and proves it by waiting for the section's own marker.
+    static func open(_ section: ShellSection, in app: XCUIApplication, settle: TimeInterval = 1.2) -> Bool {
+        guard select(section, in: app, settle: settle) else { return false }
         let marker = app.descendants(matching: .any)
             .matching(NSPredicate(format: "identifier IN %@", section.markers))
             .firstMatch
-        return marker.waitForExistence(timeout: 12) || settleFor(marker, timeout: settle)
+        return marker.waitForExistence(timeout: 12)
     }
 
     /// Presses Left until the focus engine reports a panel row rather than content.

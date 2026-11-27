@@ -6,7 +6,8 @@ import SwiftUI
 /// The tab owns its navigation stack so a favourite pushes the same detail screen the other tabs use.
 struct ProfileView: View {
     @State private var model = ProfileViewModel()
-    @State private var path: [ReleaseRoute] = []
+    /// Owned by the shell, so the section survives its own view being recreated (ADR 0028 §7).
+    @Binding var path: [ReleaseRoute]
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
