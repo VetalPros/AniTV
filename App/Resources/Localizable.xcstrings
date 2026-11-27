@@ -902,23 +902,6 @@
         }
       }
     },
-    "nav.header.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "AniTV"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "AniTV"
-          }
-        }
-      }
-    },
     "nav.home": {
       "extractionState": "manual",
       "localizations": {
@@ -932,23 +915,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Главная"
-          }
-        }
-      }
-    },
-    "nav.profile": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Profile"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Профиль"
           }
         }
       }
@@ -1578,6 +1544,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Автоматически пропускать опенинги"
+          }
+        }
+      }
+    },
+    "shell.account.profile": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profile"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Профиль"
+          }
+        }
+      }
+    },
+    "shell.account.signIn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign In"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Войти"
           }
         }
       }

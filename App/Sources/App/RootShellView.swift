@@ -1,17 +1,17 @@
 import AniLibertyKit
 import SwiftUI
 
-/// Top-level shell: the system sidebar and the sections it switches between (ADR 0028).
+/// Top-level shell: the system sidebar and the sections it switches between (ADR 0028), with the account
+/// as the panel's own header (ADR 0032).
 ///
-/// The panel, its collapse-on-leave behaviour, its focus handling and its glass are the platform's;
-/// this type only owns which section is selected and what each section shows. «Медиатека» joins when
-/// the favourites and continue-watching screens exist — a dead row is worse than a missing one.
+/// The panel, its collapse-on-leave behaviour, its focus handling and its glass are the platform's; this
+/// type owns which section is selected, the header's account read, and the profile cover. «Медиатека»
+/// joins when the favourites and continue-watching screens exist — a dead row is worse than a missing one.
 struct RootShellView: View {
     private enum Section: Hashable {
         case search
         case home
         case catalog
-        case profile
         case settings
     }
 
@@ -19,24 +19,35 @@ struct RootShellView: View {
     /// Section paths live here, above the tabs, so a section keeps its stack when the tab is unloaded
     /// and reloaded (`ShellNavigationState`, ADR 0028 §7).
     @State private var navigation = ShellNavigationState()
+    @State private var account = SidebarProfileModel()
+    /// The profile is a cover, not a section: the reference keeps it in the panel header, and a section
+    /// that is also reachable from the header would put the same screen in two places.
+    @State private var showsProfile = RootShellView.startsOnProfile
 
     /// Section to open on launch. Production always starts on «Главная»; a UI test may ask for another
-    /// one with `-uiTestingSection <search|home|profile|settings>` so it can capture every screen without
-    /// walking the focus engine into the panel.
+    /// one with `-uiTestingSection <search|home|catalog|profile|settings>` so it can capture every screen
+    /// without walking the focus engine into the panel. `profile` opens the cover instead of a tab.
     private static var initialSection: Section {
+        switch requestedSection {
+        case "search": .search
+        case "catalog": .catalog
+        case "settings": .settings
+        default: .home
+        }
+    }
+
+    private static var startsOnProfile: Bool {
+        requestedSection == "profile"
+    }
+
+    private static var requestedSection: String {
         let arguments = ProcessInfo.processInfo.arguments
         guard let flag = arguments.firstIndex(of: "-uiTestingSection"),
               arguments.index(after: flag) < arguments.endIndex
         else {
-            return .home
+            return "home"
         }
-        switch arguments[arguments.index(after: flag)] {
-        case "search": return .search
-        case "catalog": return .catalog
-        case "profile": return .profile
-        case "settings": return .settings
-        default: return .home
-        }
+        return arguments[arguments.index(after: flag)]
     }
 
     var body: some View {
@@ -54,19 +65,24 @@ struct RootShellView: View {
                 CatalogView(mode: .browse, path: $navigation.catalog)
             }
 
-            Tab("nav.profile", systemImage: "person.crop.circle", value: Section.profile) {
-                ProfileView(path: $navigation.profile)
-            }
-
             Tab("nav.settings", systemImage: "gearshape", value: Section.settings) {
                 SettingsView()
             }
         }
         .tabViewStyle(.sidebarAdaptable)
-        .tabViewSidebarHeader { SidebarHeaderView() }
-        // UI tests start from the shipped defaults; without this a failed test could leave a switch on and
-        // the next run would read someone else's settings.
-        .task { await resetSettingsIfAsked() }
+        .tabViewSidebarHeader {
+            SidebarHeaderView(account: account) { showsProfile = true }
+        }
+        .fullScreenCover(isPresented: $showsProfile) {
+            ProfileView(path: $navigation.profile)
+                // Signing in or out happens inside the cover, and the header is the only place that shows
+                // the result, so the account is re-read when the cover goes away.
+                .onDisappear { Task { await account.reload() } }
+        }
+        .task {
+            await account.reload()
+            await resetSettingsIfAsked()
+        }
     }
 
     /// Restores the playback switches to their shipped defaults when a UI test asks for it.
@@ -76,28 +92,73 @@ struct RootShellView: View {
     }
 }
 
-/// The block above the sections: who is watching and what time it is, as in the system TV app.
-///
-/// The account has no display name yet (signing in is an OTP pairing, ADR 0021), so the name slot shows
-/// the app itself until the Kit exposes one.
+/// The panel's header: who is watching, and what time it is — the account entry point, as in the system TV
+/// app. Selecting it opens the profile cover.
 private struct SidebarHeaderView: View {
+    let account: SidebarProfileModel
+    let openProfile: () -> Void
+
     var body: some View {
-        HStack(spacing: 14) {
+        Button(action: openProfile) {
+            HStack(spacing: 14) {
+                avatar
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(size: 21, weight: .semibold))
+                        .lineLimit(1)
+                    TimelineView(.everyMinute) { context in
+                        Text(context.date, format: .dateTime.hour().minute())
+                            .font(.system(size: 17))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Spacer(minLength: 0)
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("shell.account")
+        // A stable, language-independent signal for the UI tests: the header is the only place that knows
+        // whether this TV is paired, and reading it here beats re-deriving it from screens.
+        .accessibilityValue(Text(verbatim: accountStateValue))
+    }
+
+    @ViewBuilder
+    private var avatar: some View {
+        switch account.state {
+        case let .signedIn(_, url?):
+            RemoteImage(url: url)
+                .frame(width: 44, height: 44)
+                .clipShape(Circle())
+        default:
             Image(systemName: "person.crop.circle.fill")
                 .font(.system(size: 42))
                 .foregroundStyle(.secondary)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("nav.header.title")
-                    .font(.system(size: 21, weight: .semibold))
-                TimelineView(.everyMinute) { context in
-                    Text(context.date, format: .dateTime.hour().minute())
-                        .font(.system(size: 17))
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            Spacer(minLength: 0)
         }
+    }
+
+    private var accountStateValue: String {
+        switch account.state {
+        case .signedIn: "signedIn"
+        case .signedOut: "signedOut"
+        case .loading, .failed: "unknown"
+        }
+    }
+
+    private var title: LocalizedStringKey {
+        switch account.state {
+        case let .signedIn(name, _): .init(verbatim: name)
+        case .signedOut: "shell.account.signIn"
+        case .loading, .failed: "shell.account.profile"
+        }
+    }
+}
+
+/// `LocalizedStringKey` needs an explicit initialiser for a runtime string; this keeps the header's switch
+/// readable instead of spreading `LocalizedStringKey(name)` over every branch.
+private extension LocalizedStringKey {
+    init(verbatim string: String) {
+        self = LocalizedStringKey(string)
     }
 }

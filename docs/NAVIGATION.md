@@ -110,11 +110,12 @@ Full rationale and the rejected alternatives: ADR 0028 in `docs/DECISIONS.md`.
 | Главная | `home` | `house` | `HomeView` | Two rails: «Новинки» and «Обновления в избранном» (ADR 0031). The favourites rail is drawn only for a signed-in viewer. |
 | Каталог | `catalog` | `square.grid.2x2` | `CatalogView(mode: .browse)` | Chips only, no field (ADR 0030). Returns to the panel with this ADR. |
 | Медиатека | `library` | `rectangle.stack` | **does not exist yet** | Needs «Избранное» + «Продолжить просмотр»; blocked on memory Next steps 3 and 8 |
-| Профиль | `profile` | `person.crop.circle` | `ProfileView` | Pairing code when signed out |
+| — (header) | account | avatar | `ProfileView` as a cover | The panel header **is** the profile entry (ADR 0032): avatar, name, clock; selecting it opens the cover. There is no «Профиль» row. |
 | Настройки | `settings` | `gearshape` | `SettingsView` | Playback switches |
 
-Order matters: search first, content second, account last — the reference's order and the one the
-`ShellSection` order in the tests follows, because the panel is walked top-down.
+Order matters: search first, content second, account in the header — the reference's order and the one the
+`ShellSection` order in the tests follows, because the panel is walked top-down. The header is focusable
+and comes *before* the first row, which any press-counting helper has to account for.
 
 «Поиск» and «Каталог» are **two shapes of one screen**, not two screens: `CatalogView.Mode` decides
 whether the field or the chips are on display, and both keep their own navigation path. That is how the

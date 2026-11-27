@@ -120,7 +120,9 @@ final class AutoRefreshUITests: XCTestCase {
         let beforeLeaving = caption.value as? String
         XCTAssertNotNil(beforeLeaving, "The profile freshness caption exposes no timestamp")
 
-        // Leave for another tab and come straight back — a couple of seconds, far less than the interval.
+        // Leave for another section and come straight back — a couple of seconds, far less than the
+        // interval. The profile is a cover since ADR 0032, so leaving it means closing it first.
+        XCTAssertTrue(ShellNavigator.closeProfile(in: app), "The profile cover did not close")
         openLatestTab(in: app)
         Thread.sleep(forTimeInterval: 1)
         openProfileTab(in: app)
@@ -148,7 +150,7 @@ final class AutoRefreshUITests: XCTestCase {
     /// Walks focus into the sidebar and opens «Профиль».
     @MainActor
     private func openProfileTab(in app: XCUIApplication) {
-        XCTAssertTrue(ShellNavigator.open(.profile, in: app), "The sidebar never reached «Профиль»")
+        XCTAssertTrue(ShellNavigator.openProfile(in: app), "The account header never opened «Профиль»")
     }
 
     // MARK: Queries

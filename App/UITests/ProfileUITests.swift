@@ -79,7 +79,7 @@ final class ProfileUITests: XCTestCase {
     /// Walks focus into the sidebar and opens «Профиль» (ADR 0028: the panel replaced the tab bar).
     @MainActor
     private func openProfileTab(in app: XCUIApplication) {
-        XCTAssertTrue(ShellNavigator.open(.profile, in: app), "The sidebar never reached «Профиль»")
+        XCTAssertTrue(ShellNavigator.openProfile(in: app), "The account header never opened «Профиль»")
         XCTAssertTrue(
             app.descendants(matching: .any).matching(identifier: "profile.pairingCode").firstMatch
                 .waitForExistence(timeout: settleTimeout),

@@ -297,6 +297,13 @@ the simulator — so both reported defects are closed against a real account, no
       13:38:56 across one switch). Encoded as an expected failure, with the fix sketched in
       `docs/NAVIGATION.md` §7. Lifting the view models into the shell was tried and reverted — the feed
       never left its loading state.
+- [x] Account moved into the panel header (2026-11-27, ADR 0032): `SidebarHeaderView` now reads
+      `GET profile` through its own `SidebarProfileModel` and shows the avatar plus `nickname ?? login`
+      («Войти» when unpaired); selecting it opens `ProfileView` as a **cover**, and the «Профиль» row is
+      gone. The header is focusable and sits above the rows, so `ShellNavigator` clamps past it — a bug this
+      caught: every section press-count was off by one until the header was skipped. The header also
+      publishes `signedIn`/`signedOut` as an accessibility value so tests no longer need the cover to learn
+      the account state.
 - [x] «Главная» rebuilt as two rails (2026-11-27, ADR 0031): `HomeView` with «Новинки» (same model, same
       auto-refresh) and «Обновления в избранном» (favourites sorted by `fresh_at`, the field `Release` now
       decodes along with `created_at`/`updated_at`). The favourites rail is absent for a signed-out viewer

@@ -924,3 +924,44 @@ first: where the "updates" order comes from, and how the second rail behaves for
 order for that list, so the rail could look random. *Fetching the detail of each favourite to find the
 newest episode* — N requests for a carousel. *A "continue watching" rail* — that needs `views/history`,
 which is a different feature and still unbuilt.
+
+---
+
+## 0032 — The account lives in the panel header, and «Профиль» stops being a section (2026-11-27)
+
+**Context.** The sidebar shipped with a placeholder header — a generic person glyph and the app's own name
+— plus a «Профиль» row further down. The owner asked for the account to sit at the top of the panel, the way
+the system TV app does it: the profile *is* the header, and there is no row for it.
+
+**Decision.**
+
+- **The header is the account entry point.** `SidebarHeaderView` reads `GET profile` through its own small
+  model (`SidebarProfileModel`), shows the avatar thumbnail and `nickname ?? login`, and falls back to
+  «Войти» when the TV is not paired. Selecting it opens the profile.
+- **The profile is a cover, not a section.** It cannot stay a `Tab`: the sidebar draws one row per tab and
+  there is no API to hide a row, so a header entry plus a tab row would have been two doors to one screen.
+  `ProfileView` now opens in a `fullScreenCover`, dismissed with Back, and the header re-reads the account
+  when the cover closes — that is the only way the identity can change.
+- **No display name existed before, and now it does.** ADR 0021's pairing flow never asked the Kit for the
+  profile, so the old header had nothing to show. The new model makes one authenticated request at launch
+  and keeps its own state; the profile screen's own view model stays untouched.
+- **The header is part of the panel's focus chain**, above the rows. That is a real behavioural change for
+  anything that walks the panel by counting presses: `ShellNavigator` now clamps *past* the header and
+  skips it when stepping down, and treats the header as "the panel is focused".
+- **The header publishes `signedIn`/`signedOut` as an accessibility value**, so a test can ask whether the
+  TV is paired without travelling through the profile cover (and without depending on the language).
+
+**Consequences.**
+
+- Localisation: `nav.header.title` and `nav.profile` are deleted; `shell.account.signIn` and
+  `shell.account.profile` replace them.
+- `ShellSection` lost `.profile`; `ShellNavigator.openProfile(in:)` opens the cover from the header and
+  `closeProfile(in:)` waits for it to go away. `ProfileUITests`, `AutoRefreshUITests` and `HomeUITests` use
+  them; `NavigationSectionsUITests` captures the cover in its own test because it is no longer a section.
+- The `-uiTestingSection profile` launch argument now opens the cover instead of selecting a tab.
+- One authenticated request more at launch (the profile), cached by the Kit's response cache like the rest.
+
+**Alternatives rejected.** *Keeping «Профиль» as a tab and adding the header as a shortcut* — two entries to
+one screen, and the row would still be the odd one out next to a header that already shows the account.
+*Reading the name from the profile screen's view model* — that screen may never have been opened, so the
+header would sit empty until the viewer visited it.

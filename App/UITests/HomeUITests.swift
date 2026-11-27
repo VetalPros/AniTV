@@ -21,23 +21,23 @@ final class HomeUITests: XCTestCase {
 
     /// The favourites rail is whatever the account is: present with cards when signed in, absent when not.
     ///
-    /// The account state is read from «Профиль» rather than guessed from the home screen, so a broken rail
-    /// fails instead of quietly turning the test into a skip.
+    /// The account state comes from the panel header, which is the only place that knows it (ADR 0032);
+    /// travelling through the profile cover to learn it would make this test depend on the cover too.
     @MainActor
     func testFavouritesRailFollowsTheAccount() {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launch()
 
-        XCTAssertTrue(ShellNavigator.open(.profile, in: app), "«Профиль» never opened")
-        let pairingCode = app.descendants(matching: .any)["profile.pairingCode"].firstMatch
-        let signedIn = !pairingCode.waitForExistence(timeout: 15)
-
-        XCTAssertTrue(ShellNavigator.open(.home, in: app), "«Главная» never came back")
         XCTAssertTrue(
             app.descendants(matching: .any)["home.rail.latest"].firstMatch.waitForExistence(timeout: loadTimeout),
             "The «Новинки» rail never appeared"
         )
+        guard let signedIn = ShellNavigator.accountSignedIn(in: app) else {
+            XCTFail("The account header never reported whether this TV is paired")
+            return
+        }
+        XCTAssertTrue(ShellNavigator.open(.home, in: app), "«Главная» was not reachable after reading the header")
 
         let favouritesRail = app.descendants(matching: .any)["home.rail.favorites"].firstMatch
         if signedIn {

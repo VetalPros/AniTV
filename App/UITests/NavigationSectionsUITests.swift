@@ -14,8 +14,6 @@ final class NavigationSectionsUITests: XCTestCase {
             ("home", ["latest.posterCard"]),
             ("search", ["catalog.searchField"]),
             ("catalog", ["catalog.genreChip"]),
-            // The profile markers live with the section definition, signed-out and signed-in alike.
-            ("profile", ShellSection.profile.markers),
             ("settings", ["settings.screen"]),
         ]
 
@@ -41,6 +39,20 @@ final class NavigationSectionsUITests: XCTestCase {
             keepScreenshot(of: app, named: "section-\(section.name)-collapsed")
             app.terminate()
         }
+    }
+
+    /// The profile is a cover behind the panel header (ADR 0032), so it is captured on its own.
+    @MainActor
+    func testProfileCoverRenders() {
+        let app = XCUIApplication()
+        app.launchArguments = UITestLaunchArguments.opening(section: "profile")
+        app.launch()
+
+        let marker = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier IN %@", profileMarkers))
+            .firstMatch
+        XCTAssertTrue(marker.waitForExistence(timeout: loadTimeout), "The profile cover never opened")
+        keepScreenshot(of: app, named: "profile-cover")
     }
 
     @MainActor

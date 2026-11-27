@@ -80,7 +80,6 @@ enum ShellSection: String, CaseIterable {
     case search
     case home
     case catalog
-    case profile
     case settings
 
     /// What proves the section is on display once Select has been pressed.
@@ -89,14 +88,18 @@ enum ShellSection: String, CaseIterable {
         case .search: ["catalog.searchField"]
         case .home: ["latest.posterCard"]
         case .catalog: ["catalog.genreChip"]
-        // Signed out the profile shows the pairing code; signed in it shows the account name.
-        case .profile: ["profile.pairingCode", "profile.reconnect", "profile.displayName"]
         case .settings: ["settings.screen"]
         }
     }
 }
 
 /// Walks the remote into the sidebar, because there is no tab bar to walk up into any more.
+/// What proves the profile cover is on screen, signed out or signed in.
+let profileMarkers = ["profile.pairingCode", "profile.reconnect", "profile.displayName"]
+
+/// Accessibility identifier of the account entry in the panel header (ADR 0032).
+let accountHeaderIdentifier = "shell.account"
+
 @MainActor
 enum ShellNavigator {
     /// Moves focus onto `section`'s row and presses Select, without waiting for a particular screen: use
@@ -105,9 +108,14 @@ enum ShellNavigator {
     static func select(_ section: ShellSection, in app: XCUIApplication, settle: TimeInterval = 1.2) -> Bool {
         guard enterPanel(in: app) else { return false }
 
-        // Clamp to the first row, then step down once per row: the panel is one focus column.
-        for _ in 0 ..< ShellSection.allCases.count {
+        // Clamp to the top, then step down once per row: the panel is one focus column. The account header
+        // sits above the rows and takes focus too (ADR 0032), so the clamp lands on it and it is skipped.
+        for _ in 0 ..< ShellSection.allCases.count + 1 {
             XCUIRemote.shared.press(.up)
+            Thread.sleep(forTimeInterval: 0.35)
+        }
+        if accountHeaderIsFocused(in: app) {
+            XCUIRemote.shared.press(.down)
             Thread.sleep(forTimeInterval: 0.35)
         }
         for _ in 0 ..< rowIndex(of: section) {
@@ -134,6 +142,62 @@ enum ShellNavigator {
         return marker.waitForExistence(timeout: timeout)
     }
 
+    /// Opens the profile cover from the panel header, which sits above the section rows.
+    static func openProfile(in app: XCUIApplication, timeout: TimeInterval = 25) -> Bool {
+        guard enterPanel(in: app) else { return false }
+        let header = app.descendants(matching: .any)[accountHeaderIdentifier].firstMatch
+        for _ in 0 ..< 6 where !(header.exists && header.hasFocus) {
+            XCUIRemote.shared.press(.up)
+            Thread.sleep(forTimeInterval: 0.4)
+        }
+        guard header.exists, header.hasFocus else { return false }
+        XCUIRemote.shared.press(.select)
+        let marker = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier IN %@", profileMarkers))
+            .firstMatch
+        return marker.waitForExistence(timeout: timeout)
+    }
+
+    /// Whether the panel's account header currently holds focus.
+    static func accountHeaderIsFocused(in app: XCUIApplication) -> Bool {
+        let header = app.descendants(matching: .any)[accountHeaderIdentifier].firstMatch
+        return header.exists && header.hasFocus
+    }
+
+    /// Whether this TV is paired, read from the account header's value; `nil` while it is still loading.
+    static func accountSignedIn(in app: XCUIApplication) -> Bool? {
+        guard enterPanel(in: app) else { return nil }
+        let header = app.descendants(matching: .any)[accountHeaderIdentifier].firstMatch
+        for _ in 0 ..< 6 where !(header.exists && header.hasFocus) {
+            XCUIRemote.shared.press(.up)
+            Thread.sleep(forTimeInterval: 0.4)
+        }
+        guard header.exists, let value = header.value as? String else { return nil }
+        switch value {
+        case "signedIn": return true
+        case "signedOut": return false
+        default: return nil
+        }
+    }
+
+    /// Closes the profile cover with Back and waits for the shell to be reachable again.
+    static func closeProfile(in app: XCUIApplication, timeout: TimeInterval = 15) -> Bool {
+        guard app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier IN %@", profileMarkers)).firstMatch.exists
+        else { return true }
+        XCUIRemote.shared.press(.menu)
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            let stillOpen = app.descendants(matching: .any)
+                .matching(NSPredicate(format: "identifier IN %@", profileMarkers)).firstMatch.exists
+            if !stillOpen {
+                return true
+            }
+            Thread.sleep(forTimeInterval: 0.4)
+        }
+        return false
+    }
+
     /// Presses Left until the focus engine reports a panel row rather than content.
     static func enterPanel(in app: XCUIApplication, attempts: Int = 8) -> Bool {
         for _ in 0 ..< attempts {
@@ -154,7 +218,9 @@ enum ShellNavigator {
             .firstMatch
         guard element.exists else { return false }
         let frame = element.frame
-        return element.identifier.isEmpty && frame.minX <= 1 && frame.width > 300 && frame.height < 100
+        let isAccountHeader = element.identifier == accountHeaderIdentifier
+        return (element.identifier.isEmpty || isAccountHeader) && frame.minX <= 1 && frame.width > 300 && frame
+            .height < 100
     }
 
     /// Presses the remote until the element carrying `identifier` holds focus.
