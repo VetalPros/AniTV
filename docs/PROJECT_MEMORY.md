@@ -20,7 +20,7 @@
 | Repository | public, <https://github.com/VetalPros/AniTV>, MIT (published 2026-11-17) |
 | DSH workspace | `c714b289-7397-4251-b27c-4ce3ce773cf6` (`~/Documents/anitv`) |
 | Physical Apple TV | **paired and in use** since 2026-11-26: Apple TV 4K `AppleTV18,1` (devicectl's marketing name: *4th generation*; session-5 notes said 3rd), name «Гостиная», tvOS 27.2.1 (24K157), UDID `00008150-000C62CA0101401C` |
-| Navigation | **System sidebar shipped in P1–P2** (2026-11-27, ADR 0028 + 0029): `RootShellView` with `.sidebarAdaptable`, header, four rows; the old top tab bar is gone; all sections share the `72 / 56` frame and clear the collapsed pill. Test repair (P4) and «Медиатека» (P5) still pending |
+| Navigation | **System sidebar shipped in P1–P4** (2026-11-27, ADR 0028 + 0029): `RootShellView` with `.sidebarAdaptable`, header, four rows; the old top tab bar is gone; all sections share the `72 / 56` frame and clear the collapsed pill; the UI suite was repaired for the shell. «Медиатека» (P5) and the P3 remainder still pending |
 
 ## Environment facts (verified on this machine)
 
@@ -281,15 +281,22 @@ the simulator — so both reported defects are closed against a real account, no
       paddings, so all four sections share one frame. Verified with `NavigationSectionsUITests` — it opens
       each section through the new test-only `-uiTestingSection` argument, captures it with the panel
       expanded and collapsed, and shows no title or control under the pill, backgrounds full-bleed.
+- [x] Navigation shell, phase P4 (2026-11-27): the UI tests no longer walk a tab bar. `ShellNavigator`
+      in `App/UITests/UITestSupport.swift` presses Left into the panel, clamps to the first row with Up,
+      steps Down once per row and proves the section by its own marker; `ShellNavigator.focus(_:in:)`
+      replaces the twelve `.down`-only walks to a poster card. Eleven test files were ported. Two
+      behaviours had to be learned from the running app rather than guessed: the panel's rows focus as
+      **anonymous containers** (their `Button`s keep the SF Symbol identifiers but are `Disabled` and are
+      not what `hasFocus` reports), and Up stops at the first row instead of wrapping.
 
 ## Next steps (ordered)
 
-1. Continue the navigation redesign at P4 (`docs/NAVIGATION.md`): the six UI-test files still walk focus
-   into the gone tab bar (`LatestFeedUITests`, `CatalogUITests`, `AutoRefreshUITests`,
-   `PlayerSkipUITests`, `DetailResumeUITests`, `DetailEpisodePickerUITests`) and now fail; their helpers
-   belong in `UITestSupport.swift`, driven by the shell's rows instead of the tab bar. Then the rest of
-   P3: Back semantics and per-section path/scroll preservation. A browsable «Каталог» row returns once
-   `CatalogView` splits into search and browse.
+1. Finish P3 of the navigation redesign (`docs/NAVIGATION.md`): Back inside a section must pop its own
+   stack, a second Back at the section root must collapse the panel rather than change section, and
+   switching sections must preserve each stack's path and scroll position. None of that is verified yet —
+   the shell's tests cover opening sections and the focus round trip only. A browsable «Каталог» row
+   returns once `CatalogView` splits into search and browse (the «Поиск»/«Каталог» wording mismatch goes
+   with it).
 2. Re-sign on the Apple TV before the 7-day profile expires and record what happens when it does
    (in-app error? launch refused?). The TV now occupies one of the three free-account device slots;
    `docs/INSTALL_DEVICE.md` is the procedure to repeat.
@@ -432,6 +439,10 @@ not a commitment.
   successfully touches a file in that subtree — they are not preloaded.
 - The app's in-memory workspace registry is authoritative at runtime: hand-editing
   `~/.dsh/storages/workspace.json` while the app runs is unreliable — register via the GUI.
+- The sidebar's rows expose `Button`s with the SF Symbol identifiers (`house`, `gearshape`, …) but those
+  buttons are `Disabled`; the focus engine reports an **unnamed container** per row instead. Tests must
+  therefore walk the panel geometrically (`ShellNavigator`), not by identifier, and must not expect Up to
+  wrap — it stops at the first row.
 - `TabView` + `.sidebarAdaptable` on tvOS: **verified** 2026-11-27 in the simulator — the panel expands
   over the content, collapses to a section pill when focus enters the posters, and Left from the first
   poster column returns focus to the panel (`AniTVUITests/NavigationShellUITests`). Its panel is narrower

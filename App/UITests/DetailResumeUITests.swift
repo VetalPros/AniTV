@@ -57,11 +57,11 @@ final class DetailResumeUITests: XCTestCase {
 
         // Reopen the release that was just watched: the store has to have survived the round trip.
         //
-        // The pop back to the feed can leave focus on the tab bar instead of the card that was open, and a
+        // The pop back to the feed can leave focus in the sidebar instead of the card that was open, and a
         // dropped Select then goes nowhere, so focus is re-established and the press repeated.
         let detail = element(identifier: "detail.screen", in: app)
-        for _ in 0 ..< 4 where !isFocused(identifier: "latest.posterCard", in: app) {
-            XCUIRemote.shared.press(.down)
+        for step in 0 ..< 6 where !isFocused(identifier: "latest.posterCard", in: app) {
+            XCUIRemote.shared.press(step.isMultiple(of: 2) ? .right : .down)
             Thread.sleep(forTimeInterval: 0.6)
         }
         for _ in 0 ..< 3 where !detail.exists {
@@ -148,14 +148,10 @@ final class DetailResumeUITests: XCTestCase {
             posterCards.firstMatch.waitForExistence(timeout: feedTimeout),
             "The latest releases feed exposed no poster card"
         )
-        for _ in 0 ..< focusAttempts {
-            if isFocused(identifier: "latest.posterCard", in: app) {
-                break
-            }
-            XCUIRemote.shared.press(.down)
-            Thread.sleep(forTimeInterval: 0.5)
-        }
-        XCTAssertTrue(isFocused(identifier: "latest.posterCard", in: app), "Focus never reached a poster card")
+        XCTAssertTrue(
+            ShellNavigator.focus("latest.posterCard", in: app),
+            "Focus never reached a poster card"
+        )
 
         XCUIRemote.shared.press(.select)
         XCTAssertTrue(
@@ -190,7 +186,7 @@ final class DetailResumeUITests: XCTestCase {
     @MainActor
     private func focus(_ target: XCUIElement, in app: XCUIApplication, pressing button: XCUIRemote.Button) -> Bool {
         // The first presses go in the requested direction; after that the opposite direction is mixed in, so a
-        // focus that overshoots (onto the tab bar, for instance) can still come back.
+        // focus that overshoots (into the sidebar, for instance) can still come back.
         let opposite: XCUIRemote.Button = switch button {
         case .up: .down
         case .down: .up

@@ -11,8 +11,6 @@ final class PlayerSkipUITests: XCTestCase {
     private let hintTimeout: TimeInterval = 25
     private let focusAttempts = 10
     private let settleTimeout: TimeInterval = 0.8
-    /// Accessibility identifiers of the tab-bar buttons, in bar order.
-    private let tabIdentifiers = ["sparkles.tv", "square.grid.2x2", "person.crop.circle", "gearshape"]
 
     // MARK: Hint with focus
 
@@ -176,7 +174,7 @@ final class PlayerSkipUITests: XCTestCase {
     /// Opens «Настройки», flips one switch and returns to the feed.
     @MainActor
     private func setSwitch(identifier: String, on: Bool, in app: XCUIApplication) -> Bool {
-        openTab(identifier: "gearshape", in: app)
+        XCTAssertTrue(openSection(.settings, in: app), "The sidebar never reached «Настройки»")
         guard let toggle = waitForElement(identifier: identifier, in: app),
               focusToggle(toggle, in: app) else { return false }
         let currentlyOn = isOn(toggle)
@@ -185,13 +183,13 @@ final class PlayerSkipUITests: XCTestCase {
             Thread.sleep(forTimeInterval: settleTimeout)
         }
         guard isOn(toggle) == on else { return false }
-        openTab(identifier: "sparkles.tv", in: app)
+        XCTAssertTrue(openSection(.home, in: app), "The sidebar never reached «Главная»")
         return true
     }
 
     @MainActor
     private func focusToggle(_ toggle: XCUIElement, in _: XCUIApplication) -> Bool {
-        // Down walks from the tab bar into the switches; Up covers the case where focus already overshot
+        // Down walks from the sidebar into the switches; Up covers the case where focus already overshot
         // into the second one.
         let directions: [XCUIRemote.Button] = [.down, .down, .up]
         for step in 0 ..< focusAttempts * directions.count {
@@ -204,29 +202,10 @@ final class PlayerSkipUITests: XCTestCase {
         return toggle.exists && toggle.hasFocus
     }
 
-    /// Walks focus into the tab bar and selects `identifier`, moving towards it from whatever is focused.
+    /// Walks focus into the sidebar and opens `section` (ADR 0028: the panel replaced the tab bar).
     @MainActor
-    private func openTab(identifier: String, in app: XCUIApplication) {
-        for _ in 0 ..< focusAttempts * 3 {
-            if isFocused(identifier: identifier, in: app) {
-                break
-            }
-            guard let focusedIndex = focusedTabIndex(in: app) else {
-                XCUIRemote.shared.press(.up)
-                Thread.sleep(forTimeInterval: settleTimeout)
-                continue
-            }
-            guard let target = tabIdentifiers.firstIndex(of: identifier) else { break }
-            XCUIRemote.shared.press(target >= focusedIndex ? .right : .left)
-            Thread.sleep(forTimeInterval: settleTimeout)
-        }
-        XCUIRemote.shared.press(.select)
-        Thread.sleep(forTimeInterval: settleTimeout)
-    }
-
-    @MainActor
-    private func focusedTabIndex(in app: XCUIApplication) -> Int? {
-        tabIdentifiers.firstIndex { isFocused(identifier: $0, in: app) }
+    private func openSection(_ section: ShellSection, in app: XCUIApplication) -> Bool {
+        ShellNavigator.open(section, in: app, settle: settleTimeout)
     }
 
     @MainActor
@@ -239,11 +218,10 @@ final class PlayerSkipUITests: XCTestCase {
     private func openFeedAndPlay(in app: XCUIApplication) {
         let posterCards = app.descendants(matching: .any).matching(identifier: "latest.posterCard")
         _ = posterCards.firstMatch.waitForExistence(timeout: 10)
-        for _ in 0 ..< focusAttempts * 2 where !isFocusOnFeed(in: app) {
-            XCUIRemote.shared.press(.down)
-            Thread.sleep(forTimeInterval: settleTimeout)
-        }
-        XCTAssertTrue(isFocusOnFeed(in: app), "Focus never reached a poster card")
+        XCTAssertTrue(
+            ShellNavigator.focus("latest.posterCard", in: app),
+            "Focus never reached a poster card"
+        )
         XCUIRemote.shared.press(.select)
         XCTAssertTrue(
             element(identifier: "detail.screen", in: app).waitForExistence(timeout: screenTimeout),

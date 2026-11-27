@@ -8,8 +8,6 @@ final class SettingsUITests: XCTestCase {
     private let screenTimeout: TimeInterval = 30
     private let focusAttempts = 8
     private let settleTimeout: TimeInterval = 0.6
-    /// Accessibility identifiers of the tab-bar buttons, in bar order.
-    private let tabIdentifiers = ["sparkles.tv", "square.grid.2x2", "person.crop.circle", "gearshape"]
 
     @MainActor
     func testSwitchesExistFlipAndSurviveRelaunch() {
@@ -55,30 +53,14 @@ final class SettingsUITests: XCTestCase {
         return app
     }
 
-    /// Walks focus up into the tab bar and selects «Настройки», the fourth and last tab.
+    /// Walks focus into the sidebar and opens «Настройки» (ADR 0028: the panel replaced the tab bar).
     @MainActor
     private func openSettings(in app: XCUIApplication) {
-        let tab = app.descendants(matching: .any).matching(identifier: "gearshape").firstMatch
-        for _ in 0 ..< focusAttempts * 3 {
-            if isFocused(identifier: "gearshape", in: app) {
-                break
-            }
-            guard let focusedIndex = tabIdentifiers.firstIndex(where: { isFocused(identifier: $0, in: app) }) else {
-                XCUIRemote.shared.press(.up)
-                Thread.sleep(forTimeInterval: settleTimeout)
-                continue
-            }
-            let target = tabIdentifiers.count - 1
-            XCUIRemote.shared.press(target >= focusedIndex ? .right : .left)
-            Thread.sleep(forTimeInterval: settleTimeout)
-        }
-        XCTAssertTrue(tab.exists, "The app exposes no «Настройки» tab")
-        XCTAssertTrue(isFocused(identifier: "gearshape", in: app), "Focus never reached the «Настройки» tab")
-        XCUIRemote.shared.press(.select)
+        XCTAssertTrue(ShellNavigator.open(.settings, in: app), "The sidebar never reached «Настройки»")
         XCTAssertTrue(
             app.descendants(matching: .any).matching(identifier: "settings.screen").firstMatch
                 .waitForExistence(timeout: screenTimeout),
-            "Selecting the settings tab did not open the settings screen"
+            "Selecting the settings row did not open the settings screen"
         )
     }
 
@@ -97,7 +79,7 @@ final class SettingsUITests: XCTestCase {
             || value.localizedCaseInsensitiveContains("вкл")
     }
 
-    /// Focuses a toggle (Down walks from the tab bar through the header into the switches) and selects it.
+    /// Focuses a toggle (Down walks from the sidebar through the header into the switches) and selects it.
     @MainActor
     private func flip(_ element: XCUIElement, in _: XCUIApplication) -> Bool {
         for _ in 0 ..< focusAttempts * 2 {

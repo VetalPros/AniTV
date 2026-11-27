@@ -33,8 +33,9 @@ final class AutoRefreshUITests: XCTestCase {
         // Focus starts on the grid; the refresh must leave it there.
         let cards = app.descendants(matching: .any).matching(identifier: "latest.posterCard")
         XCTAssertTrue(cards.firstMatch.waitForExistence(timeout: screenTimeout), "The feed shows no poster cards")
-        for _ in 0 ..< focusAttempts where !isFocused(identifier: "latest.posterCard", in: app) {
-            XCUIRemote.shared.press(.down)
+        // Right leaves the sidebar, Down walks the rows: alternating covers both starting points.
+        for step in 0 ..< focusAttempts * 2 where !isFocused(identifier: "latest.posterCard", in: app) {
+            XCUIRemote.shared.press(step.isMultiple(of: 2) ? .right : .down)
             Thread.sleep(forTimeInterval: 0.5)
         }
         XCTAssertTrue(isFocused(identifier: "latest.posterCard", in: app), "Focus never reached the poster grid")
@@ -138,48 +139,16 @@ final class AutoRefreshUITests: XCTestCase {
 
     // MARK: Steps
 
-    /// Walks focus up into the tab bar and selects the «Новинки» tab.
+    /// Walks focus into the sidebar and opens «Главная» (ADR 0028: there is no tab bar any more).
     @MainActor
     private func openLatestTab(in app: XCUIApplication) {
-        selectTab(identifier: "sparkles.tv", arrow: .left, in: app)
+        XCTAssertTrue(ShellNavigator.open(.home, in: app), "The sidebar never reached «Главная»")
     }
 
-    /// Focuses a tab bar item by pressing the given arrow while focus is in the bar.
-    @MainActor
-    private func selectTab(identifier: String, arrow: XCUIRemote.Button, in app: XCUIApplication) {
-        let tabIdentifiers = ["sparkles.tv", "square.grid.2x2", "person.crop.circle"]
-        for _ in 0 ..< focusAttempts * 2 {
-            if isFocused(identifier: identifier, in: app) {
-                break
-            }
-            let onTabBar = app.descendants(matching: .any)
-                .matching(NSPredicate(format: "hasFocus == 1 AND identifier IN %@", tabIdentifiers))
-                .firstMatch.exists
-            XCUIRemote.shared.press(onTabBar ? arrow : .up)
-            Thread.sleep(forTimeInterval: 0.6)
-        }
-        XCTAssertTrue(isFocused(identifier: identifier, in: app), "Focus never reached the \(identifier) tab")
-        XCUIRemote.shared.press(.select)
-        Thread.sleep(forTimeInterval: settleTimeout)
-    }
-
-    /// Walks focus up into the tab bar and selects the «Профиль» tab.
+    /// Walks focus into the sidebar and opens «Профиль».
     @MainActor
     private func openProfileTab(in app: XCUIApplication) {
-        let tabIdentifiers = ["sparkles.tv", "square.grid.2x2", "person.crop.circle"]
-        for _ in 0 ..< focusAttempts * 2 {
-            if isFocused(identifier: "person.crop.circle", in: app) {
-                break
-            }
-            let onTabBar = app.descendants(matching: .any)
-                .matching(NSPredicate(format: "hasFocus == 1 AND identifier IN %@", tabIdentifiers))
-                .firstMatch.exists
-            XCUIRemote.shared.press(onTabBar ? .right : .up)
-            Thread.sleep(forTimeInterval: 0.6)
-        }
-        XCTAssertTrue(isFocused(identifier: "person.crop.circle", in: app), "Focus never reached the «Профиль» tab")
-        XCUIRemote.shared.press(.select)
-        Thread.sleep(forTimeInterval: settleTimeout)
+        XCTAssertTrue(ShellNavigator.open(.profile, in: app), "The sidebar never reached «Профиль»")
     }
 
     // MARK: Queries

@@ -10,8 +10,7 @@ final class ProfileUITests: XCTestCase {
     private let screenTimeout: TimeInterval = 40
     private let focusAttempts = 6
     private let settleTimeout: TimeInterval = 1.0
-    /// Accessibility identifiers of the three tab-bar buttons.
-    private let tabIdentifiers = ["sparkles.tv", "square.grid.2x2", "person.crop.circle"]
+    // Accessibility identifiers of the three tab-bar buttons.
 
     @MainActor
     func testProfileTabShowsLivePairingCodeAndRefreshesIt() {
@@ -77,26 +76,15 @@ final class ProfileUITests: XCTestCase {
 
     // MARK: Steps
 
-    /// Walks focus up into the tab bar and selects the «Профиль» tab.
+    /// Walks focus into the sidebar and opens «Профиль» (ADR 0028: the panel replaced the tab bar).
     @MainActor
     private func openProfileTab(in app: XCUIApplication) {
-        let profileTab = app.descendants(matching: .any).matching(identifier: "person.crop.circle").firstMatch
-        for _ in 0 ..< focusAttempts * 2 {
-            if isFocused(identifier: "person.crop.circle", in: app) {
-                break
-            }
-            // Up reaches the tab bar; Right walks towards «Профиль», the last of the three tabs.
-            if isFocusedAnyTab(in: app) {
-                XCUIRemote.shared.press(.right)
-            } else {
-                XCUIRemote.shared.press(.up)
-            }
-            Thread.sleep(forTimeInterval: 0.6)
-        }
-        XCTAssertTrue(profileTab.exists, "The app exposes no «Профиль» tab")
-        XCTAssertTrue(isFocused(identifier: "person.crop.circle", in: app), "Focus never reached the «Профиль» tab")
-        XCUIRemote.shared.press(.select)
-        Thread.sleep(forTimeInterval: settleTimeout)
+        XCTAssertTrue(ShellNavigator.open(.profile, in: app), "The sidebar never reached «Профиль»")
+        XCTAssertTrue(
+            app.descendants(matching: .any).matching(identifier: "profile.pairingCode").firstMatch
+                .waitForExistence(timeout: settleTimeout),
+            "Opening «Профиль» never showed the pairing screen"
+        )
     }
 
     /// Moves focus onto the refresh button on the pairing screen.
@@ -113,13 +101,6 @@ final class ProfileUITests: XCTestCase {
     }
 
     // MARK: Queries
-
-    @MainActor
-    private func isFocusedAnyTab(in app: XCUIApplication) -> Bool {
-        app.descendants(matching: .any)
-            .matching(NSPredicate(format: "hasFocus == 1 AND identifier IN %@", tabIdentifiers))
-            .firstMatch.exists
-    }
 
     @MainActor
     private func element(identifier: String, in app: XCUIApplication) -> XCUIElement {

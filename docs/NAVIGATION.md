@@ -147,8 +147,10 @@ Constraints we control:
 
 The focus engine is the product here; everything below is a requirement, not a nicety.
 
-1. **Entry.** Launch lands on the section's own default focus, not in the panel: `prefersDefaultFocus`
-   per screen stays as it is today (ADR 0012 — the detail screen claims focus itself).
+1. **Entry.** Launch lands on the *current sidebar row*, with the panel expanded — the same state the
+   system TV app opens in. A directional press into the content collapses the panel, and content then
+   keeps the default focus of its own screen (ADR 0012 — the detail screen claims focus itself).
+   Observed on 2026-11-27, not assumed: at launch the focused element is a row container, not a poster.
 2. **Collapse on leaving.** Moving right into content collapses the panel. Must be proven by UI test.
 3. **Return.** From the leftmost focusable column of a section, Left must reach the panel — including
    from inside a horizontal rail and from a `ScrollView`. History: ADR 0020 had to move controls out of
@@ -159,6 +161,20 @@ The focus engine is the product here; everything below is a requirement, not a n
 5. **Player.** The player is a `fullScreenCover` and must not show the panel at all.
 6. **The pill is focusable** and shows the current section — it is the only visible navigation affordance
    in the collapsed state, so it needs an accessibility label, not just an icon.
+
+**How a UI test drives the panel** (learned the hard way in P4, and worth knowing before writing another
+test): the rows expose ordinary `Button`s whose accessibility identifiers are the SF Symbol names
+(`house`, `gearshape`, …), **but those buttons are `Disabled` and are not what the focus engine reports**.
+The focused element is an unnamed container, one row tall, pinned to the leading edge, whose `frame.minY`
+identifies the row. So a test cannot ask "which row is focused"; it must:
+
+1. press Left until the focused element is that unnamed container (`ShellNavigator.enterPanel`),
+2. press Up a few times to clamp to the first row — Up stops there instead of wrapping,
+3. press Down once per row (`ShellSection.allCases` order matches the vertical order),
+4. press Select and wait for the section's own marker.
+
+All of that lives in `ShellNavigator` in `App/UITests/UITestSupport.swift`; the eight older test files call
+it instead of walking a tab bar that no longer exists.
 
 ## 7. Routing
 
@@ -176,9 +192,9 @@ The shell owns: the selection, the section list, and nothing else. No networking
 - The collapsed pill announces "current section: <name>".
 - VoiceOver order: panel rows in display order, then content; the panel is one accessibility container.
 - Focus order inside a section is unchanged from today's per-screen contracts.
-- New keys in `Localizable.xcstrings` (ru + en): `nav.search`, `nav.home`, `nav.catalog`, `nav.library`,
-  `nav.profile`, `nav.settings`, `nav.currentSection` (format string for the pill). The existing
-  `tab.*` keys are reused for the row titles where the wording is unchanged.
+- Keys shipped in `Localizable.xcstrings` (ru + en) in P1: `nav.search`, `nav.home`, `nav.profile`,
+  `nav.settings`, `nav.header.title`. The four `tab.*` keys were deleted with the tab bar. `nav.catalog`
+  and `nav.library` arrive with their rows (P2's browse surface, P5).
 
 ## 9. Phases and write scopes
 
@@ -189,7 +205,7 @@ Every phase is one commit, green before the next. Two agents never own the same 
 | P1 ✅ | Shell: sections enum, `RootShellView`, search role, sidebar header, localisation keys; `RootTabView` deleted; minimum target raised to 27.0 (ADR 0029) | `App/Sources/App/`, `App/Resources/Localizable.xcstrings`, `project.yml` | **done 2026-11-27**: simulator build green, app launches, panel and pill captured, focus proven by `NavigationShellUITests` |
 | P2 ✅ | Content adaptation: one token for the top inset (`DesignTokens.screenTopInset`), `ScreenHeader` uses it, «Настройки» dropped its private header and its hardcoded 80/60 paddings | `App/Sources/Design/`, `App/Sources/Features/Settings/` | **done 2026-11-27**: every section captured in both states by `NavigationSectionsUITests` |
 | P3 ✅ | Navigation UI test: focus leaves the panel, Left brings it back | `App/UITests/NavigationShellUITests.swift` | **done 2026-11-27**: `xcodebuild test … -only-testing:AniTVUITests/NavigationShellUITests` passed, both states captured |
-| P4 | Existing UI tests repaired for the new shell (six files walk focus into the old tab bar) | `App/UITests/` | full UI suite |
+| P4 ✅ | Existing UI tests repaired for the new shell: eight files walked focus into the old tab bar, all of them now go through `ShellNavigator` | `App/UITests/` | **done 2026-11-27**: full UI suite on the tvOS 27.2 simulator |
 | P5 | «Медиатека» screen, once favourites and continue-watching exist | `App/Sources/Features/Library/` | separate ADR |
 
 What P1 verified, and how: the panel's expanded state, its collapsed state (a pill carrying «Главная»)
@@ -240,7 +256,7 @@ that the reference puts artwork where we put a section title, which is P5's hero
 | --- | --- | --- |
 | R1 ✅ | Collapsed/focus behaviour of `sidebarAdaptable` was **unverified** — no input channel this session | **closed 2026-11-27** by `NavigationShellUITests`: focus leaves the panel for the posters on a directional press, and Left from the first column returns it. Attachments show both states |
 | R2 ✅ | System panel is narrower than the TV app's (~235 vs ~340) and its header is tvOS 27-only | header ships from P1 after the bump to 27.0 (ADR 0029); the width difference is accepted |
-| R3 | Six UI tests walk focus into the old tab bar by accessibility identifier | P4, with the helpers centralised in `UITestSupport.swift` |
+| R3 ✅ | UI tests walked focus into the old tab bar by accessibility identifier | **closed 2026-11-27** in P4: eleven test files now call `ShellNavigator`; the panel's rows focus as anonymous containers, which the helper handles (see §6) |
 | R4 | White pill over bright hero artwork loses contrast | scrim behind the panel, checked on real artwork |
 | R5 | Free account: 7-day profiles, 3 devices — device iteration is slow | simulator first, device captures per phase |
 | R6 | Building the app requires the DSH session to run with full file access: under the default `workspace-write` policy SwiftPM cannot write its manifest cache to `~/Library/Caches/org.swift.swiftpm` and the build dies with `Missing package product 'AniLibertyKit'` (observed 2026-11-27; same command green once the session was widened) | run P1–P5 builds with the wider policy, then build and `swift test` as the definition of done |

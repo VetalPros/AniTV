@@ -45,7 +45,7 @@ final class LatestFeedUITests: XCTestCase {
         XCTAssertFalse(posterCards.firstMatch.label.isEmpty, "A poster card must expose a title for VoiceOver")
         keepScreenshot(of: app, named: "1-feed")
 
-        // Focus starts on the tab bar; Down presses must move it onto a poster card.
+        // Focus starts in the sidebar; Right leaves it for the grid, Down lands on a poster card.
         let focusedCard = focusPosterCard(in: app)
         XCTAssertNotNil(focusedCard, "Down presses never moved focus onto a poster card within \(focusTimeout)s")
         XCTAssertEqual(
@@ -170,7 +170,7 @@ final class LatestFeedUITests: XCTestCase {
     private func openDetail(in app: XCUIApplication, showing detailScreen: XCUIElement) -> Bool {
         let cards = app.descendants(matching: .any).matching(identifier: "latest.posterCard")
         for attempt in 0 ..< pressAttempts {
-            // The feed re-renders when the images arrive and can drop focus back to the tab bar, so
+            // The feed re-renders when the images arrive and can drop focus back to the sidebar, so
             // every attempt starts by making sure a poster card is the focused element again.
             if !cards.matching(NSPredicate(format: "hasFocus == 1")).firstMatch.exists {
                 _ = focusPosterCard(in: app)
@@ -219,12 +219,17 @@ final class LatestFeedUITests: XCTestCase {
     private func focusPosterCard(in app: XCUIApplication) -> XCUIElement? {
         let focused = app.descendants(matching: .any).matching(NSPredicate(format: "hasFocus == 1"))
         let deadline = Date().addingTimeInterval(focusTimeout)
+        // Right leaves the panel for the grid; Down walks the rows. Alternating covers both "focus is in
+        // the sidebar" and "focus is already in the grid, above the cards".
+        let cycle: [XCUIRemote.Button] = [.right, .down, .down, .right]
+        var step = 0
         while Date() < deadline {
             let element = focused.firstMatch
             if element.exists, element.identifier == "latest.posterCard" {
                 return element
             }
-            XCUIRemote.shared.press(.down)
+            XCUIRemote.shared.press(cycle[step % cycle.count])
+            step += 1
             Thread.sleep(forTimeInterval: 0.5)
         }
         return nil

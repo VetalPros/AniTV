@@ -88,11 +88,16 @@ final class DetailEpisodePickerUITests: XCTestCase {
         let heroActions = app.descendants(matching: .any).matching(
             NSPredicate(format: "hasFocus == 1 AND identifier IN %@", ["detail.playButton", "detail.resumeButton"])
         )
-        // Up walks back towards the hero, but a walk that ends on the tab bar can never come down again, so
-        // the direction alternates instead of assuming focus is always below the hero.
+        // Up walks back towards the hero, but a walk that ends in the sidebar has to be steered out again,
+        // so the direction alternates instead of assuming focus is always below the hero.
         let returnCycle: [XCUIRemote.Button] = [.up, .up, .up, .down]
         for step in 0 ..< focusAttempts * returnCycle.count where !heroActions.firstMatch.exists {
-            XCUIRemote.shared.press(returnCycle[step % returnCycle.count])
+            // The sidebar is the new overshoot: Up there only walks its rows, so leave it first.
+            if ShellNavigator.panelRowIsFocused(in: app) {
+                XCUIRemote.shared.press(.right)
+            } else {
+                XCUIRemote.shared.press(returnCycle[step % returnCycle.count])
+            }
             Thread.sleep(forTimeInterval: settleTimeout)
         }
         XCTAssertTrue(heroActions.firstMatch.exists, "Up never returned to a hero action")
@@ -124,14 +129,10 @@ final class DetailEpisodePickerUITests: XCTestCase {
             posterCards.firstMatch.waitForExistence(timeout: feedTimeout),
             "The latest releases feed exposed no poster card"
         )
-        for _ in 0 ..< focusAttempts {
-            if isFocused(identifier: "latest.posterCard", in: app) {
-                break
-            }
-            XCUIRemote.shared.press(.down)
-            Thread.sleep(forTimeInterval: 0.5)
-        }
-        XCTAssertTrue(isFocused(identifier: "latest.posterCard", in: app), "Focus never reached a poster card")
+        XCTAssertTrue(
+            ShellNavigator.focus("latest.posterCard", in: app),
+            "Focus never reached a poster card"
+        )
 
         XCUIRemote.shared.press(.select)
         XCTAssertTrue(

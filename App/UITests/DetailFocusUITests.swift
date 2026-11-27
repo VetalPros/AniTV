@@ -196,14 +196,10 @@ final class DetailFocusUITests: XCTestCase {
                 posterCards.firstMatch.waitForExistence(timeout: feedTimeout),
                 "The latest releases feed exposed no poster card"
             )
-            for _ in 0 ..< focusAttempts {
-                if isFocused(identifier: "latest.posterCard", in: app) {
-                    break
-                }
-                XCUIRemote.shared.press(.down)
-                Thread.sleep(forTimeInterval: 0.5)
-            }
-            XCTAssertTrue(isFocused(identifier: "latest.posterCard", in: app), "Focus never reached a poster card")
+            XCTAssertTrue(
+                ShellNavigator.focus("latest.posterCard", in: app),
+                "Focus never reached a poster card"
+            )
             card = focusedLabel(in: app)
         }
 

@@ -33,11 +33,18 @@ final class CatalogUITests: XCTestCase {
         XCTAssertTrue(picker.waitForExistence(timeout: 15), "The genre chip did not open its picker")
         attach(app, named: "catalog-genre-picker")
 
-        // «Любой» is the first row; two Downs land on a real genre, which then applies on Select.
-        XCUIRemote.shared.press(.down)
-        Thread.sleep(forTimeInterval: settle)
-        XCUIRemote.shared.press(.down)
-        Thread.sleep(forTimeInterval: settle)
+        // «Любой» is the first row and would leave the count unchanged, so walk down until a real genre
+        // holds focus instead of trusting a fixed number of presses.
+        for _ in 0 ..< 6 {
+            let focusedOption = app.descendants(matching: .any)
+                .matching(NSPredicate(format: "hasFocus == 1 AND identifier BEGINSWITH %@", "filterPicker.option."))
+                .firstMatch
+            if focusedOption.exists, focusedOption.identifier != "filterPicker.option.any" {
+                break
+            }
+            XCUIRemote.shared.press(.down)
+            Thread.sleep(forTimeInterval: settle)
+        }
         XCUIRemote.shared.press(.select)
         Thread.sleep(forTimeInterval: settle)
 
@@ -141,17 +148,12 @@ final class CatalogUITests: XCTestCase {
 
     @MainActor
     private func openCatalogTab(in app: XCUIApplication) {
-        // The tab bar takes focus on launch; «Каталог» is one press to the right.
-        for _ in 0 ..< 4 {
-            XCUIRemote.shared.press(.right)
-            Thread.sleep(forTimeInterval: 0.5)
-            XCUIRemote.shared.press(.select)
-            let searchField = app.descendants(matching: .any)["catalog.searchField"].firstMatch
-            if searchField.waitForExistence(timeout: 5) {
-                return
-            }
-        }
-        XCTFail("The catalogue tab never opened")
+        // «Поиск» is the row that opens the catalogue: search and browse are one screen (ADR 0020, 0028).
+        XCTAssertTrue(ShellNavigator.open(.search, in: app), "The sidebar never reached «Поиск»")
+        XCTAssertTrue(
+            app.descendants(matching: .any)["catalog.searchField"].firstMatch.waitForExistence(timeout: loadTimeout),
+            "«Поиск» never opened the catalogue screen"
+        )
     }
 
     @MainActor
