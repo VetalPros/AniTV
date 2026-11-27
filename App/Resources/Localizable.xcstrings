@@ -766,6 +766,57 @@
         }
       }
     },
+    "home.favorites.failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favourites did not load"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Избранное не загрузилось"
+          }
+        }
+      }
+    },
+    "home.favorites.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updates in favourites"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обновления в избранном"
+          }
+        }
+      }
+    },
+    "home.latest.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Releases"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Новинки"
+          }
+        }
+      }
+    },
     "latest.empty.message": {
       "extractionState": "manual",
       "localizations": {

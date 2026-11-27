@@ -51,7 +51,9 @@ final class NavigationStateUITests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
 
-        XCTAssertTrue(ShellNavigator.open(.home, in: app), "«Главная» never opened")
+        // A grid screen, not «Главная»: the home screen is rails since ADR 0031, and a rail does not have
+        // the "two rows down" the measurement needs.
+        XCTAssertTrue(ShellNavigator.open(.catalog, in: app), "«Каталог» never opened")
         XCTAssertTrue(ShellNavigator.focus("latest.posterCard", in: app), "Focus never reached a poster")
 
         // Move away from the default first card so "reset to the top" is distinguishable from "kept".
@@ -64,7 +66,7 @@ final class NavigationStateUITests: XCTestCase {
         let stampBefore = app.descendants(matching: .any)["latest.updatedAt"].firstMatch.value as? String
 
         XCTAssertTrue(ShellNavigator.open(.settings, in: app), "«Настройки» never opened")
-        XCTAssertTrue(ShellNavigator.open(.home, in: app), "«Главная» never came back")
+        XCTAssertTrue(ShellNavigator.open(.catalog, in: app), "«Каталог» never came back")
 
         let after = focusedPosterLabel(in: app)
         let stampAfter = app.descendants(matching: .any)["latest.updatedAt"].firstMatch.value as? String

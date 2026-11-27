@@ -39,6 +39,15 @@ public struct Release: Sendable, Identifiable, Equatable, Decodable {
     public let episodesTotal: Int?
     /// `true` while the release is still airing.
     public let isOngoing: Bool?
+    /// When the service last marked the release as fresh (a new episode landed), when known.
+    ///
+    /// This is the field the home screen sorts «Обновления в избранном» by: `fresh_at` moves when an
+    /// episode is published, while the rest of the metadata can stay untouched for months.
+    public let freshAt: Date?
+    /// When the release was created on the service, when known.
+    public let createdAt: Date?
+    /// When the release was last updated in any way, when known.
+    public let updatedAt: Date?
     /// Geo-block flag; blocked releases must never reach the player.
     public let isBlockedByGeo: Bool
     /// Copyright-block flag; blocked releases must never reach the player.
@@ -63,6 +72,9 @@ public struct Release: Sendable, Identifiable, Equatable, Decodable {
         case type
         case season
         case ageRating
+        case freshAt
+        case createdAt
+        case updatedAt
         case rating
         case episodesTotal
         case isOngoing
@@ -85,6 +97,10 @@ public struct Release: Sendable, Identifiable, Equatable, Decodable {
         type = try? container.decodeIfPresent(NamedValue.self, forKey: .type)
         season = try? container.decodeIfPresent(NamedValue.self, forKey: .season)
         ageRating = Self.ageRating(from: container)
+        // Tolerant on purpose: a release without timestamps still decodes, it just cannot be dated.
+        freshAt = try? container.decodeIfPresent(Date.self, forKey: .freshAt)
+        createdAt = try? container.decodeIfPresent(Date.self, forKey: .createdAt)
+        updatedAt = try? container.decodeIfPresent(Date.self, forKey: .updatedAt)
         let rating = Self.rating(from: container)
         averageRating = rating.average
         ratingVotes = rating.votes

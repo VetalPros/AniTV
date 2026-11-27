@@ -296,6 +296,12 @@ the simulator — so both reported defects are closed against a real account, no
       13:38:56 across one switch). Encoded as an expected failure, with the fix sketched in
       `docs/NAVIGATION.md` §7. Lifting the view models into the shell was tried and reverted — the feed
       never left its loading state.
+- [x] «Главная» rebuilt as two rails (2026-11-27, ADR 0031): `HomeView` with «Новинки» (same model, same
+      auto-refresh) and «Обновления в избранном» (favourites sorted by `fresh_at`, the field `Release` now
+      decodes along with `created_at`/`updated_at`). The favourites rail is absent for a signed-out viewer
+      and the two rails fail independently. `LatestReleasesView` is deleted; `HomeUITests` covers both the
+      rail and its absence. The favourites *order* stays `unverified` against the live service — nobody has
+      signed in on this project yet.
 - [x] UI suite de-flaked where it kept failing (2026-11-27): `PlayerSkipUITests` no longer samples the
       transport bar once (the first reading after revealing it is often `0:00`, which used to be judged as a
       failed seek) and no longer gives the hint ~5 s to claim focus inside a 4-second lifetime; the

@@ -22,6 +22,10 @@ struct ReleaseDecodingTests {
         #expect(first.genres.isEmpty == false)
         #expect(first.averageRating == 8)
         #expect(first.ratingVotes == 1)
+        // The home screen sorts «Обновления в избранном» by this timestamp, so it must actually arrive.
+        let freshAt = try #require(first.freshAt)
+        #expect(freshAt > Date(timeIntervalSince1970: 0))
+        #expect(first.updatedAt != nil)
     }
 
     @Test("Posters resolve against the site root and prefer the optimised variant")

@@ -47,7 +47,7 @@ struct RootShellView: View {
             }
 
             Tab("nav.home", systemImage: "house", value: Section.home) {
-                LatestReleasesView(path: $navigation.home)
+                HomeView(path: $navigation.home)
             }
 
             Tab("nav.catalog", systemImage: "square.grid.2x2", value: Section.catalog) {

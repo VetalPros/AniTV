@@ -5,6 +5,8 @@ import SwiftUI
 struct PosterCard: View {
     let release: Release
     var takesDefaultFocus: Bool = false
+    /// Accessibility identifier this card publishes; a rail passes its own so tests can tell rails apart.
+    var identifier = "latest.posterCard"
     let action: () -> Void
 
     @FocusState private var isFocused: Bool
@@ -23,7 +25,7 @@ struct PosterCard: View {
         .animation(DesignTokens.Motion.focus, value: isFocused)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(verbatim: "\(release.title). \(release.subtitle)"))
-        .accessibilityIdentifier("latest.posterCard")
+        .accessibilityIdentifier(identifier)
     }
 
     private var artwork: some View {

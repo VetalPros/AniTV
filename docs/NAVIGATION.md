@@ -107,7 +107,7 @@ Full rationale and the rejected alternatives: ADR 0028 in `docs/DECISIONS.md`.
 | Section | Value | Icon | Content today | Notes |
 | --- | --- | --- | --- | --- |
 | Поиск | `search` (role `.search`) | `magnifyingglass` | `CatalogView(mode: .search)` | The system pins it above the sections, as in the TV app. Field only, no chips (ADR 0030). |
-| Главная | `home` | `house` | `LatestReleasesView` | Later: hero carousel + rails (separate decision) |
+| Главная | `home` | `house` | `HomeView` | Two rails: «Новинки» and «Обновления в избранном» (ADR 0031). The favourites rail is drawn only for a signed-in viewer. |
 | Каталог | `catalog` | `square.grid.2x2` | `CatalogView(mode: .browse)` | Chips only, no field (ADR 0030). Returns to the panel with this ADR. |
 | Медиатека | `library` | `rectangle.stack` | **does not exist yet** | Needs «Избранное» + «Продолжить просмотр»; blocked on memory Next steps 3 and 8 |
 | Профиль | `profile` | `person.crop.circle` | `ProfileView` | Pairing code when signed out |

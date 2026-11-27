@@ -876,3 +876,51 @@ pill said «Поиск» while the screen's own title said «Каталог».
 reference pins a search row above the sections, and the owner asked for that look. *One screen showing
 field and chips together* — the half that does not apply to the task in hand is the half that steals
 focus, which is how ADR 0020's focus chain got broken in the first place.
+
+---
+
+## 0031 — «Главная» is two rails, and favourites get a recency field to sort by (2026-11-27)
+
+**Context.** The owner asked to rebuild the home screen with two carousels — «Новинки» and «Обновления в
+избранном» — instead of the six-column grid that the tab bar era left there. Two things had to be settled
+first: where the "updates" order comes from, and how the second rail behaves for a viewer with no account.
+
+**Decision.**
+
+- **Rail one: fresh releases**, from the same `latestReleases()` endpoint the grid used, through the same
+  `LatestReleasesViewModel` — its auto-refresh policy (ADR 0024) and freshness caption are kept, so nothing
+  that already worked is rebuilt.
+- **Rail two: the favourites, newest first**, sorted by a timestamp the model did not have. The release
+  payload has carried `fresh_at`, `created_at` and `updated_at` all along (recorded in `docs/api-notes.md`)
+  and `Release` simply ignored them, so the model now decodes all three as optional dates and the rail
+  orders by `freshAt ?? updatedAt ?? createdAt`, descending. A release the service never dated sorts last
+  rather than disappearing.
+- **No account, no rail.** `FavoritesUpdatesViewModel` reports `.signedOut` when the token store has no
+  token and the rail is not drawn at all. An empty strip under «Новинки» reads as a bug, and a "sign in"
+  nag on the home screen is not what the owner asked for.
+- **The rails fail independently**: a dead favourites request leaves the fresh rail intact and shows a
+  compact "Избранное не загрузилось" line with the mapped error; the reverse is equally true.
+- **One rail is a `HomeRail`**, not a grid: a horizontal `ScrollView` of the existing `PosterCard`s at
+  244 pt, title 32 pt, the freshness line under it. Cards carry the rail's own accessibility identifier
+  (`latest.posterCard` for the first rail, `home.favoriteCard` for the second) so tests can tell the rails
+  apart without guessing by label.
+
+**Consequences.**
+
+- The home screen is `HomeView`; `LatestReleasesView` is deleted. The section keeps its `NavigationStack`
+  and its path still lives in `ShellNavigationState` (ADR 0028 §7), so an open release survives a trip to
+  another section.
+- The grid is no longer the home layout. `LatestFeedUITests` and `AutoRefreshUITests` were re-run against
+  the rails and pass unchanged — they address cards by identifier and the freshness line by its
+  `accessibilityValue`, both of which the rail preserves.
+- Two requests now happen when «Главная» appears for a signed-in viewer (latest + favourites) instead of
+  one. That is one request per rail per activation, still inside the politeness rule: no paging, no
+  polling of the favourites endpoint beyond the existing policy.
+- The favourites *order* is `unverified` against the live service: nobody has signed in on this project
+  yet (memory Next steps), so `fresh_at` semantics are taken from the schema and the fixtures, and the
+  sorting is covered only by the model test that asserts the field decodes.
+
+**Alternatives rejected.** *Sorting favourites by the order the endpoint returns* — the API documents no
+order for that list, so the rail could look random. *Fetching the detail of each favourite to find the
+newest episode* — N requests for a carousel. *A "continue watching" rail* — that needs `views/history`,
+which is a different feature and still unbuilt.

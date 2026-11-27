@@ -29,6 +29,8 @@ enum DesignTokens {
         static let screenTitle = Font.system(size: 46, weight: .bold, design: .rounded)
         static let screenSubtitle = Font.system(size: 21, weight: .medium)
         static let sectionTitle = Font.system(size: 27, weight: .semibold)
+        /// Title of a home rail: reads as a section, but louder than one inside a card list.
+        static let railTitle = Font.system(size: 32, weight: .semibold)
         static let detailTitle = Font.system(size: 54, weight: .bold, design: .rounded)
         static let detailOriginalTitle = Font.system(size: 22, weight: .medium)
         static let body = Font.system(size: 20, weight: .regular)

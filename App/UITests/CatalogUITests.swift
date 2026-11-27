@@ -69,6 +69,13 @@ final class CatalogUITests: XCTestCase {
         openCatalog(in: app, mode: .catalog)
         let count = app.staticTexts["catalog.resultCount"]
         XCTAssertTrue(count.waitForExistence(timeout: loadTimeout))
+        // The caption exists before the results do ("Найдено: 0" while loading), so the baseline is read
+        // only once the grid has something in it.
+        XCTAssertTrue(
+            app.descendants(matching: .any).matching(identifier: "latest.posterCard").firstMatch
+                .waitForExistence(timeout: loadTimeout),
+            "The catalogue grid never loaded, so there is no baseline count"
+        )
         let unfiltered = count.label
 
         chooseGenre(in: app)
