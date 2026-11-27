@@ -19,6 +19,40 @@ final class HomeUITests: XCTestCase {
         XCTAssertGreaterThan(cards.count, 1, "A rail should offer more than one release to walk through")
     }
 
+    /// The favourites rail is whatever the account is: present with cards when signed in, absent when not.
+    ///
+    /// The account state is read from «Профиль» rather than guessed from the home screen, so a broken rail
+    /// fails instead of quietly turning the test into a skip.
+    @MainActor
+    func testFavouritesRailFollowsTheAccount() {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launch()
+
+        XCTAssertTrue(ShellNavigator.open(.profile, in: app), "«Профиль» never opened")
+        let pairingCode = app.descendants(matching: .any)["profile.pairingCode"].firstMatch
+        let signedIn = !pairingCode.waitForExistence(timeout: 15)
+
+        XCTAssertTrue(ShellNavigator.open(.home, in: app), "«Главная» never came back")
+        XCTAssertTrue(
+            app.descendants(matching: .any)["home.rail.latest"].firstMatch.waitForExistence(timeout: loadTimeout),
+            "The «Новинки» rail never appeared"
+        )
+
+        let favouritesRail = app.descendants(matching: .any)["home.rail.favorites"].firstMatch
+        if signedIn {
+            XCTAssertTrue(
+                favouritesRail.waitForExistence(timeout: loadTimeout),
+                "A signed-in viewer got no «Обновления в избранном» rail"
+            )
+            let cards = app.descendants(matching: .any).matching(identifier: "home.favoriteCard")
+            XCTAssertTrue(cards.firstMatch.exists, "The favourites rail is on screen but empty")
+            attach(app, named: "home-signed-in")
+        } else {
+            XCTAssertFalse(favouritesRail.exists, "A signed-out viewer got a favourites rail")
+        }
+    }
+
     @MainActor
     func testFavouritesRailIsAbsentWhenSignedOut() {
         continueAfterFailure = false
@@ -35,5 +69,13 @@ final class HomeUITests: XCTestCase {
             app.descendants(matching: .any)["home.rail.favorites"].firstMatch.exists,
             "A signed-out viewer got a favourites rail"
         )
+    }
+
+    @MainActor
+    private func attach(_ app: XCUIApplication, named name: String) {
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
     }
 }

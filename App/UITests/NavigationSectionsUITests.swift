@@ -14,8 +14,8 @@ final class NavigationSectionsUITests: XCTestCase {
             ("home", ["latest.posterCard"]),
             ("search", ["catalog.searchField"]),
             ("catalog", ["catalog.genreChip"]),
-            // Signed out the profile shows the pairing code; signed in it offers «Сменить аккаунт».
-            ("profile", ["profile.pairingCode", "profile.reconnect"]),
+            // The profile markers live with the section definition, signed-out and signed-in alike.
+            ("profile", ShellSection.profile.markers),
             ("settings", ["settings.screen"]),
         ]
 

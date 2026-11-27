@@ -89,7 +89,8 @@ enum ShellSection: String, CaseIterable {
         case .search: ["catalog.searchField"]
         case .home: ["latest.posterCard"]
         case .catalog: ["catalog.genreChip"]
-        case .profile: ["profile.pairingCode", "profile.reconnect"]
+        // Signed out the profile shows the pairing code; signed in it shows the account name.
+        case .profile: ["profile.pairingCode", "profile.reconnect", "profile.displayName"]
         case .settings: ["settings.screen"]
         }
     }
@@ -119,12 +120,18 @@ enum ShellNavigator {
     }
 
     /// Opens `section` from wherever focus is, and proves it by waiting for the section's own marker.
-    static func open(_ section: ShellSection, in app: XCUIApplication, settle: TimeInterval = 1.2) -> Bool {
+    static func open(
+        _ section: ShellSection,
+        in app: XCUIApplication,
+        settle: TimeInterval = 1.2,
+        timeout: TimeInterval = 20
+    ) -> Bool {
         guard select(section, in: app, settle: settle) else { return false }
         let marker = app.descendants(matching: .any)
             .matching(NSPredicate(format: "identifier IN %@", section.markers))
             .firstMatch
-        return marker.waitForExistence(timeout: 12)
+        // Signed-in screens go to the network before they have anything to show, so the wait is generous.
+        return marker.waitForExistence(timeout: timeout)
     }
 
     /// Presses Left until the focus engine reports a panel row rather than content.

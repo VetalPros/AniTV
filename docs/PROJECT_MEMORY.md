@@ -19,6 +19,7 @@
 | Product name | Provisional `anitv` — final name and bundle ID decided later |
 | Repository | public, <https://github.com/VetalPros/AniTV>, MIT (published 2026-11-17) |
 | DSH workspace | `c714b289-7397-4251-b27c-4ce3ce773cf6` (`~/Documents/anitv`) |
+| Simulator account | **signed in** since 2026-11-27 (owner paired on the tvOS 27.2 simulator), so the favourites rail and the profile screens can be exercised for real |
 | Physical Apple TV | **paired and in use** since 2026-11-26: Apple TV 4K `AppleTV18,1` (devicectl's marketing name: *4th generation*; session-5 notes said 3rd), name «Гостиная», tvOS 27.2.1 (24K157), UDID `00008150-000C62CA0101401C` |
 | Navigation | **System sidebar shipped** (2026-11-27, ADR 0028/0029/0030): `RootShellView` with `.sidebarAdaptable`, header, **five** rows (Поиск, Главная, Каталог, Профиль, Настройки); «Поиск» and «Каталог» are two modes of `CatalogView`; paths live in `ShellNavigationState`; UI suite green. «Медиатека» (P5) and focus/scroll restoration still pending |
 
@@ -300,8 +301,10 @@ the simulator — so both reported defects are closed against a real account, no
       auto-refresh) and «Обновления в избранном» (favourites sorted by `fresh_at`, the field `Release` now
       decodes along with `created_at`/`updated_at`). The favourites rail is absent for a signed-out viewer
       and the two rails fail independently. `LatestReleasesView` is deleted; `HomeUITests` covers both the
-      rail and its absence. The favourites *order* stays `unverified` against the live service — nobody has
-      signed in on this project yet.
+      rail (signed in **and** signed out branches), `HomeUITests` reads the account state from «Профиль»
+      instead of guessing, and the rail was captured with a real account on 2026-11-27 (`home-signed-in`
+      attachment). The favourites *order* is still not cross-checked against the service's own ordering —
+      it is computed from `fresh_at`, and the same list is not exposed elsewhere to compare with.
 - [x] UI suite de-flaked where it kept failing (2026-11-27): `PlayerSkipUITests` no longer samples the
       transport bar once (the first reading after revealing it is often `0:00`, which used to be judged as a
       failed seek) and no longer gives the hint ~5 s to claim focus inside a 4-second lifetime; the
