@@ -104,6 +104,14 @@
 
 ## Done
 
+- [x] App Store Connect material prepared while the enrollment was pending (2026-11-27): `docs/PRIVACY.md`
+      (bilingual policy, accurate to the code: only `aniliberty.top` is contacted, token in Keychain, device
+      UUID and switches in `UserDefaults`, no analytics/ads/SDKs), `docs/APPSTORE.md` (name, subtitle,
+      description, keywords, age rating and category answers, «What to test», App Review notes, publication
+      of the policy through GitHub Pages), and the screenshot pipeline — `AppStoreShotsUITests` plus
+      `scripts/capture-appstore-screenshots.sh` produce five 1920×1080 PNGs in `docs/appstore/screenshots/`.
+      The capture test passes; the images were inspected (home shows both rails, detail shows the hero,
+      genres and episodes).
 - [x] TestFlight delivery pipeline (2026-11-27, ADR 0033): `App/Resources/PrivacyInfo.xcprivacy` (the only
       required-reason API is `UserDefaults`, reason `CA92.1`), `ITSAppUsesNonExemptEncryption: false`,
       `CURRENT_PROJECT_VERSION = $(BUILD_NUMBER)` with `BUILD_NUMBER = 1` as the fallback in
@@ -507,6 +515,10 @@ not a commitment.
   successfully touches a file in that subtree — they are not preloaded.
 - The app's in-memory workspace registry is authoritative at runtime: hand-editing
   `~/.dsh/storages/workspace.json` while the app runs is unreliable — register via the GUI.
+- **The home screenshot shows the signed-in account name** (`AppleTV-App_test`) in the panel header,
+  because the capture ran on the signed-in simulator. Before publishing the listing, either rename the
+  nickname in the service or re-shoot with the rail hidden — the account name is not something to ship by
+  accident.
 - **TestFlight needs three things that live outside the repository**: a paid Team ID in
   `Config/Local.xcconfig`, that team signed into Xcode, and an App Store Connect app record. Without all
   three, `-exportArchive` fails before anything is uploaded (measured 2026-11-27). Builds also expire after
