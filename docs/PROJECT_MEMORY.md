@@ -304,7 +304,9 @@ the simulator — so both reported defects are closed against a real account, no
       rail (signed in **and** signed out branches), `HomeUITests` reads the account state from «Профиль»
       instead of guessing, and the rail was captured with a real account on 2026-11-27 (`home-signed-in`
       attachment). The favourites *order* is still not cross-checked against the service's own ordering —
-      it is computed from `fresh_at`, and the same list is not exposed elsewhere to compare with.
+      it is computed from `fresh_at`, and the same list is not exposed elsewhere to compare with. With the
+      account signed in the full UI suite runs 29 tests, of which 28 pass and 1 skips (the ending-hint
+      episode is not offered by the current feed) — verified 2026-11-27.
 - [x] UI suite de-flaked where it kept failing (2026-11-27): `PlayerSkipUITests` no longer samples the
       transport bar once (the first reading after revealing it is often `0:00`, which used to be judged as a
       failed seek) and no longer gives the hint ~5 s to claim focus inside a 4-second lifetime; the
