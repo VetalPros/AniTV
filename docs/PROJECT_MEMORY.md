@@ -303,7 +303,9 @@ the simulator — so both reported defects are closed against a real account, no
       gone. The header is focusable and sits above the rows, so `ShellNavigator` clamps past it — a bug this
       caught: every section press-count was off by one until the header was skipped. The header also
       publishes `signedIn`/`signedOut` as an accessibility value so tests no longer need the cover to learn
-      the account state.
+      the account state. Both branches are now covered end to end: `SignedOutShellUITests` launches with
+      `-uiTestingSignedOut`, reads `signedOut` from the header, opens the pairing screen through it, closes
+      the cover with Back and checks the shell is usable afterwards with no favourites rail.
 - [x] «Главная» rebuilt as two rails (2026-11-27, ADR 0031): `HomeView` with «Новинки» (same model, same
       auto-refresh) and «Обновления в избранном» (favourites sorted by `fresh_at`, the field `Release` now
       decodes along with `created_at`/`updated_at`). The favourites rail is absent for a signed-out viewer
