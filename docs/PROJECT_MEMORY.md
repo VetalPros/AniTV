@@ -458,9 +458,12 @@ not a commitment.
   `~/.dsh/storages/workspace.json` while the app runs is unreliable — register via the GUI.
 - The UI suite is **timing-fragile**: it drives the remote with fixed `Thread.sleep` choreography, so a full
   run can fail one or two tests that pass on their own — observed 2026-11-27 in different tests on
-  different runs (2026-11-27: «The expiring hint never held focus» in `PlayerSkipUITests`, «the genre filter
-  did not apply» in `CatalogUITests`). Both classes are green when run alone. The fix is to convert those
-  sleeps into polling helpers of the `ShellNavigator` kind, task by task, not to raise timeouts.
+  different runs (2026-11-27: «The expiring hint never held focus», «The skip did not move the playhead (0s)»
+  in `PlayerSkipUITests`; «the genre filter did not apply» in `CatalogUITests`). `CatalogUITests` was made
+  deterministic that day; the player-hint assertions still flake, and they measure playback timing, not
+  navigation. One *real* bug was hiding among those flakes: `PlayerSkipUITests.leaveToFeed` pressed Menu
+  while the feed was still loading, which at a section root hands the screen to tvOS — fixed by pressing
+  Menu only while the player or the detail cover is on screen.
 - `TabView` with `.sidebarAdaptable` **unloads the content of a section that is not selected**: the
   section's `@State` (view model, path, focus, scroll) is destroyed and rebuilt on return. Paths must live
   in `ShellNavigationState`; focus, scroll and loaded data do not survive (measured 2026-11-27).

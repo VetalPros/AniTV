@@ -165,14 +165,21 @@ final class PlayerSkipUITests: XCTestCase {
     @MainActor
     private func leaveToFeed(in app: XCUIApplication) {
         let card = element(identifier: "latest.posterCard", in: app)
-        // Player → detail → feed: three Menu presses at best, and each of them may need a moment.
-        for _ in 0 ..< 6 where !card.exists {
+        let player = element(identifier: "player.screen", in: app)
+        let detail = element(identifier: "detail.screen", in: app)
+        // Player → detail → feed. Menu is pressed **only** while one of those covers is on screen: at the
+        // section root a Menu press hands the screen to tvOS itself, and the app then cannot reach the
+        // sidebar at all (that is how this helper used to fail when the feed was merely still loading).
+        for _ in 0 ..< 6 {
+            if card.exists {
+                return
+            }
+            guard player.exists || detail.exists else {
+                _ = card.waitForExistence(timeout: 3)
+                continue
+            }
             XCUIRemote.shared.press(.menu)
             Thread.sleep(forTimeInterval: settleTimeout)
-        }
-        if !card.exists {
-            XCUIRemote.shared.press(.menu)
-            Thread.sleep(forTimeInterval: settleTimeout * 2)
         }
         XCTAssertTrue(
             card.waitForExistence(timeout: screenTimeout),
