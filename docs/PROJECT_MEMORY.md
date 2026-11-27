@@ -443,8 +443,14 @@ xcrun devicectl device process launch --device 00008150-… tv.anitv.client     
 xcrun devicectl device capture screenshot … --destination /tmp/appletv-live.png → 1920×1080
 ```
 
-The screenshot shows the live feed with the new four-tab bar including «Настройки», so the build on the
-device is the current `main` (`c2973d8`). Signing is `Apple Development: vetalirusa@gmail.com`, team
+**Updated 2026-11-27, evening:** the TV now runs the **`feat/sidebar-navigation` build** (`f09e71d`) —
+Debug configuration, same personal team, installed with `devicectl device install` and captured again. It
+shows the sidebar shell with the rails on «Главная» and a **populated «Обновления в избранном» rail**, so
+this TV holds its own paired session in its Keychain (the simulator's session is separate). The profile is
+still the free team's seven-day one: it expires around **2026-12-03** unless the paid team is active by
+then, in which case re-signing moves to a yearly profile.
+
+The earlier session's screenshot showed the four-tab bar of `main` (`c2973d8`). Signing is `Apple Development: vetalirusa@gmail.com`, team
 `9KLFP6C3LT`; a free personal team means the profile lives **seven days**, after which the app stops
 launching until it is installed again — that is a property of the account, not of the code.
 
