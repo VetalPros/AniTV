@@ -1022,3 +1022,51 @@ in App Store Connect.
 **Alternatives rejected.** *Staying on ad-hoc installs* — the owner asked for TestFlight explicitly.
 *Uploading by hand from Xcode Organizer only* — a documented script is repeatable and reviewable, and CI
 can run the same commands later.
+
+---
+
+## 0034 — OpenChamber is the working harness, and the team rules stop naming DSH tools (2026-11-28)
+
+**Context.** Development moved from DeepSeek Harness to OpenChamber. The decision to work as a team
+(ADR 0007) still holds, but `AGENTS.md` §3 and `docs/HANDOFF.md` §7 named DSH-only tools
+(`team_task_create`, `spawn_teammate`, `wait_agent`, `team_task_list`), so read from any other harness the
+rules said the project's default mode was unavailable. `feat/sidebar-navigation` is still the branch with
+the real state; `main` still carries the old tab-bar UI.
+
+**Decision.**
+
+- **The rules stay harness-neutral.** `AGENTS.md` §3 describes the model — lead session, child sessions
+  with disjoint write scopes, a shared board, dependencies, verification by the lead, no commits from
+  children — and names no product. §1, §2 and §5–§9 are unchanged, as are the engineering constants
+  (tvOS 27.0, no third-party dependencies, no secrets in the repository).
+- **OpenChamber supplies the pieces DSH had:** child sessions replace teammates, **Project knowledge**
+  (todos with dependencies, notes) replaces the external task board, and git worktrees replace DSH's
+  per-teammate checkouts. The mapping, the gate commands and the environment's limits live in the new
+  `docs/OPENCHAMBER.md`; `AGENTS.md` only points at it.
+- **Worktrees branch from `feat/sidebar-navigation`** (`startRef = feat/sidebar-navigation`), never from
+  `main`. `main` is 20 commits behind at the time of writing (19 when `docs/HANDOFF.md` was written on the
+  same day) and stays non-working until the owner decides to merge. Agents do not merge it.
+- **Only the lead commits**, after running the gates itself. A child's "done" remains a claim, not
+  evidence, and a harness without child sessions or a shared board still falls back to sequential work
+  with the same verification rules.
+- **`docs/HANDOFF.md` stays the state map.** Only its §7 changed: it now points at
+  `docs/OPENCHAMBER.md` and no longer claims that team work is impossible outside DSH.
+
+**Consequences.**
+
+- ADR 0007's team model stands; its DSH tool names are superseded by this entry.
+- Project knowledge is harness state, not repository state: todos and plans do not travel through git.
+  `docs/PROJECT_MEMORY.md` and the ADR log remain the durable record that survives a harness change.
+- `CONTRIBUTING.md` and `AGENTS.md`'s preamble carried the same vendor wording; both were edited in this
+  commit, and §2.6 now justifies the "no restructuring" rule by what actually references the paths
+  (`project.yml`, CI, the release scripts). `docs/NAVIGATION.md` R6 and ADR 0007 keep their DSH wording as
+  history.
+- A future harness change costs one new document like `docs/OPENCHAMBER.md`, not another rewrite of the
+  engineering rules.
+
+**Alternatives rejected.** *Keeping the DSH tool names and telling other harnesses to work sequentially* —
+that would make the default mode unreachable in the harness actually in use, and push correctness-critical
+rules (verification, commit ownership) into a product that is not installed. *Moving the board into the
+repository as a task file* — the repository is public, the board is churn, and it would compete with the
+memory protocol. *Switching the working branch to `main` now* — merging the sidebar work is the owner's
+decision and would invalidate the handoff map.

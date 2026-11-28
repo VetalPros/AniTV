@@ -1,8 +1,8 @@
 # AGENTS.md — working agreement for AI agents in this repository
 
-This file is the entry point for every AI agent (DSH sessions, subagents, teammates) working
-on this project. Read it fully before the first action. It is loaded automatically by DSH from
-the repository root.
+This file is the entry point for every AI agent (lead sessions, child sessions, subagents) working
+on this project. Read it fully before the first action. Harnesses that preload repository
+instructions read it from this directory.
 
 Repository root: this directory. Session working directory MUST be inside it.
 
@@ -58,17 +58,19 @@ signing/app-store credentials live (never in the repository) and which failures 
    AniLiberty HTTP API. Do not attempt to bypass geo-blocking, ads or any access control.
 5. **Politeness to the upstream service.** One `User-Agent` with the repository URL, conditional
    requests / caching, no request storms, no scraping of unrelated endpoints.
-6. **Do not rename or restructure top-level directories** without an ADR — the DSH workspace is
-   registered by path.
+6. **Do not rename or restructure top-level directories** without an ADR — `project.yml`, CI, the
+   release scripts and the docs all reference these paths by name.
 
 ---
 
 ## 3. Agent Teams — mandatory working mode
 
-This project is built with DSH **Agent Teams** ("Команда Агентов"). Using it is not optional for
-non-trivial work.
+Non-trivial work is done by an **agent team**: a lead session, child sessions with disjoint write
+scopes, and a shared task board. This is required for this project, not optional. The rules here are
+harness-neutral — they describe roles and evidence, not a vendor. `docs/OPENCHAMBER.md` maps them
+onto the harness currently in use.
 
-**Use Agent Teams (Lead + teammates + shared task board) whenever a task:**
+**Use a team whenever a task:**
 
 - touches more than ~2 source files, or
 - spans more than one module (Kit / tvOS app / docs / CI), or
@@ -77,24 +79,31 @@ non-trivial work.
 **Procedure for the Lead:**
 
 1. Restate the goal, then split it into tasks with **disjoint write scopes**
-   (`team_task_create` with `write_scopes`, e.g. `Sources/App/Player/`, `AniLibertyKit/Sources/API/`).
-2. Add dependencies (`blocked_by`) when one task must land before another.
-3. Spawn teammates with self-contained prompts (`spawn_teammate`): goal, paths they own, the
-   conventions from this file, how to verify, and the rule "do not edit files outside your scope".
+   (e.g. `App/Sources/Player/`, `AniLibertyKit/Sources/API/`) and record them on the shared board.
+2. Add a dependency when one task must land before another.
+3. Dispatch child sessions with self-contained prompts: goal, the paths they own, the conventions
+   from this file, how to verify, and the rule "do not edit files outside your scope".
 4. Keep the write scopes disjoint. Two agents never edit the same file concurrently. The Lead
    owns shared files (`project.yml`, `Package.swift`, `AGENTS.md`, `docs/`).
-5. Wait for results (`wait_agent`, `team_task_list`), then **verify**: read the diff, run the build
-   and tests yourself. A teammate's "done" is a claim, not evidence.
+5. When children return, **verify**: read the diff, run the build and tests yourself. A child's
+   "done" is a claim, not evidence.
 6. Report to the user in Russian: what changed, what was verified, what stayed unverified.
+
+**Where the team runs.** In OpenChamber the shared board is **Project knowledge** (todos with
+dependencies, notes), child work goes to child sessions, and any work that needs its own checkout
+runs in a git worktree branched from the working branch — `feat/sidebar-navigation` today, never
+`main` (ADR 0034). Commands, limits and the rest of the environment mapping: `docs/OPENCHAMBER.md`.
 
 **Hard rules:**
 
-- No teammate starts a task without claiming it on the shared board first.
-- No teammate runs `git commit`, `git push`, or history rewriting. Only the Lead commits, and only
+- No child starts a task without claiming it on the shared board first.
+- No child runs `git commit`, `git push`, or history rewriting. Only the Lead commits, and only
   after a green build.
-- The Lead is responsible for the final state of `main`. Never leave the repository non-building.
-- If Agent Teams tools are unavailable in the current session, say so explicitly in the answer and
-  fall back to sequential work — do not silently pretend a team was used.
+- The Lead is responsible for the final state of the working branch. Never leave the repository
+  non-building.
+- If the harness has no team tools at all — no child sessions, no shared board — say so explicitly
+  in the answer and fall back to sequential work. Do not silently pretend a team was used, and do
+  not drop the verification rules: a child's report is still a claim, not evidence.
 
 Small single-file edits, one-line fixes and pure Q&A do not need a team.
 

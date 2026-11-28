@@ -2,10 +2,11 @@
 
 > Update this file at the end of every session that changes the project's state.
 > Rules and constraints live in `AGENTS.md`; decisions live in `docs/DECISIONS.md`.
-> Last updated: **2026-11-27** (session 6: navigation redesign specified — `docs/NAVIGATION.md` and ADR 0028
-> — after live captures of the system TV app and a sidebar spike on the owner's Apple TV. Previous,
-> session 5: first build, install and launch on a physical Apple TV with a free Apple ID, ADR 0027,
-> procedure in `docs/INSTALL_DEVICE.md`).
+> Last updated: **2026-11-28** (session 7: development moved from DSH to **OpenChamber** — baseline
+> re-verified on this machine, rules made harness-neutral (ADR 0034, `docs/OPENCHAMBER.md`). Previous,
+> session 6: navigation redesign specified — `docs/NAVIGATION.md` and ADR 0028 — after live captures of the
+> system TV app and a sidebar spike on the owner's Apple TV; session 5: first build, install and launch on
+> a physical Apple TV, ADR 0027).
 
 ## Snapshot
 
@@ -18,13 +19,20 @@
 | License | **MIT** — confirmed 2026-11-10 (`LICENSE`) |
 | Product name | Marketing name still provisional (`AniTV`); bundle ID **fixed at `tv.anitv.client`** by the owner on 2026-11-27, before the first App Store Connect record |
 | Repository | public, <https://github.com/VetalPros/AniTV>, MIT (published 2026-11-17) |
-| DSH workspace | `c714b289-7397-4251-b27c-4ce3ce773cf6` (`~/Documents/anitv`) |
+| Working harness | **OpenChamber** since 2026-11-28 (ADR 0034, `docs/OPENCHAMBER.md`); the old DSH workspace id `c714b289-7397-4251-b27c-4ce3ce773cf6` is history |
 | Simulator account | **signed in** since 2026-11-27 (owner paired on the tvOS 27.2 simulator), so the favourites rail and the profile screens can be exercised for real |
 | Physical Apple TV | **paired and in use** since 2026-11-26: Apple TV 4K `AppleTV18,1` (devicectl's marketing name: *4th generation*; session-5 notes said 3rd), name «Гостиная», tvOS 27.2.1 (24K157), UDID `00008150-000C62CA0101401C` |
 | Navigation | **System sidebar shipped** (2026-11-27, ADR 0028/0029/0030): `RootShellView` with `.sidebarAdaptable`, the account in the header (ADR 0032, opens the profile as a cover) and **four** rows (Поиск, Главная, Каталог, Настройки); «Поиск» and «Каталог» are two modes of `CatalogView`; paths live in `ShellNavigationState`; UI suite green. «Медиатека» (P5) and focus/scroll restoration still pending |
 
 ## Environment facts (verified on this machine)
 
+- **OpenChamber is the working harness since 2026-11-28** (ADR 0034, `docs/OPENCHAMBER.md`). Baseline
+  re-verified there on this machine: `xcodegen generate` ok; `swift test` **91 tests in 11 suites**
+  (0.07 s); simulator build `BUILD SUCCEEDED` in 15.7 s — on **warm** `DerivedData`, a clean
+  build is still unmeasured; `swiftformat --lint .` 0/111 files require formatting; `swiftlint --strict`
+  0 violations in 111 files; one XCUITest (`NavigationShellUITests`) green — ~18.4 s of test, ~34 s wall,
+  with a runner-connection flake recorded in `docs/HANDOFF.md` §5. `gh` 2.106.0 is installed but **not
+  authenticated** yet.
 - macOS **27.0.1** (26A434), arm64. Disk: ~104 GB free.
 - Xcode **27.2** (27B52) at `/Applications/Xcode.app`; `xcode-select -p` →
   `/Applications/Xcode.app/Contents/Developer`. License accepted, first-launch components installed.
@@ -112,6 +120,14 @@
 
 ## Done
 
+- [x] **Work moved to OpenChamber, 2026-11-28 (session 7).** The harness change cost one document, not a
+      rewrite of the engineering rules: `AGENTS.md` §3 now describes the team model harness-neutrally
+      (lead + child sessions with disjoint write scopes, shared board, dependencies, only the lead commits),
+      `docs/OPENCHAMBER.md` maps it onto this harness, ADR 0034 records the decision, and `docs/HANDOFF.md`
+      §7 no longer claims team work needs DSH. Stale vendor wording went with it: the `AGENTS.md` preamble,
+      §2.6's justification (now `project.yml`/CI/scripts referencing the paths), `CONTRIBUTING.md`'s team
+      section and its `tvOS 26.0` line (raised to 27.0, ADR 0029). Gates re-run by the lead on the changed
+      tree: 91 Kit tests, simulator build, 0 lint violations, 0/111 formatting.
 - [x] **First TestFlight upload, 2026-11-28.** App Store Connect app record exists: **AniTV**, App Store
       app id `6840296537`, version 1.0 in `PREPARE_FOR_SUBMISSION`, platform `TV_OS`. The API key
       `5QY2594WJR` (issuer `b8e1a4d6-…`) authenticated against App Store Connect; the paid enrolment turned
@@ -383,12 +399,10 @@ the simulator — so both reported defects are closed against a real account, no
 
 ## Next steps (ordered)
 
-1. Finish the first TestFlight upload (ADR 0033, `docs/RELEASE.md`): put the **paid** team ID into
-   `Config/Local.xcconfig`, sign that team in under Xcode → Settings → Accounts, create the App ID
-   `tv.anitv.client` with Keychain Sharing, create the App Store Connect record (platform tvOS), then run
-   `./scripts/release-testflight.sh`. Export currently fails with *"team does not have permission to create
-   «Apple TV App Store» profiles"* and *"No provider associated with App Store Connect user"* — both are the
-   owner's logins, not code.
+1. Ship the build to testers (ADR 0033, `docs/RELEASE.md`): the upload pipeline is done and build
+   `202611280951` is in App Store Connect, so what is left is on the owner's side — create the **Internal
+   Testing** group, add themselves to it, and install through the TestFlight app on the Apple TV (no Apple
+   review for internal testers). Nothing here is code.
 2. Finish converting fixed sleeps to expectations if they start flaking again: the player and catalogue
    suites are done (`UITestWait`, polled focus), the detail/profile/settings suites still use
    `Thread.sleep` but have not flaked. The player's ending-hint focus gap is a **product** question, not a
@@ -400,8 +414,8 @@ the simulator — so both reported defects are closed against a real account, no
    the feed stopped loading, so start by understanding that failure. A browsable «Каталог» row returns
    once `CatalogView` splits into search and browse (the «Поиск»/«Каталог» wording mismatch goes with it).
 4. Watch what happens when the yearly profile expires (it replaced the 7-day ritual; nothing observed yet)
-   (in-app error? launch refused?). The TV now occupies one of the three free-account device slots;
-   `docs/INSTALL_DEVICE.md` is the procedure to repeat.
+   (in-app error? launch refused?). Re-installing on the TV now signs with the paid team — the procedure is
+   still `docs/INSTALL_DEVICE.md`.
 5. Exercise the favourite toggle against a live account: the add/remove calls and the rollback path have
    never run with a real token (doing it mutates the owner's favourites, so it needs their go-ahead). Same
    for the `views/history` "continue watching" row, which is not built yet — and «Медиатека» (P5 of the
@@ -414,8 +428,9 @@ the simulator — so both reported defects are closed against a real account, no
    decode relaxed).
 8. Watch the advisory `ui-tests` CI job on a real GitHub runner; only then consider making it required
    (ADR 0013). Also pin `xcode-select` if the `macos-26` image starts shipping a different default Xcode.
-9. Decide the final product name / bundle identifier **before** the repository goes public (renaming the
-   directory means re-registering the DSH workspace).
+9. Decide the final product name. The repository is public and the App Store record plus
+   `tv.anitv.client` already exist, so a rename now means a new store record — it is no longer a
+   pre-publication gate.
 10. Nice-to-haves nobody has asked for yet: a disk tier for the catalogue cache (it is memory-only now) and
    a "continue watching" row on «Новинки» from `views/history` — the latter becomes redundant if
    «Медиатека» lands.
@@ -516,9 +531,10 @@ not a commitment.
 
 ## Open questions for the user
 
-- Final **product name** and **bundle identifier** — deliberately deferred; the working name is
-  `anitv` and the bundle id will be `top.<domain>.<name>` once the name is chosen. Renaming the
-  directory later means re-registering the DSH workspace, so decide before the repository goes public.
+- **Product name** — still deliberately deferred; the working name is `anitv`. The **bundle identifier is
+  settled**: `tv.anitv.client`, fixed by the owner on 2026-11-27 (ADR 0033) and carried by the App Store
+  record, so renaming the product would need a new record. The directory name is free to change — nothing
+  is registered by path any more.
 - Whether to enable an Xcode MCP bridge now or after the first successful build.
 - **Navigation (ADR 0028, spec `docs/NAVIGATION.md`), asked 2026-11-27:**
   - ~~**Minimum target 26.0 → 27.0?**~~ **Answered: yes, raised** (ADR 0029) — the sidebar header ships.
@@ -530,11 +546,10 @@ not a commitment.
 
 ## Known caveats
 
-- A free Apple ID cannot produce App Groups, so a Top Shelf extension cannot read app data. Plan:
-  static Top Shelf imagery or no Top Shelf at all.
-- 7-day signing expiry means the app on a physical Apple TV stops launching weekly until re-signed.
-  Not observed yet: the first device profile was created on 2026-11-26, so the expiry behaviour is
-  still `unverified`.
+- Signing is on the **paid** team since 2026-11-27: profiles last a year (the store profile expires
+  2027-11-28) and the 7-day ritual is history. **App Groups, Push, CloudKit and Sign in with Apple are
+  available but not configured** (ADR 0033) — the deferred Top Shelf carousel is no longer blocked by the
+  account, only by its own spike.
 - Device Hub is useless without the macOS **Local Network** permission for the app (and for Xcode);
   that, not the network, is the usual reason the device list stays empty while `ping`/Bonjour work
   from the terminal.
@@ -542,11 +557,7 @@ not a commitment.
 - The tvOS simulator runtime unmounts itself occasionally; `xcrun simctl runtime scan-and-mount` brings it
   back without re-downloading (see Environment facts). A `simctl bootstatus -b` can fail with "cannot
   determine the runtime bundle" on a device that `xcodebuild test` then boots by UDID without trouble.
-- DSH loads `AGENTS.md` from the repo root (marked by `.git`) down to the session working directory,
-  plus a user-global `$DSH_HOME/AGENTS.md`. Nested `AGENTS.md` files are picked up after the agent
-  successfully touches a file in that subtree — they are not preloaded.
-- The app's in-memory workspace registry is authoritative at runtime: hand-editing
-  `~/.dsh/storages/workspace.json` while the app runs is unreliable — register via the GUI.
+- The device list, pairing and install procedure live in `docs/INSTALL_DEVICE.md`.
 - **The App Store icon slot is filled with the service's mark** (borrowed per ADR 0025), flattened from the
   parallax layers into a 1280×768 two-layer stack. That is enough for TestFlight; a public listing should
   use the project's own artwork.

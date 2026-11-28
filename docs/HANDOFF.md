@@ -97,6 +97,11 @@ swiftlint --strict && swiftformat .
 - **The UI suite is timing-fragile.** The player and catalogue suites poll for state (`UITestWait`); the
   rest still sleep. A full run can fail one test that passes alone — check for a real bug first (the
   "Menu at a section root sends the app Home" bug hid among those flakes for exactly that reason).
+- **The XCUITest runner sometimes fails to connect while the test itself passed.** Measured
+  2026-11-28 on `NavigationShellUITests`: the first run exited 65 with *"AniTVUITests-Runner encountered
+  an error (The test runner exited with code 0 before establishing connection.)"*, yet the same
+  `.xcresult` recorded `testFocusLeavesTheSidebarAndComesBack()` as Passed (18.4 s); an immediate rerun
+  gave `** TEST SUCCEEDED **`. Read the xcresult before treating exit 65 as a red test.
 
 ## 6. Documentation map
 
@@ -114,10 +119,15 @@ swiftlint --strict && swiftformat .
 
 ## 7. Harness differences worth knowing
 
-- `AGENTS.md` §3 mandates DSH **Agent Teams** (`team_task_create`, `spawn_teammate`). Those tools exist only
-  in DeepSeek Harness. In any other harness, say so explicitly in the answer and work sequentially — the
-  file already allows that; do not silently pretend a team was used.
+- `AGENTS.md` §3 mandates an **agent team** for non-trivial work, and the rules are harness-neutral: a lead
+  session, child sessions with disjoint write scopes, a shared board, dependencies, and only the lead
+  commits. `docs/OPENCHAMBER.md` maps them onto this repository's current harness (child sessions, Project
+  knowledge, worktrees from `feat/sidebar-navigation`).
+- If your harness has none of that — no child sessions, no shared board — say so explicitly in the answer
+  and work sequentially. `AGENTS.md` §3 already allows that; do not silently pretend a team was used. The
+  verification rules do not relax: a child's "done" is a claim, not evidence, and the lead runs the builds.
 - The rules in `AGENTS.md`, `docs/PROJECT_MEMORY.md` and the ADRs are harness-neutral. If your harness does
   not preload `AGENTS.md`, read it yourself before touching code.
-- Memory is the only handoff channel: update `docs/PROJECT_MEMORY.md` in the same commit as the code, and
-  append an ADR when you make an architectural choice. That is what makes the next handoff cheap.
+- Memory is the only handoff channel that survives a harness change: update `docs/PROJECT_MEMORY.md` in the
+  same commit as the code, and append an ADR when you make an architectural choice. That is what makes the
+  next handoff cheap.
