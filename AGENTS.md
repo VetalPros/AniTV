@@ -33,6 +33,10 @@ Traits that define the project:
 
 Read `docs/PROJECT_MEMORY.md` for current state and `docs/DECISIONS.md` for the decision log.
 
+**Starting in a new harness, or new to this repository?** Read `docs/HANDOFF.md` first: it says which
+branch is the real one (`feat/sidebar-navigation`, not `main`), what is finished, what is broken, where the
+signing/app-store credentials live (never in the repository) and which failures are already understood.
+
 ---
 
 ## 2. Hard constraints (never violate)
