@@ -22,11 +22,6 @@ enum DesignTokens {
     static let gridRowSpacing: CGFloat = 44
     /// 2:3 is the poster aspect ratio used by the upstream catalogue.
     static let posterAspectRatio: CGFloat = 2.0 / 3.0
-    /// Width of one poster on the «Главная» rails: half again the 244 pt the rail used to draw, so the
-    /// artwork fills the vertical space the owner actually watches. The six-column grid keeps its own
-    /// width (a flexible column of about 273 pt on a 1920 pt canvas) and is deliberately not affected —
-    /// see ``PosterCardStyle`` for the caption that grows with this tile.
-    static let railCardWidth: CGFloat = 366
     static let cardCornerRadius: CGFloat = 18
     static let heroPosterWidth: CGFloat = 300
 
@@ -50,13 +45,10 @@ enum DesignTokens {
         static let callout = Font.system(size: 17, weight: .medium)
         static let cardTitle = Font.system(size: 17, weight: .semibold)
         static let cardMeta = Font.system(size: 15, weight: .regular)
-        /// Caption of a rail poster. The grid pair above stays as it is; the rail's tiles are 1.5× wider, so
-        /// their title and metadata step up by the same factor and keep the proportion the owner reads from
-        /// the sofa (17 → 25.5 ≈ 24, 15 → 22.5 ≈ 20; rounded down so two title lines still fit under 549 pt
-        /// of artwork).
-        static let railCardTitle = Font.system(size: 24, weight: .semibold)
-        static let railCardMeta = Font.system(size: 20, weight: .regular)
         static let badge = Font.system(size: 14, weight: .semibold)
+        // Posters take their caption sizes from the Kit's ``PosterMetrics`` instead: the viewer picks the
+        // rail size in «Настройки». The `cardTitle`/`cardMeta` pair above stays for episode cards and the
+        // profile, which do not scale.
     }
 
     enum Motion {

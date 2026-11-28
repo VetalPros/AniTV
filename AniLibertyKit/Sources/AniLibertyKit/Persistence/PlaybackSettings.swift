@@ -77,14 +77,3 @@ public final class PlaybackSettingsStore: PlaybackSettingsStoring {
         defaults.value.set(settings.skipsEndings, forKey: Key.skipsEndings)
     }
 }
-
-/// Carries `UserDefaults` across concurrency boundaries.
-///
-/// `UserDefaults` is documented as thread-safe but is not marked `Sendable`, so the promise is stated once here.
-private final class DefaultsBox: @unchecked Sendable {
-    let value: UserDefaults
-
-    init(_ value: UserDefaults) {
-        self.value = value
-    }
-}

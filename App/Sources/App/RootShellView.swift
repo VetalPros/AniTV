@@ -85,10 +85,12 @@ struct RootShellView: View {
         }
     }
 
-    /// Restores the playback switches to their shipped defaults when a UI test asks for it.
+    /// Restores the playback switches and the poster size to their shipped defaults when a UI test asks for
+    /// it. A test that changes a setting must not leave it for the next one.
     private func resetSettingsIfAsked() async {
         guard ProcessInfo.processInfo.arguments.contains("-uiTestingResetSettings") else { return }
         await PlaybackSettingsStore().save(.defaults)
+        await PosterScaleStore().save(.default)
     }
 }
 

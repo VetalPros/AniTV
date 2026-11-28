@@ -1172,3 +1172,43 @@ roughly 1.5× and for the «Онгоинг» capsule to leave the posters.
 **Alternatives rejected.** *Scaling the shared `cardTitle`/`cardMeta` tokens* — the catalogue's captions
 would have grown into the rail's scale and broken the six-column density. *A separate poster view for the
 rails* — a second implementation of focus, flags and image loading for a purely numeric difference.
+
+---
+
+## 0037 — Poster scale on «Главная» becomes a setting, 100–150 % in 10 % steps (2026-11-28)
+
+**Context.** ADR 0036 hard-coded the rail tile at 1.5× (366 pt). The owner asked for it to be adjustable in
+«Настройки»: 100 % (the rail as it was before ADR 0036), 110 … 150 %.
+
+**Decision.**
+
+- **`PosterScale` lives in the Kit, next to the setting it describes** (`AniLibertyKit/…/Persistence/`), with
+  `PosterMetrics` computing the geometry. The two edges are **pinned**: 100 % is exactly the pre-0036 rail
+  (244 pt, caption 17/15, star 11, flags ×0.85, gaps 12/4) and 150 % exactly the 0036 one (366, 24/20, 17,
+  ×1.275, 16/6); everything between is linear, rounded to whole points. Keeping the numbers in the Kit means
+  the contract is unit-tested without a simulator and the app only turns them into `Font`s and spacing.
+- **Default is 150 %**, so an existing install does not shrink on upgrade.
+- **Storage follows `PlaybackSettings`**: `PosterScaleStoring` + a `UserDefaults`-backed store under
+  `tv.anitv.home.posterScale`. A stored value that is not one of the six steps reads as the default, so a
+  broken domain can never leave the viewer at a size nobody picked. The shared `DefaultsBox` moved to its own
+  file while three stores needed it.
+- **The control is a row of six glass chips, not a system `Picker`** — on tvOS a picker opens a menu over the
+  screen, and the chips switch with one press like the rest of the settings screen.
+- **Only the two «Главная» rails follow the scale.** The six-column grid of «Каталог»/«Поиск» resolves to the
+  compact metrics on purpose: it is a different reading task.
+
+**Consequences.**
+
+- Kit tests go 91 → **99** (8 new: the steps and the default, a fresh install, a round trip over all six,
+  invalid values falling back, domain isolation, both pinned edges, the whole interpolation table).
+- `SettingsUITests.testPosterScaleAppliesToHomeAndSurvivesRelaunch` picks 130 %, checks the rail on
+  «Главная» and relaunches. **The width assertion is on the rail step, not the tile**: XCUITest inflates a
+  card's accessibility frame by the focus chrome (×1.05, plus ×1.04 on the focused card), measured
+  244 → 256 and 366 → 384.5. The step between two cards is exact — 272 / 345 / 394 pt for 100 / 130 / 150 —
+  and is asserted as 345 ± 1 at 130 %.
+- `HomeUITests` and `CatalogUITests` stay green, which is the proof that the grid did not move.
+
+**Alternatives rejected.** *A free 10–200 % slider* — a range nobody asked for, and every stop is a layout to
+verify. *Storing the scale as an app design token* — untestable without a simulator and it would have put the
+contract in the view layer. *Scaling the whole app UI* — the request is about the home posters, and scaling
+`ScreenHeader` or the player controls is a different product decision.

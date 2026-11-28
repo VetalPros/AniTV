@@ -10,6 +10,9 @@ import SwiftUI
 struct HomeView: View {
     @State private var latestModel = LatestReleasesViewModel()
     @State private var favoritesModel = FavoritesUpdatesViewModel()
+    /// How large the viewer wants the posters. Read when the section appears: `TabView` unloads an
+    /// unselected section, so coming back from «Настройки» re-runs the task and picks up the new value.
+    @State private var posterScale = PosterScale.default
     /// Owned by the shell, so the section survives its own view being recreated (ADR 0028 §7).
     @Binding var path: [ReleaseRoute]
     @Environment(\.scenePhase) private var scenePhase
@@ -25,6 +28,7 @@ struct HomeView: View {
             }
         }
         .task {
+            posterScale = await PosterScaleStore().load()
             await latestModel.loadIfNeeded()
             await favoritesModel.loadIfNeeded()
         }
@@ -58,6 +62,7 @@ struct HomeView: View {
             HomeRail(
                 title: "home.latest.title",
                 releases: releases,
+                scale: posterScale,
                 cardIdentifier: "latest.posterCard",
                 railIdentifier: "home.rail.latest",
                 refreshProbe: RefreshProbe.stamp(RefreshProbe.latestIdentifier, date: latestModel.updatedAt),
@@ -87,6 +92,7 @@ struct HomeView: View {
             HomeRail(
                 title: "home.favorites.title",
                 releases: releases,
+                scale: posterScale,
                 cardIdentifier: "home.favoriteCard",
                 railIdentifier: "home.rail.favorites",
                 onSelect: open

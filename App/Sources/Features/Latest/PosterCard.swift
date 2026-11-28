@@ -3,65 +3,53 @@ import SwiftUI
 
 /// Presentation of a poster tile.
 ///
-/// The six-column grid («Каталог», «Поиск», «Новинки») draws the compact pair of tokens; the «Главная»
-/// rail draws its artwork 1.5× wider (``DesignTokens/railCardWidth``) and therefore steps the caption, the
-/// rating star and the flags up by the same factor. Everything else about the tile — corner radius, focus
-/// chrome, shadow — stays shared, so a rail poster still reads as the same card.
+/// The six-column grid («Каталог», «Поиск») draws the compact pair of metrics; a «Главная» rail draws the
+/// size the viewer picked in «Настройки», 244…366 pt wide (``PosterScale``), and every other number — the
+/// caption, the rating star, the flags, the gaps — follows it in proportion. Everything else about the tile
+/// — corner radius, focus chrome, shadow — stays shared, so a rail poster still reads as the same card.
 enum PosterCardStyle {
     case grid
-    case rail
+    case rail(PosterScale)
+
+    /// Tile geometry. The grid is pinned to the compact edge, which is exactly the 17/15 pair the six-column
+    /// layout has always drawn; a rail interpolates between the two edges owned by the Kit.
+    var metrics: PosterMetrics {
+        switch self {
+        case .grid: PosterScale.percent100.metrics
+        case let .rail(scale): scale.metrics
+        }
+    }
 
     var titleFont: Font {
-        switch self {
-        case .grid: DesignTokens.Typography.cardTitle
-        case .rail: DesignTokens.Typography.railCardTitle
-        }
+        .system(size: metrics.titleSize, weight: .semibold)
     }
 
     var metaFont: Font {
-        switch self {
-        case .grid: DesignTokens.Typography.cardMeta
-        case .rail: DesignTokens.Typography.railCardMeta
-        }
+        .system(size: metrics.metaSize)
     }
 
     var starSize: CGFloat {
-        switch self {
-        case .grid: 11
-        case .rail: 17
-        }
+        metrics.starSize
     }
 
     /// Flags are drawn below their nominal size so they do not fight the artwork; the rail keeps the same
-    /// ratio against its larger tile instead of letting a 14 pt capsule shrink against 366 pt of art.
+    /// ratio against its tile instead of letting a 14 pt capsule shrink against 366 pt of art.
     var badgeScale: CGFloat {
-        switch self {
-        case .grid: 0.85
-        case .rail: 1.275
-        }
+        metrics.badgeScale
     }
 
     var badgeInset: CGFloat {
-        switch self {
-        case .grid: 10
-        case .rail: 15
-        }
+        metrics.badgeInset
     }
 
     /// Gap between the artwork and the caption block.
     var captionSpacing: CGFloat {
-        switch self {
-        case .grid: 12
-        case .rail: 16
-        }
+        metrics.captionSpacing
     }
 
     /// Gap between the title and the metadata line.
     var detailsSpacing: CGFloat {
-        switch self {
-        case .grid: 4
-        case .rail: 6
-        }
+        metrics.detailsSpacing
     }
 }
 

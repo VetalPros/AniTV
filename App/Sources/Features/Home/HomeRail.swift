@@ -4,13 +4,15 @@ import SwiftUI
 /// One horizontal rail on «Главная»: a single-line title and a row of posters the remote walks left to
 /// right (ADR 0031).
 ///
-/// A tile is ``DesignTokens/railCardWidth`` (366 pt) wide with the 28 pt rail gap, which fits four full
-/// posters and a bit over half of the fifth in the ~1634 pt the shell leaves inside the sidebar's safe
-/// area: the rail still reads as scrollable, and the focus halo of a 366 pt card (×1.04) keeps 13 pt of
-/// air to its neighbour.
+/// A tile is as wide as the viewer chose in «Настройки» (``PosterScale``: 244 pt at 100 %, 366 pt at the
+/// 150 % default) with the 28 pt rail gap. At the default scale four full posters and a bit over half of
+/// the fifth fit in the ~1634 pt the shell leaves inside the sidebar's safe area: the rail still reads as
+/// scrollable, and the focus halo of a 366 pt card (×1.04) keeps 13 pt of air to its neighbour.
 struct HomeRail: View {
     let title: LocalizedStringKey
     let releases: [Release]
+    /// How large the viewer wants the posters on this rail.
+    let scale: PosterScale
     /// Accessibility identifier of a card, so a test can tell the rails apart.
     let cardIdentifier: String
     /// Accessibility identifier of the rail itself.
@@ -28,13 +30,13 @@ struct HomeRail: View {
                     ForEach(Array(releases.enumerated()), id: \.element.id) { index, release in
                         PosterCard(
                             release: release,
-                            style: .rail,
+                            style: .rail(scale),
                             takesDefaultFocus: takesDefaultFocus && index == 0,
                             identifier: cardIdentifier
                         ) {
                             onSelect(release)
                         }
-                        .frame(width: DesignTokens.railCardWidth)
+                        .frame(width: scale.metrics.width)
                     }
                 }
                 .padding(.horizontal, DesignTokens.screenInset)

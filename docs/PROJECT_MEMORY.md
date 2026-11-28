@@ -139,6 +139,12 @@
       `202611281137` is **VALID** and not expired, the internal group **«Владелец»** exists with the owner
       (`vetalirusa@gmail.com`) **ACCEPTED**, and all three builds are assigned to it — nothing had to be
       created for TestFlight.
+- [x] **Poster scale is a setting, 2026-11-28 (ADR 0037).** `PosterScale` (100…150 % in 10 % steps, default
+      150) and `PosterMetrics` live in the Kit's `Persistence/`, with a `UserDefaults` store under
+      `tv.anitv.home.posterScale`; the two edges are pinned to the pre-0036 and post-0036 rails and the steps
+      between are linear. Six glass chips in «Настройки» replace a system `Picker`. Kit tests 91 → 99;
+      `SettingsUITests` proves 130 % reaches «Главная» and survives a relaunch by asserting the rail step
+      (345 pt at 130) because XCUITest inflates a card's frame by the focus chrome.
 - [x] **Rail posters 1.5×, «Онгоинг» off the posters, 2026-11-28 (ADR 0036).** `railCardWidth` 244 → 366 pt
       (549 tall), caption 17/15 → 24/20 through a `PosterCardStyle` split (`.grid` stays the default, so
       «Каталог»/«Поиск» did not move), and the «Онгоинг» capsule left `PosterCard` while staying on the

@@ -1,18 +1,24 @@
 import AniLibertyKit
 import SwiftUI
 
-/// «Настройки»: the two playback switches and nothing else.
+/// «Настройки»: the two playback switches, their explanation, and the size of the posters on «Главная».
 ///
-/// Thin on purpose — no networking, no models beyond the store the Kit already provides. Every change is
+/// Thin on purpose — no networking, no models beyond the stores the Kit already provides. Every change is
 /// written immediately, so leaving the tab by any path keeps it.
 struct SettingsView: View {
     @State private var settings = PlaybackSettings.defaults
+    @State private var posterScale = PosterScale.default
     @State private var isLoaded = false
 
     private let store: PlaybackSettingsStoring
+    private let posterScaleStore: PosterScaleStoring
 
-    init(store: PlaybackSettingsStoring = PlaybackSettingsStore()) {
+    init(
+        store: PlaybackSettingsStoring = PlaybackSettingsStore(),
+        posterScaleStore: PosterScaleStoring = PosterScaleStore()
+    ) {
         self.store = store
+        self.posterScaleStore = posterScaleStore
     }
 
     var body: some View {
@@ -36,6 +42,8 @@ struct SettingsView: View {
                     .frame(maxWidth: 900, alignment: .leading)
                     .padding(.horizontal, DesignTokens.screenInset)
 
+                posterSize
+
                 Spacer(minLength: 0)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -47,10 +55,28 @@ struct SettingsView: View {
             guard isLoaded else { return }
             Task { await store.save(value) }
         }
+        .onChange(of: posterScale) { _, value in
+            guard isLoaded else { return }
+            Task { await posterScaleStore.save(value) }
+        }
+    }
+
+    /// «Размер постеров на главной»: a heading and the six chips, in their own block so the two playback
+    /// switches keep reading as one group.
+    private var posterSize: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("settings.posterScale.title")
+                .font(DesignTokens.Typography.sectionTitle)
+                .foregroundStyle(.white)
+            PosterScaleControl(selection: posterScale) { posterScale = $0 }
+        }
+        .padding(.horizontal, DesignTokens.screenInset)
+        .padding(.top, 12)
     }
 
     private func load() async {
         settings = await store.load()
+        posterScale = await posterScaleStore.load()
         isLoaded = true
     }
 }

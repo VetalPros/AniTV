@@ -1531,6 +1531,131 @@
         }
       }
     },
+    "settings.posterScale.100": {
+      "comment": "Smallest poster size on «Главная», as it reads on a chip.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "100%"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "100 %"
+          }
+        }
+      }
+    },
+    "settings.posterScale.110": {
+      "comment": "Poster size on «Главная», as it reads on a chip.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "110%"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "110 %"
+          }
+        }
+      }
+    },
+    "settings.posterScale.120": {
+      "comment": "Poster size on «Главная», as it reads on a chip.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "120%"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "120 %"
+          }
+        }
+      }
+    },
+    "settings.posterScale.130": {
+      "comment": "Poster size on «Главная», as it reads on a chip.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "130%"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "130 %"
+          }
+        }
+      }
+    },
+    "settings.posterScale.140": {
+      "comment": "Poster size on «Главная», as it reads on a chip.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "140%"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "140 %"
+          }
+        }
+      }
+    },
+    "settings.posterScale.150": {
+      "comment": "Largest poster size on «Главная» and the shipped default, as it reads on a chip.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "150%"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "150 %"
+          }
+        }
+      }
+    },
+    "settings.posterScale.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poster size on Home"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Размер постеров на главной"
+          }
+        }
+      }
+    },
     "shell.account.profile": {
       "extractionState": "manual",
       "localizations": {
