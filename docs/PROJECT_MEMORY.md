@@ -123,6 +123,13 @@
       one-layer stack), and a hand-made `BUILD_NUMBER=probe` was rejected because the build number must be
       numeric. Both are now in `docs/RELEASE.md`. At the time of writing Apple was still ingesting the
       upload (`GET /v1/builds` returned nothing yet).
+- [x] **TestFlight is live, 2026-11-28.** Build **`202611280945`** reached `VALID` and shows as «Готово к
+      отправке» in App Store Connect (90-day clock running). Apple's first mail was informational:
+      `ITMS-90471 — missing Top Shelf Image Wide 2x`; the top-shelf slots carried only `1x`, so
+      `top_shelf@2x.png` (3840×1440) and `top_shelf_wide@2x.png` (4640×1440) were generated and a second
+      build **`202611280951`** was uploaded (validation + upload clean, ingestion pending at the time of
+      writing). Remaining for the owner: create the **Internal Testing** group, add themselves, and install
+      through the TestFlight app on the Apple TV — no Apple review needed for internal testers.
 - [x] App Store Connect material prepared while the enrollment was pending (2026-11-27): `docs/PRIVACY.md`
       (bilingual policy, accurate to the code: only `aniliberty.top` is contacted, token in Keychain, device
       UUID and switches in `UserDefaults`, no analytics/ads/SDKs), `docs/APPSTORE.md` (name, subtitle,
