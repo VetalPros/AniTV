@@ -141,12 +141,13 @@
       created for TestFlight.
 - [x] **Compact section headers, 2026-11-28 (ADR 0035).** The owner reported that the «Новинки» header ate
       a fifth of the canvas and that «Обновлено HH:mm» is debug information a viewer does not need. The rail
-      title went 32 → 22 pt and onto one line (`HomeRail` spacing 18 → 12, carousel padding 12 → 8),
-      `ScreenHeader` 46/21 → 38/18 with 4/20 padding, `screenTopInset` 56 → 40. Measured on the tvOS 27.2
-      simulator: first poster row **259.5 → 197.5 pt** (−62), the second rail title 768.5 → 700.5, five and
-      a half rows visible instead of four and a half, 72 pt of clearance under the collapsed pill (bottom
-      y ≈ 94). The caption left «Главная» **and** the profile, `common.updatedAt %@` left the string
-      catalogue (92 → 91 keys), and auto-refresh stays observable through the `-uiTestingRefreshProbe` seam.
+      title went 32 → 29 pt (an intermediate 22 pt was rejected the same day as too small) and onto one
+      line (`HomeRail` spacing 18 → 12, carousel padding 12 → 8), `ScreenHeader` 46/21 → 38/18 with 4/20
+      padding, `screenTopInset` 56 → 40. Measured on the tvOS 27.2 simulator: first poster row
+      **259.5 → 197.5 pt** at 22 pt and ≈205 at 29 (≈−55), the second rail title 768.5 → 700.5, 72 pt of
+      clearance under the collapsed pill (bottom y ≈ 94). The caption left «Главная» **and** the profile,
+      `common.updatedAt %@` left the string catalogue (92 → 91 keys), and auto-refresh stays observable
+      through the `-uiTestingRefreshProbe` seam.
 - [x] **First TestFlight upload, 2026-11-28.** App Store Connect app record exists: **AniTV**, App Store
       app id `6840296537`, version 1.0 in `PREPARE_FOR_SUBMISSION`, platform `TV_OS`. The API key
       `5QY2594WJR` (issuer `b8e1a4d6-…`) authenticated against App Store Connect; the paid enrolment turned

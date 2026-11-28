@@ -36,8 +36,8 @@ enum DesignTokens {
         static let screenSubtitleCompact = Font.system(size: 18, weight: .medium)
         static let sectionTitle = Font.system(size: 27, weight: .semibold)
         /// Title of a home rail. One line above the posters, so it reads as a label rather than a screen
-        /// header: it must not compete with the poster art next to it.
-        static let railTitle = Font.system(size: 22, weight: .semibold)
+        /// header — but at the tvOS body size, because the owner reads it from the sofa (ADR 0035).
+        static let railTitle = Font.system(size: 29, weight: .semibold)
         static let detailTitle = Font.system(size: 54, weight: .bold, design: .rounded)
         static let detailOriginalTitle = Font.system(size: 22, weight: .medium)
         static let body = Font.system(size: 20, weight: .regular)

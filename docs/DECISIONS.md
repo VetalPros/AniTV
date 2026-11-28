@@ -1085,8 +1085,9 @@ had.
 
 **Decision.**
 
-- **One line per rail, smaller.** `railTitle` 32 → 22 pt; `HomeRail` spacing 18 → 12 and the carousel's
-  vertical padding 12 → 8. `ScreenHeader` moves to a new compact pair, 38/18 pt, with 4 pt between the
+- **One line per rail, at body size.** `railTitle` 32 → 29 pt (an intermediate 22 pt was rejected by the
+  owner the same day as too small from the sofa); `HomeRail` spacing 18 → 12 and the carousel's vertical
+  padding 12 → 8. `ScreenHeader` moves to a new compact pair, 38/18 pt, with 4 pt between the
   title and the subtitle and a 20 pt bottom pad. The 46/21 pair stays for `EpisodePickerScreen` and the
   catalogue result count, which are not section headers.
 - **`screenTopInset` 56 → 40.** Forty is the floor: the collapsed pill's bottom edge was measured at
@@ -1103,13 +1104,13 @@ had.
 
 **Consequences.**
 
-- Measured after the change: first poster row **197.5 pt** (−62), second rail title 700.5, five and a half
-  rows of posters visible instead of four and a half, 72 pt of clearance under the pill, nothing under it.
+- Measured after the change: first poster row **197.5 pt** at 22 pt and ≈205 pt at the final 29 pt (−55),
+  second rail title 700.5, and 72 pt of clearance under the pill, nothing under it.
 - `AutoRefreshUITests` and `HomeUITests` were updated; `HomeUITests` gained a test that the probe is absent
   without the argument. `NavigationStateUITests` keeps its expected failure and now reads `nil` instead of
   a stale caption.
-- **22 pt is below the tvOS body size (29 pt).** Reading it from three metres is the one open question; 24
-  or 26 pt is a one-token change if the owner calls it too small.
+- The rail title is now the tvOS body size (29 pt), so the header is legible from three metres; that is the
+  trade the owner chose over the last ~8 pt of height.
 - Store screenshots in `docs/appstore/screenshots/` and the committed `docs/screenshots/` set are now
   stale and have to be re-shot.
 - The bigger remaining lever is not this token: the section content starts ~120 pt down because two safe
