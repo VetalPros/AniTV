@@ -3,11 +3,12 @@ import SwiftUI
 
 /// One horizontal rail on «Главная»: a single-line title and a row of posters the remote walks left to
 /// right (ADR 0031).
+///
+/// A tile is ``DesignTokens/railCardWidth`` (366 pt) wide with the 28 pt rail gap, which fits four full
+/// posters and a bit over half of the fifth in the ~1634 pt the shell leaves inside the sidebar's safe
+/// area: the rail still reads as scrollable, and the focus halo of a 366 pt card (×1.04) keeps 13 pt of
+/// air to its neighbour.
 struct HomeRail: View {
-    /// Width of one card. The grid on the other screens fits six columns; a rail shows about six and a
-    /// half, so the next card is always peeking in and the rail reads as scrollable.
-    private static let cardWidth: CGFloat = 244
-
     let title: LocalizedStringKey
     let releases: [Release]
     /// Accessibility identifier of a card, so a test can tell the rails apart.
@@ -27,12 +28,13 @@ struct HomeRail: View {
                     ForEach(Array(releases.enumerated()), id: \.element.id) { index, release in
                         PosterCard(
                             release: release,
+                            style: .rail,
                             takesDefaultFocus: takesDefaultFocus && index == 0,
                             identifier: cardIdentifier
                         ) {
                             onSelect(release)
                         }
-                        .frame(width: Self.cardWidth)
+                        .frame(width: DesignTokens.railCardWidth)
                     }
                 }
                 .padding(.horizontal, DesignTokens.screenInset)

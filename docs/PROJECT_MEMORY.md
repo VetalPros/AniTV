@@ -139,6 +139,12 @@
       `202611281137` is **VALID** and not expired, the internal group **«Владелец»** exists with the owner
       (`vetalirusa@gmail.com`) **ACCEPTED**, and all three builds are assigned to it — nothing had to be
       created for TestFlight.
+- [x] **Rail posters 1.5×, «Онгоинг» off the posters, 2026-11-28 (ADR 0036).** `railCardWidth` 244 → 366 pt
+      (549 tall), caption 17/15 → 24/20 through a `PosterCardStyle` split (`.grid` stays the default, so
+      «Каталог»/«Поиск» did not move), and the «Онгоинг» capsule left `PosterCard` while staying on the
+      release hero. Measured: four posters plus 55 % of the fifth visible, first rail's caption ends at
+      ≈866 pt, the second rail's title at 928 with 109.5 pt (20 %) of its artwork — one scroll to read it.
+      `HomeUITests`, `LatestFeedUITests`, `CatalogUITests`, `NavigationSectionsUITests` green.
 - [x] **Compact section headers, 2026-11-28 (ADR 0035).** The owner reported that the «Новинки» header ate
       a fifth of the canvas and that «Обновлено HH:mm» is debug information a viewer does not need. The rail
       title went 32 → 29 pt (an intermediate 22 pt was rejected the same day as too small) and onto one

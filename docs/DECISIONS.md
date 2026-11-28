@@ -1136,3 +1136,39 @@ its only label. *Keeping the caption behind `#if DEBUG`* — it would still rend
 in any debug build on a tester's television, which is the same visual debt with an extra branch.
 *Overlaying the title on the artwork* — it collides with the default-focus halo and the «Онгоинг» badge of
 the first card, and the expanded panel covers that corner anyway.
+
+---
+
+## 0036 — Rail posters are 1.5× and drop the «Онгоинг» flag (2026-11-28)
+
+**Context.** After the headers were compacted (ADR 0035) the «Главная» rails still drew 244 × 366 pt posters,
+so the artwork the viewer actually watches covered about a third of the canvas height. The owner asked for
+roughly 1.5× and for the «Онгоинг» capsule to leave the posters.
+
+**Decision.**
+
+- **`DesignTokens.railCardWidth` 244 → 366 pt** (2:3, so 549 pt tall). The six-column grid of «Каталог» and
+  «Поиск» keeps its own width: the card gains `PosterCardStyle` (`.grid` is the default, `.rail` is what the
+  two home rails pass), and the style steps the caption 17/15 → 24/20, the rating star 11 → 17, the flag
+  scale 0.85 → 1.275 and the flag inset 10 → 15. Corner radius, focus chrome and shadow stay shared, so a
+  rail poster is still the same card.
+- **The «Онгоинг» capsule leaves `PosterCard`.** It stays on the release hero (`ReleaseHeroView`), where the
+  status sits next to the metadata, and `badge.ongoing` stays in the string catalogue for it.
+- **Geo- and copyright-lock flags stay on posters** — those are access information, not editorial status.
+
+**Consequences.**
+
+- Measured on the tvOS 27.2 simulator: four posters fully visible plus 55 % of the fifth (six and a half
+  before), the first rail's caption block ends at ≈866 pt, the second rail's title lands at 928 and its
+  artwork shows 109.5 pt (20 %) — the favourites row needs one scroll to be read, and its captions are
+  below the fold.
+- The focus halo (×1.04 = 380.6 pt) leaves 13.4 pt between neighbouring cards, and the left edge of the
+  focused card is not clipped; `scrollClipDisabled` is unchanged.
+- `HomeUITests`, `LatestFeedUITests`, `CatalogUITests` and `NavigationSectionsUITests` stay green; the
+  catalogue grid's own screenshots are unchanged, which is the proof that the style split worked.
+- 1.5× costs the second rail its visibility. 1.4 (342 × 512) would show 29 % and 1.3 (317 × 476) 41 %; the
+  owner asked for 1.5 and this is one token to revisit.
+
+**Alternatives rejected.** *Scaling the shared `cardTitle`/`cardMeta` tokens* — the catalogue's captions
+would have grown into the rail's scale and broken the six-column density. *A separate poster view for the
+rails* — a second implementation of focus, flags and image loading for a purely numeric difference.
