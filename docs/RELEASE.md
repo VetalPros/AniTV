@@ -65,6 +65,19 @@ BUILD_NUMBER=202611271930 ./scripts/release-testflight.sh
 After the upload, the build appears in App Store Connect → TestFlight within minutes to an hour. Add
 yourself to a group, install the TestFlight app on the Apple TV, sign in with the same Apple ID.
 
+To see whether the upload was accepted without waiting for the UI:
+
+```bash
+xcrun altool --list-apps --apiKey "$APPLE_API_KEY_ID" --apiIssuer "$APPLE_API_ISSUER" \
+  --p8-file-path "$APPLE_P8_PATH"          # the app record and its App Store version state
+xcrun altool --build-status --platform appletvos --apple-id <App Store app id> \
+  --bundle-version <build> --bundle-short-version-string <marketing version> \
+  --apiKey ... --apiIssuer ... --p8-file-path ...
+```
+
+The App Store Connect API works too (`GET /v1/builds?filter[app]=<id>`); the JWT it needs is ES256 and has
+to be signed with the same `.p8`.
+
 ---
 
 ## 3. Versioning
@@ -84,5 +97,7 @@ yourself to a group, install the TestFlight app on the Apple TV, sign in with th
 | `The provided entity includes an attribute with a value that has already been used` | Build number reused. Pass a new `BUILD_NUMBER` |
 | `Invalid Bundle. The bundle at … does not support the minimum OS Version` | `deploymentTarget.tvOS` is higher than what the App Store Connect record expects — check that the record's platform is **tvOS** and not iOS |
 | Upload succeeds but no build appears | Processing takes minutes; a rejected bundle sends a mail with the reason (often a missing privacy manifest or app icon) |
+| `Missing Image Asset. Your app is missing the App Store Icon asset` | tvOS wants **two** icons in the brand assets: the home-screen stack (400×240) and the App Store stack (1280×768). Both must be *image stacks with at least two layers* — `actool` rejects a single-layer stack with "must have at least 2 layers". Shipping state: `App Icon - App Store.imagestack` with `Back`/`Front` layers |
+| `CFBundleVersion … must be composed of one to three period-separated integers` | The build number has to be numeric. The script's default (`yyyymmddHHMM`) is; a hand-made `BUILD_NUMBER=probe` is not |
 | TestFlight asks about export compliance | `ITSAppUsesNonExemptEncryption` did not reach `Info.plist`; check the generated plist in the archive |
 | External testers see nothing | External testing needs the beta review; internal testing does not |

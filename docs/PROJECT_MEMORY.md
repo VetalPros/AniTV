@@ -112,6 +112,17 @@
 
 ## Done
 
+- [x] **First TestFlight upload, 2026-11-28.** App Store Connect app record exists: **AniTV**, App Store
+      app id `6840296537`, version 1.0 in `PREPARE_FOR_SUBMISSION`, platform `TV_OS`. The API key
+      `5QY2594WJR` (issuer `b8e1a4d6-…`) authenticated against App Store Connect; the paid enrolment turned
+      out to upgrade the *existing* team `9KLFP6C3LT` in place, so no signing config changed. Build
+      **`202611280945`** of `0.1.0` was archived, exported, validated (*"No errors validating archive"*) and
+      uploaded (*"No errors uploading archive"*) with `scripts/release-testflight.sh`; the pipeline was run
+      twice end to end by the Lead. Two real blockers surfaced and were fixed on the way: the bundle had no
+      **App Store icon** (`App Icon - App Store.imagestack`, 1280×768, **two layers** — `actool` rejects a
+      one-layer stack), and a hand-made `BUILD_NUMBER=probe` was rejected because the build number must be
+      numeric. Both are now in `docs/RELEASE.md`. At the time of writing Apple was still ingesting the
+      upload (`GET /v1/builds` returned nothing yet).
 - [x] App Store Connect material prepared while the enrollment was pending (2026-11-27): `docs/PRIVACY.md`
       (bilingual policy, accurate to the code: only `aniliberty.top` is contacted, token in Keychain, device
       UUID and switches in `UserDefaults`, no analytics/ads/SDKs), `docs/APPSTORE.md` (name, subtitle,
@@ -529,6 +540,9 @@ not a commitment.
   successfully touches a file in that subtree — they are not preloaded.
 - The app's in-memory workspace registry is authoritative at runtime: hand-editing
   `~/.dsh/storages/workspace.json` while the app runs is unreliable — register via the GUI.
+- **The App Store icon slot is filled with the service's mark** (borrowed per ADR 0025), flattened from the
+  parallax layers into a 1280×768 two-layer stack. That is enough for TestFlight; a public listing should
+  use the project's own artwork.
 - **The home screenshot shows the signed-in account name** (`AppleTV-App_test`) in the panel header,
   because the capture ran on the signed-in simulator. Before publishing the listing, either rename the
   nickname in the service or re-shoot with the rail hidden — the account name is not something to ship by
