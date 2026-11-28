@@ -135,9 +135,9 @@ The system owns the two states; we own what is inside them.
 
 Constraints we control:
 
-- Content must not assume a top bar. `ScreenHeader` currently pads `.top` by 56 on top of the
-  `TabView`'s safe area; under the sidebar the section title sits in the content's own top-left corner,
-  as the reference does.
+- Content must not assume a top bar. `ScreenHeader` pads `.top` by 40 on top of the `TabView`'s safe area
+  (56 until ADR 0035); under the sidebar the section title sits in the content's own top-left corner, as
+  the reference does.
 - Content must stay full-bleed (`.ignoresSafeArea()` on backgrounds, hero artwork under any overlay) or
   the reference look collapses to a boxed layout.
 - Nothing may be placed in the panel's leading 40 pt except through the panel itself.
@@ -198,7 +198,7 @@ to the open release, which `NavigationStateUITests` now asserts.
 | Navigation path (pushed release) | **yes** | lives in `ShellNavigationState` |
 | Selected section | yes | the shell's own state |
 | Grid focus and scroll position | **no** | the section's view is unloaded; it comes back at the top |
-| Loaded data | **no** | the view model is `@State` inside the section, so it refetches: the freshness caption moved 13:38:35 → 13:38:56 across one switch |
+| Loaded data | **no** | the view model is `@State` inside the section, so it refetches: the freshness caption moved 13:38:35 → 13:38:56 across one switch (the caption has since left the UI, ADR 0035 — the test probe carries the same instant) |
 | Catalogue filters (ADR 0020) | **no** | same reason — the filter state lives in the section's view model |
 
 Restoring focus and scroll is a known limitation, encoded as an expected failure in
@@ -244,15 +244,17 @@ What P2 verified: `NavigationSectionsUITests` opens each section through the tes
 `-uiTestingSection` launch argument (`RootShellView.initialSection`), captures it twice — once with the
 panel expanded on entry, once after a directional press collapses it — and asserts the screen is on
 display. Result: in the collapsed state no section title or control lands under the pill, every screen's
-background is full-bleed, and all four sections start at the same `72 / 56` insets. The expanded state
+background is full-bleed, and all four sections start at the same `72 / 40` insets. The expanded state
 still covers the left third of the content, exactly as the reference does when its panel is open — the
 difference is that Apple's content there is artwork and ours is text, so the earlier screenshots looked
 worse than they are.
 
-`DesignTokens.screenTopInset` (56) and `DesignTokens.screenInset` (72) are now the only two numbers any
-section uses for its frame, and the collapsed pill was measured against them: it ends at y ≈ 104 in the
-collapsed state, well above the title. The remaining visual gap to the reference is not spacing — it is
-that the reference puts artwork where we put a section title, which is P5's hero question, not P2's.
+`DesignTokens.screenTopInset` (40 since ADR 0035, 56 before) and `DesignTokens.screenInset` (72) are the
+only two numbers any section uses for its frame. Measured on 2026-11-28: the collapsed pill ends at
+y ≈ 94 and the first rail title starts at 165.5, so the title clears it by ~70 pt although the inset adds
+only 40 — the rest is two stacked safe areas (see `docs/PROJECT_MEMORY.md`). The remaining visual gap to
+the reference is not spacing — it is that the reference puts artwork where we put a section title, which
+is P5's hero question, not P2's.
 
 ## 10. Open questions for the owner (answered 2026-11-27)
 

@@ -1070,3 +1070,55 @@ rules (verification, commit ownership) into a product that is not installed. *Mo
 repository as a task file* — the repository is public, the board is churn, and it would compete with the
 memory protocol. *Switching the working branch to `main` now* — merging the sidebar work is the owner's
 decision and would invalidate the handoff map.
+
+---
+
+## 0035 — Section headers are compact, the freshness caption was debug-only and leaves the UI (2026-11-28)
+
+**Context.** The owner reported that the header of «Главная» — the «Новинки» title plus a grey
+«Обновлено 14:02» line — ate a fifth of the canvas, and that the same was true of the other sections.
+Measured on the tvOS 27.2 simulator: the first poster row started at **259.5 pt** of a 1080-point canvas,
+and `ScreenHeader` (46/21 pt with a 30 pt bottom pad) pushed everything below 172 pt on «Поиск», «Каталог»,
+«Настройки» and the profile. In the same message the owner said the «Обновлено HH:mm» caption exists for
+debugging and means nothing to a viewer — and that caption was the only observable `AutoRefreshUITests`
+had.
+
+**Decision.**
+
+- **One line per rail, smaller.** `railTitle` 32 → 22 pt; `HomeRail` spacing 18 → 12 and the carousel's
+  vertical padding 12 → 8. `ScreenHeader` moves to a new compact pair, 38/18 pt, with 4 pt between the
+  title and the subtitle and a 20 pt bottom pad. The 46/21 pair stays for `EpisodePickerScreen` and the
+  catalogue result count, which are not section headers.
+- **`screenTopInset` 56 → 40.** Forty is the floor: the collapsed pill's bottom edge was measured at
+  y ≈ 93.5, and the inset sits on top of the safe area, so anything lower starts closing that gap.
+- **The caption is gone from the UI**, on «Главная» and in the profile, and `common.updatedAt %@` left the
+  string catalogue with it (92 → 91 keys).
+- **Auto-refresh stays observable through a test-only seam.** `-uiTestingRefreshProbe`
+  (`App/Sources/Support/RefreshProbe.swift`) builds a 1×1 transparent element carrying the last-refresh
+  instant in `accessibilityValue` (`latest.updatedAt`, `profile.updatedAt`); without the argument nothing
+  is built, so it cannot reach a television. Same pattern as `-uiTestingSignedOut`.
+- **The rails keep their names.** The sidebar pill names the section («Главная»), not the rail, and the
+  favourites rail is named nowhere else — removing the titles would leave two poster rows
+  indistinguishable and one of them nameless for VoiceOver.
+
+**Consequences.**
+
+- Measured after the change: first poster row **197.5 pt** (−62), second rail title 700.5, five and a half
+  rows of posters visible instead of four and a half, 72 pt of clearance under the pill, nothing under it.
+- `AutoRefreshUITests` and `HomeUITests` were updated; `HomeUITests` gained a test that the probe is absent
+  without the argument. `NavigationStateUITests` keeps its expected failure and now reads `nil` instead of
+  a stale caption.
+- **22 pt is below the tvOS body size (29 pt).** Reading it from three metres is the one open question; 24
+  or 26 pt is a one-token change if the owner calls it too small.
+- Store screenshots in `docs/appstore/screenshots/` and the committed `docs/screenshots/` set are now
+  stale and have to be re-shot.
+- The bigger remaining lever is not this token: the section content starts ~120 pt down because two safe
+  areas stack. Cutting that means `.ignoresSafeArea(.container, edges: .top)` on the section scroll, which
+  is the move that risks the pill — a decision for later, recorded as a caveat.
+
+**Alternatives rejected.** *Removing the rail titles entirely (the option the owner first picked)* — its
+premise was that the pill names the rail, but the pill names the section, so the favourites row would lose
+its only label. *Keeping the caption behind `#if DEBUG`* — it would still render in UI-test screenshots and
+in any debug build on a tester's television, which is the same visual debt with an extra branch.
+*Overlaying the title on the artwork* — it collides with the default-focus halo and the «Онгоинг» badge of
+the first card, and the expanded panel covers that corner anyway.

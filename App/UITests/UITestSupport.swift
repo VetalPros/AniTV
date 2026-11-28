@@ -10,6 +10,9 @@ enum UITestLaunchArguments {
     static let refreshInterval = "-uiTestingRefreshInterval"
     /// Overrides how long "away" must be before a visible screen reloads (`AutoRefreshPolicy.staleAfterArgument`).
     static let staleAfter = "-uiTestingStaleAfter"
+    /// Exposes the freshness instants as hidden accessibility elements (`RefreshProbe.argument`). The
+    /// caption a viewer used to see is gone, so this is the only way a test can watch the refresh clock.
+    static let refreshProbe = "-uiTestingRefreshProbe"
     /// Starts the player inside the episode's opening (`PlayerTestOverrides.startAtOpeningArgument`).
     static let startAtOpening = "-uiTestingStartAtOpening"
     /// Starts the player inside the episode's ending (`PlayerTestOverrides.startAtEndingArgument`).

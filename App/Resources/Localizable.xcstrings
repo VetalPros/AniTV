@@ -290,23 +290,6 @@
         }
       }
     },
-    "common.updatedAt %@": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Updated %@"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Обновлено %@"
-          }
-        }
-      }
-    },
     "detail.blocked.copyrights": {
       "extractionState": "manual",
       "localizations": {

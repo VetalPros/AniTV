@@ -19,6 +19,24 @@ final class HomeUITests: XCTestCase {
         XCTAssertGreaterThan(cards.count, 1, "A rail should offer more than one release to walk through")
     }
 
+    /// The freshness caption is gone from the UI, and the hidden probe that replaced it exists only under the
+    /// UI-test launch argument — a production launch must not carry the element at all.
+    @MainActor
+    func testFreshnessProbeIsAbsentWithoutTheLaunchArgument() {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launch()
+
+        XCTAssertTrue(
+            app.descendants(matching: .any)["home.rail.latest"].firstMatch.waitForExistence(timeout: loadTimeout),
+            "The «Новинки» rail never appeared"
+        )
+        XCTAssertFalse(
+            app.descendants(matching: .any)["latest.updatedAt"].firstMatch.exists,
+            "A production launch exposed the hidden freshness probe"
+        )
+    }
+
     /// The favourites rail is whatever the account is: present with cards when signed in, absent when not.
     ///
     /// The account state comes from the panel header, which is the only place that knows it (ADR 0032);

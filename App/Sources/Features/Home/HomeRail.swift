@@ -1,8 +1,8 @@
 import AniLibertyKit
 import SwiftUI
 
-/// One horizontal rail on «Главная»: a title, an optional freshness line, and a row of posters the remote
-/// walks left to right (ADR 0031).
+/// One horizontal rail on «Главная»: a single-line title and a row of posters the remote walks left to
+/// right (ADR 0031).
 struct HomeRail: View {
     /// Width of one card. The grid on the other screens fits six columns; a rail shows about six and a
     /// half, so the next card is always peeking in and the rail reads as scrollable.
@@ -14,14 +14,13 @@ struct HomeRail: View {
     let cardIdentifier: String
     /// Accessibility identifier of the rail itself.
     let railIdentifier: String
-    /// Optional freshness instant shown under the title.
-    var captionDate: Date?
-    var captionIdentifier: String?
+    /// Invisible freshness marker, present only when a UI test asked for one (see ``RefreshProbe``).
+    var refreshProbe: RefreshProbeStamp?
     var takesDefaultFocus = false
     let onSelect: (Release) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: 12) {
             header
             ScrollView(.horizontal) {
                 LazyHStack(alignment: .top, spacing: DesignTokens.gridSpacing) {
@@ -37,34 +36,22 @@ struct HomeRail: View {
                     }
                 }
                 .padding(.horizontal, DesignTokens.screenInset)
-                .padding(.vertical, 12)
+                .padding(.vertical, 8)
             }
             .scrollClipDisabled()
             .accessibilityIdentifier(railIdentifier)
         }
+        // The probe sits in the header's corner rather than in the stack: it must not add a single point
+        // of height to a header whose whole purpose is to be compact.
+        .overlay(alignment: .topLeading) {
+            refreshProbe
+        }
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .font(DesignTokens.Typography.railTitle)
-                .foregroundStyle(.white)
-            if let captionDate {
-                // The catalogue's format key carries a `%@`, so the time goes in through the format
-                // rather than through string concatenation. The accessibility value keeps seconds: the
-                // auto-refresh test watches it to prove the rail reloaded.
-                Text(
-                    verbatim: String(
-                        format: String(localized: "common.updatedAt %@"),
-                        captionDate.formatted(date: .omitted, time: .shortened)
-                    )
-                )
-                .font(DesignTokens.Typography.cardMeta)
-                .foregroundStyle(.secondary)
-                .accessibilityIdentifier(captionIdentifier ?? "home.rail.caption")
-                .accessibilityValue(Text(verbatim: captionDate.formatted(date: .omitted, time: .standard)))
-            }
-        }
-        .padding(.horizontal, DesignTokens.screenInset)
+        Text(title)
+            .font(DesignTokens.Typography.railTitle)
+            .foregroundStyle(.white)
+            .padding(.horizontal, DesignTokens.screenInset)
     }
 }

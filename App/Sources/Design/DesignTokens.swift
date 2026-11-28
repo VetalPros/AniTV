@@ -10,8 +10,9 @@ enum DesignTokens {
     /// Horizontal breathing room between screen content and the display edges.
     static let screenInset: CGFloat = 72
     /// Space between the top of a section and its title. Clears the collapsed sidebar pill, which sits in
-    /// the top-left corner (ADR 0028) — every section title starts below it.
-    static let screenTopInset: CGFloat = 56
+    /// the top-left corner (ADR 0028): the pill's bottom edge is at about 94 pt on the ten-foot canvas, and
+    /// every section title starts below it. Forty is as low as this inset may go.
+    static let screenTopInset: CGFloat = 40
     /// Vertical rhythm between major blocks on a screen.
     static let sectionSpacing: CGFloat = 40
     /// Poster columns for the latest-releases grid (six posters fit a 1080p canvas comfortably).
@@ -28,9 +29,15 @@ enum DesignTokens {
     enum Typography {
         static let screenTitle = Font.system(size: 46, weight: .bold, design: .rounded)
         static let screenSubtitle = Font.system(size: 21, weight: .medium)
+        /// Header of a top-level screen: the same pair as ``screenTitle``/``screenSubtitle``, compressed so
+        /// the block does not eat a fifth of the canvas. Kept separate because the detail and picker screens
+        /// use the larger pair on purpose.
+        static let screenTitleCompact = Font.system(size: 38, weight: .bold, design: .rounded)
+        static let screenSubtitleCompact = Font.system(size: 18, weight: .medium)
         static let sectionTitle = Font.system(size: 27, weight: .semibold)
-        /// Title of a home rail: reads as a section, but louder than one inside a card list.
-        static let railTitle = Font.system(size: 32, weight: .semibold)
+        /// Title of a home rail. One line above the posters, so it reads as a label rather than a screen
+        /// header: it must not compete with the poster art next to it.
+        static let railTitle = Font.system(size: 22, weight: .semibold)
         static let detailTitle = Font.system(size: 54, weight: .bold, design: .rounded)
         static let detailOriginalTitle = Font.system(size: 22, weight: .medium)
         static let body = Font.system(size: 20, weight: .regular)

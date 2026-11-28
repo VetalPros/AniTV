@@ -3,19 +3,24 @@ import XCTest
 /// Proof that the two content screens keep themselves current without the viewer doing anything.
 ///
 /// The production cadence is minutes long, so the app reads a short interval from a launch argument
-/// (`-uiTestingRefreshInterval`) and the test watches a real request happen: the «Обновлено» caption is
-/// re-stamped while the screen is untouched, and focus is not thrown away by the refresh.
+/// (`-uiTestingRefreshInterval`) and the test watches a real request happen: the hidden freshness probe is
+/// re-stamped while the screen is untouched, and focus is not thrown away by the refresh. The probe exists
+/// only under `-uiTestingRefreshProbe` — the caption that used to carry it is no longer in the UI.
 final class AutoRefreshUITests: XCTestCase {
     private let screenTimeout: TimeInterval = 60
     private let settleTimeout: TimeInterval = 1.0
     private let focusAttempts = 8
-    /// Seconds between the two caption reads: several refresh ticks even for a slow request.
+    /// Seconds between the two probe reads: several refresh ticks even for a slow request.
     private let observationWindow: TimeInterval = 10
 
     /// Short interval so the test sees a genuine refresh; the stale rule is shortened too, so entering a
     /// tab refreshes immediately instead of waiting a minute.
     private var launchArguments: [String] {
-        [UITestLaunchArguments.refreshInterval, "4", UITestLaunchArguments.staleAfter, "1"]
+        [
+            UITestLaunchArguments.refreshInterval, "4",
+            UITestLaunchArguments.staleAfter, "1",
+            UITestLaunchArguments.refreshProbe,
+        ]
     }
 
     @MainActor
@@ -25,10 +30,10 @@ final class AutoRefreshUITests: XCTestCase {
         app.launchArguments = launchArguments
         app.launch()
 
-        let caption = element(identifier: "latest.updatedAt", in: app)
-        XCTAssertTrue(caption.waitForExistence(timeout: screenTimeout), "The feed shows no freshness caption")
-        let firstStamp = caption.value as? String
-        XCTAssertNotNil(firstStamp, "The freshness caption exposes no timestamp")
+        let probe = element(identifier: "latest.updatedAt", in: app)
+        XCTAssertTrue(probe.waitForExistence(timeout: screenTimeout), "The feed exposes no freshness probe")
+        let firstStamp = probe.value as? String
+        XCTAssertNotNil(firstStamp, "The freshness probe carries no timestamp")
 
         // Focus starts on the grid; the refresh must leave it there.
         let cards = app.descendants(matching: .any).matching(identifier: "latest.posterCard")
@@ -41,11 +46,11 @@ final class AutoRefreshUITests: XCTestCase {
         XCTAssertTrue(isFocused(identifier: "latest.posterCard", in: app), "Focus never reached the poster grid")
 
         Thread.sleep(forTimeInterval: observationWindow)
-        let secondStamp = caption.value as? String
+        let secondStamp = probe.value as? String
         XCTAssertNotEqual(
             secondStamp,
             firstStamp,
-            "The feed did not refresh by itself: the caption stayed at \(secondStamp ?? "nil")"
+            "The feed did not refresh by itself: the probe stayed at \(secondStamp ?? "nil")"
         )
         XCTAssertTrue(cards.firstMatch.exists, "The grid disappeared during the refresh")
         XCTAssertTrue(
@@ -73,17 +78,17 @@ final class AutoRefreshUITests: XCTestCase {
             throw XCTSkip("The stored session is gone; the signed-out profile screen is asserted instead")
         }
 
-        let caption = element(identifier: "profile.updatedAt", in: app)
-        XCTAssertTrue(caption.waitForExistence(timeout: screenTimeout), "The profile shows no freshness caption")
-        let firstStamp = caption.value as? String
-        XCTAssertNotNil(firstStamp, "The profile freshness caption exposes no timestamp")
+        let probe = element(identifier: "profile.updatedAt", in: app)
+        XCTAssertTrue(probe.waitForExistence(timeout: screenTimeout), "The profile exposes no freshness probe")
+        let firstStamp = probe.value as? String
+        XCTAssertNotNil(firstStamp, "The profile freshness probe carries no timestamp")
 
         Thread.sleep(forTimeInterval: observationWindow)
-        let secondStamp = caption.value as? String
+        let secondStamp = probe.value as? String
         XCTAssertNotEqual(
             secondStamp,
             firstStamp,
-            "The favourites did not refresh by themselves: the caption stayed at \(secondStamp ?? "nil")"
+            "The favourites did not refresh by themselves: the probe stayed at \(secondStamp ?? "nil")"
         )
         XCTAssertTrue(
             element(identifier: "detail.screen", in: app).exists == false,
@@ -103,6 +108,7 @@ final class AutoRefreshUITests: XCTestCase {
         app.launchArguments = [
             UITestLaunchArguments.refreshInterval, "4",
             UITestLaunchArguments.staleAfter, "3600",
+            UITestLaunchArguments.refreshProbe,
         ]
         app.launch()
 
@@ -115,10 +121,10 @@ final class AutoRefreshUITests: XCTestCase {
             throw XCTSkip("The stored session is gone; the signed-out profile screen is asserted instead")
         }
 
-        let caption = element(identifier: "profile.updatedAt", in: app)
-        XCTAssertTrue(caption.waitForExistence(timeout: screenTimeout), "The profile shows no freshness caption")
-        let beforeLeaving = caption.value as? String
-        XCTAssertNotNil(beforeLeaving, "The profile freshness caption exposes no timestamp")
+        let probe = element(identifier: "profile.updatedAt", in: app)
+        XCTAssertTrue(probe.waitForExistence(timeout: screenTimeout), "The profile exposes no freshness probe")
+        let beforeLeaving = probe.value as? String
+        XCTAssertNotNil(beforeLeaving, "The profile freshness probe carries no timestamp")
 
         // Leave for another section and come straight back — a couple of seconds, far less than the
         // interval. The profile is a cover since ADR 0032, so leaving it means closing it first.
@@ -130,12 +136,12 @@ final class AutoRefreshUITests: XCTestCase {
         var afterReturn: String? = beforeLeaving
         for _ in 0 ..< 10 where afterReturn == beforeLeaving {
             Thread.sleep(forTimeInterval: 1)
-            afterReturn = caption.value as? String
+            afterReturn = probe.value as? String
         }
         XCTAssertNotEqual(
             afterReturn,
             beforeLeaving,
-            "Coming back to the tab did not re-read the favourites: the caption stayed at \(afterReturn ?? "nil")"
+            "Coming back to the tab did not re-read the favourites: the probe stayed at \(afterReturn ?? "nil")"
         )
     }
 

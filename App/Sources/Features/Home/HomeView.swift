@@ -60,8 +60,7 @@ struct HomeView: View {
                 releases: releases,
                 cardIdentifier: "latest.posterCard",
                 railIdentifier: "home.rail.latest",
-                captionDate: latestModel.updatedAt,
-                captionIdentifier: "latest.updatedAt",
+                refreshProbe: RefreshProbe.stamp(RefreshProbe.latestIdentifier, date: latestModel.updatedAt),
                 takesDefaultFocus: true,
                 onSelect: open
             )

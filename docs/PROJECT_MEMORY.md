@@ -135,7 +135,18 @@
       2 551 522 bytes in 6.8 s. Signed *Apple Distribution: Vitalii Proskurnia (9KLFP6C3LT)*, profile
       `2027-11-28`. Also verified on the tvOS 27.2 simulator in the same session: Debug build, `simctl
       install` + `launch` (pid 25795), sidebar shell and both rails rendered with live data
-      (`.build/evidence/sim-launch-t9.png`).
+      (`.build/evidence/sim-launch-t9.png`). Checked through the App Store Connect API the same day:
+      `202611281137` is **VALID** and not expired, the internal group **«Владелец»** exists with the owner
+      (`vetalirusa@gmail.com`) **ACCEPTED**, and all three builds are assigned to it — nothing had to be
+      created for TestFlight.
+- [x] **Compact section headers, 2026-11-28 (ADR 0035).** The owner reported that the «Новинки» header ate
+      a fifth of the canvas and that «Обновлено HH:mm» is debug information a viewer does not need. The rail
+      title went 32 → 22 pt and onto one line (`HomeRail` spacing 18 → 12, carousel padding 12 → 8),
+      `ScreenHeader` 46/21 → 38/18 with 4/20 padding, `screenTopInset` 56 → 40. Measured on the tvOS 27.2
+      simulator: first poster row **259.5 → 197.5 pt** (−62), the second rail title 768.5 → 700.5, five and
+      a half rows visible instead of four and a half, 72 pt of clearance under the collapsed pill (bottom
+      y ≈ 94). The caption left «Главная» **and** the profile, `common.updatedAt %@` left the string
+      catalogue (92 → 91 keys), and auto-refresh stays observable through the `-uiTestingRefreshProbe` seam.
 - [x] **First TestFlight upload, 2026-11-28.** App Store Connect app record exists: **AniTV**, App Store
       app id `6840296537`, version 1.0 in `PREPARE_FOR_SUBMISSION`, platform `TV_OS`. The API key
       `5QY2594WJR` (issuer `b8e1a4d6-…`) authenticated against App Store Connect; the paid enrolment turned
@@ -292,13 +303,18 @@ Second pass (same day, after the user's own run on the simulator):
       300 s and on returning to the tab after >60 s, favourites every 180 s plus an immediate re-read on
       entering the tab, and the detail screen re-reads the favourite state on every appear. Hidden screens
       and a backgrounded app run no timer at all. Proven by `AutoRefreshUITests`, which watches the
-      «Обновлено HH:mm» caption change on an untouched screen with the intervals shortened by
-      `-uiTestingRefreshInterval`; the production numbers themselves are not measured by any test.
+      freshness instant change on an untouched screen with the intervals shortened by
+      `-uiTestingRefreshInterval`. The instant reaches the test through a probe element that exists only
+      under `-uiTestingRefreshProbe` (ADR 0035), because the caption that used to carry it left the UI.
+      The production numbers themselves are not measured by any test.
 
 - [x] Test seam: `App/Sources/Support/AuthTokenStoreFactory.swift` — the launch argument
       `-uiTestingSignedOut` swaps in an `EmptyTokenStore` so the pairing and signed-out-heart tests are
       deterministic while the simulator's Keychain holds a real session. Production never passes the flag;
-      the Keychain stays the only token store.
+      the Keychain stays the only token store. A second seam, `-uiTestingRefreshProbe`
+      (`App/Sources/Support/RefreshProbe.swift`, ADR 0035), puts the last-refresh instant into the
+      accessibility tree as a 1×1 transparent element; without the argument nothing is built at all, which
+      `HomeUITests` asserts.
 
 **Confirmed by the account owner (2026-11-17)** on the simulator: the avatar set on the site is now shown
 next to the display name, the favourites poster renders, and the profile is still there after restarting
@@ -351,7 +367,8 @@ the simulator — so both reported defects are closed against a real account, no
       the collapsed pill), device build signed and installed, and the shell captured on the owner's Apple
       TV. Not verified: Back semantics and per-section path preservation; the six older UI-test files
       still walk focus into the tab bar that no longer exists (P4).
-- [x] Navigation shell, phase P2 (2026-11-27): `DesignTokens.screenTopInset` (56) became the single top
+- [x] Navigation shell, phase P2 (2026-11-27): `DesignTokens.screenTopInset` (56, raised to 40 on
+      2026-11-28 by ADR 0035) became the single top
       inset, `ScreenHeader` uses it, and «Настройки» lost its private header plus the hardcoded 80/60
       paddings, so all four sections share one frame. Verified with `NavigationSectionsUITests` — it opens
       each section through the new test-only `-uiTestingSection` argument, captures it with the panel
@@ -565,6 +582,12 @@ not a commitment.
 - The tvOS simulator runtime unmounts itself occasionally; `xcrun simctl runtime scan-and-mount` brings it
   back without re-downloading (see Environment facts). A `simctl bootstatus -b` can fail with "cannot
   determine the runtime bundle" on a device that `xcodebuild test` then boots by UDID without trouble.
+- **The section content still starts ~120 pt below the top of the canvas with `screenTopInset = 40`** (rail
+  title 165.5, collapsed pill bottom 93.5, on a 1080-point canvas): the inset is added on top of two
+  stacked safe areas — the shell's `TabView` and the section's own container, roughly 60 pt each. Trimming
+  further means `.ignoresSafeArea(.container, edges: .top)` on the section scroll, which is exactly the
+  move that puts content under the pill; that is a decision, not a tweak. Which layer contributes what is
+  `unverified`.
 - **The sidebar collapses on its own ~6–10 s after launch, with no input** (observed 2026-11-28 on the
   tvOS 27.2 simulator, three launches: expanded at t=5 s and t=9 s, collapsed at t=11 s, 12 s and 30 s).
   `docs/NAVIGATION.md` ties collapsing to a Right press, so either `sidebarAdaptable` auto-collapses an

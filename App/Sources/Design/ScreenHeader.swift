@@ -18,12 +18,12 @@ struct ScreenHeader<Trailing: View>: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 24) {
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(DesignTokens.Typography.screenTitle)
+                    .font(DesignTokens.Typography.screenTitleCompact)
                     .foregroundStyle(.white)
                 Text(subtitle)
-                    .font(DesignTokens.Typography.screenSubtitle)
+                    .font(DesignTokens.Typography.screenSubtitleCompact)
                     .foregroundStyle(.secondary)
             }
             Spacer(minLength: 24)
@@ -31,7 +31,7 @@ struct ScreenHeader<Trailing: View>: View {
         }
         .padding(.horizontal, DesignTokens.screenInset)
         .padding(.top, DesignTokens.screenTopInset)
-        .padding(.bottom, 30)
+        .padding(.bottom, 20)
     }
 }
 
