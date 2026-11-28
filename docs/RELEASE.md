@@ -102,3 +102,6 @@ to be signed with the same `.p8`.
 | `CFBundleVersion … must be composed of one to three period-separated integers` | The build number has to be numeric. The script's default (`yyyymmddHHMM`) is; a hand-made `BUILD_NUMBER=probe` is not |
 | TestFlight asks about export compliance | `ITSAppUsesNonExemptEncryption` did not reach `Info.plist`; check the generated plist in the archive |
 | External testers see nothing | External testing needs the beta review; internal testing does not |
+| `Failed to create URL for 'CDUploaderStateInfoResumeFilePath'. The file doesn't exist` during upload | A benign altool line on a run that has no resume state yet; the same run ends `UPLOAD SUCCEEDED` with a `Delivery UUID` |
+| `resource fork, Finder information, or similar detritus not allowed` when `codesign` runs on an unzipped `.ipa` | `unzip` attaches `com.apple.FinderInfo`/`com.apple.provenance` xattrs; the `.ipa` itself is clean. Run `xattr -cr Payload/AniTV.app` before inspecting |
+| `altool` prints nothing for a minute or two | Normal: `--validate-app` uploads the bundle to Apple's validation service first. On 2026-11-28 a 2.4 MB ipa took ~75 s for validation and upload together |

@@ -128,6 +128,14 @@
       §2.6's justification (now `project.yml`/CI/scripts referencing the paths), `CONTRIBUTING.md`'s team
       section and its `tvOS 26.0` line (raised to 27.0, ADR 0029). Gates re-run by the lead on the changed
       tree: 91 Kit tests, simulator build, 0 lint violations, 0/111 formatting.
+- [x] **Build `202611281137` uploaded to TestFlight, 2026-11-28 (session 7).** The local half of the
+      pipeline ran without credentials (`UPLOAD=0 VALIDATE=0`, 44 s: archive → export → `AniTV.ipa`,
+      2.4 MB, sha256 `4b95425a…09ec9`), then `altool --validate-app` reported *"No errors validating
+      archive"* and `--upload-app` *"UPLOAD SUCCEEDED"*, delivery UUID `ecfa8aae-3a06-4472-b9fd-ab561016001b`,
+      2 551 522 bytes in 6.8 s. Signed *Apple Distribution: Vitalii Proskurnia (9KLFP6C3LT)*, profile
+      `2027-11-28`. Also verified on the tvOS 27.2 simulator in the same session: Debug build, `simctl
+      install` + `launch` (pid 25795), sidebar shell and both rails rendered with live data
+      (`.build/evidence/sim-launch-t9.png`).
 - [x] **First TestFlight upload, 2026-11-28.** App Store Connect app record exists: **AniTV**, App Store
       app id `6840296537`, version 1.0 in `PREPARE_FOR_SUBMISSION`, platform `TV_OS`. The API key
       `5QY2594WJR` (issuer `b8e1a4d6-…`) authenticated against App Store Connect; the paid enrolment turned
@@ -557,6 +565,11 @@ not a commitment.
 - The tvOS simulator runtime unmounts itself occasionally; `xcrun simctl runtime scan-and-mount` brings it
   back without re-downloading (see Environment facts). A `simctl bootstatus -b` can fail with "cannot
   determine the runtime bundle" on a device that `xcodebuild test` then boots by UDID without trouble.
+- **The sidebar collapses on its own ~6–10 s after launch, with no input** (observed 2026-11-28 on the
+  tvOS 27.2 simulator, three launches: expanded at t=5 s and t=9 s, collapsed at t=11 s, 12 s and 30 s).
+  `docs/NAVIGATION.md` ties collapsing to a Right press, so either `sidebarAdaptable` auto-collapses an
+  idle panel or the focus engine moves focus into the content. Nothing tells the two apart yet — it needs
+  an XCUITest. Reproducible as a symptom, `unverified` as a diagnosis.
 - **CI never ran on `feat/sidebar-navigation`.** `.github/workflows/ci.yml` triggers on pushes to `main`
   and on pull requests targeting `main` only, so the working branch's commits are verified locally and
   nowhere else (last runs: 2026-11-26, `main`). Adding the branch pattern to `on.push` or opening a pull
