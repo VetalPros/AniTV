@@ -1090,8 +1090,11 @@ had.
   padding 12 → 8. `ScreenHeader` moves to a new compact pair, 38/18 pt, with 4 pt between the
   title and the subtitle and a 20 pt bottom pad. The 46/21 pair stays for `EpisodePickerScreen` and the
   catalogue result count, which are not section headers.
-- **`screenTopInset` 56 → 40.** Forty is the floor: the collapsed pill's bottom edge was measured at
-  y ≈ 93.5, and the inset sits on top of the safe area, so anything lower starts closing that gap.
+- **`screenTopInset` 56 → 40.** The inset sits on top of the 120 pt the system reserves at the top of every
+  section (60 pt of window safe area plus 60 pt `TabView` keeps clear for the pill), so forty is not the
+  whole gap to the pill — it is our last lever. Measured the same evening: the pill's body occupies
+  y ≈ 50.5…109, a rail title starts at 160 (glyph 167), the first poster at 206, leaving **51 pt** of
+  clearance rather than the 72 pt this entry first claimed.
 - **The caption is gone from the UI**, on «Главная» and in the profile, and `common.updatedAt %@` left the
   string catalogue with it (92 → 91 keys).
 - **Auto-refresh stays observable through a test-only seam.** `-uiTestingRefreshProbe`
@@ -1105,17 +1108,27 @@ had.
 **Consequences.**
 
 - Measured after the change: first poster row **197.5 pt** at 22 pt and ≈205 pt at the final 29 pt (−55),
-  second rail title 700.5, and 72 pt of clearance under the pill, nothing under it.
+  second rail title 700.5, and **51 pt** of clearance under the pill (its body ends at 109) with nothing
+  under it.
 - `AutoRefreshUITests` and `HomeUITests` were updated; `HomeUITests` gained a test that the probe is absent
   without the argument. `NavigationStateUITests` keeps its expected failure and now reads `nil` instead of
   a stale caption.
 - The rail title is now the tvOS body size (29 pt), so the header is legible from three metres; that is the
   trade the owner chose over the last ~8 pt of height.
 - Store screenshots in `docs/appstore/screenshots/` and the committed `docs/screenshots/` set are now
-  stale and have to be re-shot.
-- The bigger remaining lever is not this token: the section content starts ~120 pt down because two safe
-  areas stack. Cutting that means `.ignoresSafeArea(.container, edges: .top)` on the section scroll, which
-  is the move that risks the pill — a decision for later, recorded as a caveat.
+  stale. The owner decided on 2026-11-28 **not** to re-shoot them for this change; do not raise it again
+  without a new reason (a store submission would be one).
+- **The remaining 120 pt are the system's; taking them was measured and rejected.** Probes placed in the
+  running app show 60 pt of window safe area (overscan) plus 60 pt `TabView` reserves for the pill;
+  `NavigationStack` adds nothing. `.ignoresSafeArea(.container, edges: .top)` on the section scroll puts the
+  first poster at 86 — under the pill; the same on the `TabView` leaves the title at 100 — also under it;
+  `.safeAreaPadding(.top, 40)` only adds. Our own inset at 0 gives a title at 120 and 11 pt of clearance,
+  which reads as cramped. An inset of 16 was prototyped (−24 pt, 27 pt of clearance) and **not adopted**:
+  the token stays at 40 until the owner asks for density over air.
+- **`NavigationSectionsUITests` does not assert geometry** — an earlier entry in this log implied it did.
+  It proves each section renders and keeps the screenshots of both panel states; nothing in the suite fails
+  today if a title slides under the pill. A `frame.minY >= 110` assertion on the section's first element is
+  the obvious guard and is not written yet.
 
 **Alternatives rejected.** *Removing the rail titles entirely (the option the owner first picked)* — its
 premise was that the pill names the rail, but the pill names the section, so the favourites row would lose

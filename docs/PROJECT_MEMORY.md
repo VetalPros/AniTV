@@ -144,8 +144,9 @@
       title went 32 → 29 pt (an intermediate 22 pt was rejected the same day as too small) and onto one
       line (`HomeRail` spacing 18 → 12, carousel padding 12 → 8), `ScreenHeader` 46/21 → 38/18 with 4/20
       padding, `screenTopInset` 56 → 40. Measured on the tvOS 27.2 simulator: first poster row
-      **259.5 → 197.5 pt** at 22 pt and ≈205 at 29 (≈−55), the second rail title 768.5 → 700.5, 72 pt of
-      clearance under the collapsed pill (bottom y ≈ 94). The caption left «Главная» **and** the profile,
+      **259.5 → 197.5 pt** at 22 pt and ≈205 at 29 (≈−55), the second rail title 768.5 → 700.5, 51 pt of
+      clearance under the collapsed pill (its body ends at 109). The caption left «Главная» **and** the
+      profile,
       `common.updatedAt %@` left the string catalogue (92 → 91 keys), and auto-refresh stays observable
       through the `-uiTestingRefreshProbe` seam.
 - [x] **First TestFlight upload, 2026-11-28.** App Store Connect app record exists: **AniTV**, App Store
@@ -583,12 +584,11 @@ not a commitment.
 - The tvOS simulator runtime unmounts itself occasionally; `xcrun simctl runtime scan-and-mount` brings it
   back without re-downloading (see Environment facts). A `simctl bootstatus -b` can fail with "cannot
   determine the runtime bundle" on a device that `xcodebuild test` then boots by UDID without trouble.
-- **The section content still starts ~120 pt below the top of the canvas with `screenTopInset = 40`** (rail
-  title 165.5, collapsed pill bottom 93.5, on a 1080-point canvas): the inset is added on top of two
-  stacked safe areas — the shell's `TabView` and the section's own container, roughly 60 pt each. Trimming
-  further means `.ignoresSafeArea(.container, edges: .top)` on the section scroll, which is exactly the
-  move that puts content under the pill; that is a decision, not a tweak. Which layer contributes what is
-  `unverified`.
+- **The section content starts 120 pt below the top of the canvas before our inset is added** — 60 pt of
+  window safe area (overscan) plus 60 pt `TabView` keeps clear for the pill, measured with GeometryReader
+  probes and XCUITest frames on 2026-11-28; `NavigationStack` adds nothing. The pill's body occupies
+  y ≈ 50.5…109, so `screenTopInset = 40` leaves 51 pt of clearance and 0 leaves 11 pt. Both layers are the
+  system's: removing either puts content under the pill (measured — poster at 86, title at 100).
 - **The sidebar collapses on its own ~6–10 s after launch, with no input** (observed 2026-11-28 on the
   tvOS 27.2 simulator, three launches: expanded at t=5 s and t=9 s, collapsed at t=11 s, 12 s and 30 s).
   `docs/NAVIGATION.md` ties collapsing to a Right press, so either `sidebarAdaptable` auto-collapses an
