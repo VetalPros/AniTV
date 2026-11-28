@@ -71,6 +71,14 @@
   `.tabViewStyle(.sidebarAdaptable)` **tvOS 18.0+**, `TabSection` tvOS 18.0+, `Tab(role: .search)`
   tvOS 18+ (renders as the pinned «Поиск» row); `tabViewSidebarHeader`/`tabViewSidebarFooter`
   **tvOS 27.0+**; `tabViewSidebarBottomBar` unavailable on tvOS.
+- **TestFlight pipeline is complete locally as of 2026-11-28.** The enrollment activated the *existing*
+  team — the paid Team ID is the same `9KLFP6C3LT` that was in `Config/Local.xcconfig` since 26 November,
+  so nothing in the signing config changed. `UPLOAD=0 VALIDATE=0 ./scripts/release-testflight.sh` now runs
+  archive → export → **`** EXPORT SUCCEEDED **`**, producing `.build/export/AniTV.ipa` (1.5 MB) signed with
+  *Apple Distribution: Vitalii Proskurnia (9KLFP6C3LT)*, profile *tvOS Team Store Provisioning Profile:
+  tv.anitv.client*, `beta-reports-active = true`, `get-task-allow = false`,
+  `keychain-access-groups = 9KLFP6C3LT.tv.anitv.client`, **profile expires 2027-11-28** (a year, not seven
+  days). What is still missing for the upload: the App Store Connect app record and altool credentials.
 - **TestFlight pipeline, measured 2026-11-27 (Xcode 27.2)**: `xcodebuild archive -configuration Release
   -destination 'generic/platform=tvOS' -allowProvisioningUpdates` **succeeds** →
   `.build/AniTV.xcarchive`. `-exportArchive -exportOptionsPlist Config/ExportOptions.plist`

@@ -69,6 +69,13 @@ IPA="$(find "$EXPORT_DIR" -maxdepth 1 -name '*.ipa' | head -1)"
 [[ -n "$IPA" ]] || fail "the export produced no .ipa in $EXPORT_DIR"
 echo "==> exported $IPA"
 
+# A dry run needs no credentials: archive + export are local operations (signing goes through Xcode's
+# account, not altool). Only validation and the upload talk to App Store Connect.
+if [[ "${UPLOAD:-1}" == "0" && "${VALIDATE:-1}" == "0" ]]; then
+	echo "==> UPLOAD=0 VALIDATE=0: local pipeline only, leaving the package in $EXPORT_DIR"
+	exit 0
+fi
+
 # Credentials come from the environment; nothing here is ever written to the repository.
 if [[ -n "${APPLE_API_KEY_ID:-}" && -n "${APPLE_API_ISSUER:-}" ]]; then
 	AUTH=(--apiKey "$APPLE_API_KEY_ID" --apiIssuer "$APPLE_API_ISSUER")
