@@ -31,8 +31,8 @@
   (0.07 s); simulator build `BUILD SUCCEEDED` in 15.7 s — on **warm** `DerivedData`, a clean
   build is still unmeasured; `swiftformat --lint .` 0/111 files require formatting; `swiftlint --strict`
   0 violations in 111 files; one XCUITest (`NavigationShellUITests`) green — ~18.4 s of test, ~34 s wall,
-  with a runner-connection flake recorded in `docs/HANDOFF.md` §5. `gh` 2.106.0 is installed but **not
-  authenticated** yet.
+  with a runner-connection flake recorded in `docs/HANDOFF.md` §5. `gh` 2.106.0 is installed and
+  authenticated as `VetalPros` (scopes `repo`, `read:org`) since 2026-11-28.
 - macOS **27.0.1** (26A434), arm64. Disk: ~104 GB free.
 - Xcode **27.2** (27B52) at `/Applications/Xcode.app`; `xcode-select -p` →
   `/Applications/Xcode.app/Contents/Developer`. License accepted, first-launch components installed.
@@ -557,6 +557,10 @@ not a commitment.
 - The tvOS simulator runtime unmounts itself occasionally; `xcrun simctl runtime scan-and-mount` brings it
   back without re-downloading (see Environment facts). A `simctl bootstatus -b` can fail with "cannot
   determine the runtime bundle" on a device that `xcodebuild test` then boots by UDID without trouble.
+- **CI never ran on `feat/sidebar-navigation`.** `.github/workflows/ci.yml` triggers on pushes to `main`
+  and on pull requests targeting `main` only, so the working branch's commits are verified locally and
+  nowhere else (last runs: 2026-11-26, `main`). Adding the branch pattern to `on.push` or opening a pull
+  request are the two ways to close this.
 - The device list, pairing and install procedure live in `docs/INSTALL_DEVICE.md`.
 - **The App Store icon slot is filled with the service's mark** (borrowed per ADR 0025), flattened from the
   parallax layers into a 1280×768 two-layer stack. That is enough for TestFlight; a public listing should
